@@ -144,7 +144,7 @@ async def login_form(request: Request):
         request.session["roles"] = "instructor" if form_data["username"] == "admin" else "student"
         request.session["program"] = form_data.get("program", "inlab_test")
 
-        return RedirectResponse(url='http://localhost:7860', status_code=status.HTTP_303_SEE_OTHER)
+        return RedirectResponse(url='http://10.236.173.229:13860', status_code=status.HTTP_303_SEE_OTHER)
 
     # GETのとき
     return templates.TemplateResponse("login_form.html", {"request": request})
@@ -168,7 +168,7 @@ async def login_form(request: Request):
             request.session["program"] = "inlab_test"
 
             # ログイン成功したらGradioに飛ばす
-            return RedirectResponse(url='http://localhost:7860', status_code=status.HTTP_303_SEE_OTHER)
+            return RedirectResponse(url='http://10.236.173.229:13860', status_code=status.HTTP_303_SEE_OTHER)
         else:
             # 入力なければログイン画面に戻す
             return templates.TemplateResponse("login_form.html", {"request": request, "error": "Invalid login"})
@@ -230,7 +230,7 @@ async def lti_login(request: Request):
         request.session["roles"] = role
         request.session["program"] = form_data.get('custom_program', 'none')
         # return RedirectResponse(url='/avery/', status_code=status.HTTP_303_SEE_OTHER)
-        return RedirectResponse(url='http://localhost:7860', status_code=status.HTTP_303_SEE_OTHER)
+        return RedirectResponse(url='http://10.236.173.229:13860', status_code=status.HTTP_303_SEE_OTHER)
 
     raise HTTPException(status_code=500, detail="Failed to login")
 
@@ -273,7 +273,7 @@ async def redirect_page(request: Request):
             return RedirectResponse(url="/logout", status_code=status.HTTP_303_SEE_OTHER)
     if "leaderboard_id" in request.session:
         request.session.pop("leaderboard_id")
-    return RedirectResponse(url="http://localhost:7860", status_code=status.HTTP_303_SEE_OTHER)
+    return RedirectResponse(url="http://10.236.173.229:13860", status_code=status.HTTP_303_SEE_OTHER)
     # return RedirectResponse(url="/avery/leaderboards", status_code=status.HTTP_303_SEE_OTHER)
 
 @app.exception_handler(Exception)
@@ -303,4 +303,4 @@ def get_mounted_apps():
 
 @app.get("/go-to-gradio")
 async def go_to_gradio():
-    return RedirectResponse(url="http://localhost:7860")  # Gradioが動いてるポート
+    return RedirectResponse(url="http://10.236.173.229:13860")  # Gradioが動いてるポート
