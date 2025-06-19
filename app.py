@@ -5,7 +5,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.sessions import SessionMiddleware
 from starlette.routing import Mount
-from lti import validate_lti_request
+from mathquizgen.lti import validate_lti_request
 from fastapi.responses import JSONResponse
 
 import os
