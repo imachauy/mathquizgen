@@ -279,7 +279,7 @@ async def redirect_page(request: Request):
     return RedirectResponse(url="/mathgen/ui", status_code=status.HTTP_303_SEE_OTHER)
     # return RedirectResponse(url="/avery/leaderboards", status_code=status.HTTP_303_SEE_OTHER)
 
-@router.exception_handler(Exception)
+@app.exception_handler(Exception)
 async def exception_handler(request: Request, exc: Exception):
 
     # return RedirectResponse(url="/avery/logout", status_code=status.HTTP_303_SEE_OTHER)
