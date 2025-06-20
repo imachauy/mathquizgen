@@ -259,7 +259,7 @@ async def logout(request: Request):
     elif school == "lms":
         return RedirectResponse(url='https://lms.let.media.kyoto-u.ac.jp/moodle/')
     else:
-        return RedirectResponse(url='/login')
+        return RedirectResponse(url='/mathgen/login')
 
 @router.post("/token")
 def token(request: Request):
@@ -272,18 +272,15 @@ async def redirect_page(request: Request):
             response = await read_leaderboard(request)
             assert response.status_code == 401
         except:
-            # return RedirectResponse(url="/avery/logout", status_code=status.HTTP_303_SEE_OTHER)
-            return RedirectResponse(url="/logout", status_code=status.HTTP_303_SEE_OTHER)
+            return RedirectResponse(url="/mathgen/logout", status_code=status.HTTP_303_SEE_OTHER)
     if "leaderboard_id" in request.session:
         request.session.pop("leaderboard_id")
     return RedirectResponse(url="/mathgen/ui", status_code=status.HTTP_303_SEE_OTHER)
-    # return RedirectResponse(url="/avery/leaderboards", status_code=status.HTTP_303_SEE_OTHER)
 
 @app.exception_handler(Exception)
 async def exception_handler(request: Request, exc: Exception):
 
-    # return RedirectResponse(url="/avery/logout", status_code=status.HTTP_303_SEE_OTHER)
-    return RedirectResponse(url="/logout", status_code=status.HTTP_303_SEE_OTHER)
+    return RedirectResponse(url="/mathgen/logout", status_code=status.HTTP_303_SEE_OTHER)
 
 def get_root_url(
     request: Request, route_path: str, root_path: Optional[str] = None
