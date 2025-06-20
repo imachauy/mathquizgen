@@ -130,8 +130,8 @@ app.add_middleware(SessionMiddleware, secret_key=os.environ.get('SECRET_KEY'))
 templates = Jinja2Templates(directory="templates")
 
 MAX_GENERATION = int(os.getenv("MAX_GENERATION", 5))
-'''
-@app.route("/login", methods=["GET", "POST"])
+
+@router.route("/login", methods=["GET", "POST"])
 @concurrency_control.limit_concurrency(max_concurrent=40, per_client=True)
 async def login_form(request: Request):
     if request.method == "POST":
@@ -140,7 +140,7 @@ async def login_form(request: Request):
 
         # 認証失敗ならここで返す！
         if response.status_code != 200:
-            return templates.TemplateResponse("login_form.html", {"request": request, "error": "Invalid login"})
+            return templates.TemplateResponse("login_form.html", {"request": request, "error": response.json()})
 
         # 認証成功したらtoken取り出し
         token = models.Token(**json.loads(response.json()))
@@ -153,8 +153,8 @@ async def login_form(request: Request):
 
     # GETのとき
     return templates.TemplateResponse("login_form.html", {"request": request})
-'''
 
+'''
 @router.route("/login", methods=["GET", "POST"])
 @concurrency_control.limit_concurrency(max_concurrent=40, per_client=True)
 async def login_form(request: Request):
@@ -180,7 +180,8 @@ async def login_form(request: Request):
 
     # GETリクエスト時はログイン画面を表示
     return templates.TemplateResponse("login_form.html", {"request": request})
-
+'''
+    
 @router.route('/lti/login',methods=["POST"])
 @concurrency_control.limit_concurrency(max_concurrent=40, per_client=True)
 async def lti_login(request: Request):
