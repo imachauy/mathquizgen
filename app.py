@@ -8,6 +8,7 @@ from starlette.routing import Mount
 from lti import validate_lti_request
 from fastapi.responses import JSONResponse
 from gradio_app import gradio_app
+from fastapi import APIRouter
 
 import os
 import json
@@ -102,8 +103,11 @@ app = FastAPI(
     openapi_url=None,
     title="MathQuizGen",
 )
+
+router = APIRouter()
+
 app.mount("/static", StaticFiles(directory="static"), name="static")
-@app.on_event("shutdown")
+@router.on_event("shutdown")
 async def shutdown_client():
     await http_client.aclose()
 
@@ -145,13 +149,13 @@ async def login_form(request: Request):
         request.session["roles"] = "instructor" if form_data["username"] == "admin" else "student"
         request.session["program"] = form_data.get("program", "inlab_test")
 
-        return RedirectResponse(url='/mathgen', status_code=status.HTTP_303_SEE_OTHER)
+        return RedirectResponse(url='/mathgen/ui', status_code=status.HTTP_303_SEE_OTHER)
 
     # GETのとき
     return templates.TemplateResponse("login_form.html", {"request": request})
 '''
 
-@app.route("/login", methods=["GET", "POST"])
+@router.route("/login", methods=["GET", "POST"])
 @concurrency_control.limit_concurrency(max_concurrent=40, per_client=True)
 async def login_form(request: Request):
     if request.method == "POST":
@@ -169,7 +173,7 @@ async def login_form(request: Request):
             request.session["program"] = "inlab_test"
 
             # ログイン成功したらGradioに飛ばす
-            return RedirectResponse(url='/mathgen', status_code=status.HTTP_303_SEE_OTHER)
+            return RedirectResponse(url='/mathgen/ui', status_code=status.HTTP_303_SEE_OTHER)
         else:
             # 入力なければログイン画面に戻す
             return templates.TemplateResponse("login_form.html", {"request": request, "error": "Invalid login"})
@@ -177,7 +181,7 @@ async def login_form(request: Request):
     # GETリクエスト時はログイン画面を表示
     return templates.TemplateResponse("login_form.html", {"request": request})
 
-@app.route('/lti/login',methods=["POST"])
+@router.route('/lti/login',methods=["POST"])
 @concurrency_control.limit_concurrency(max_concurrent=40, per_client=True)
 async def lti_login(request: Request):
     valid = await validate_lti_request(request)
@@ -230,12 +234,11 @@ async def lti_login(request: Request):
         request.session["username"] = username
         request.session["roles"] = role
         request.session["program"] = form_data.get('custom_program', 'none')
-        # return RedirectResponse(url='/avery/', status_code=status.HTTP_303_SEE_OTHER)
-        return RedirectResponse(url='/mathgen', status_code=status.HTTP_303_SEE_OTHER)
+        return RedirectResponse(url='/mathgen/ui', status_code=status.HTTP_303_SEE_OTHER)
 
     raise HTTPException(status_code=500, detail="Failed to login")
 
-@app.route('/logout')
+@router.route('/logout')
 @concurrency_control.limit_concurrency(max_concurrent=40, per_client=True)
 async def logout(request: Request):
 
@@ -256,14 +259,13 @@ async def logout(request: Request):
     elif school == "lms":
         return RedirectResponse(url='https://lms.let.media.kyoto-u.ac.jp/moodle/')
     else:
-        # return RedirectResponse(url='/avery/login')
         return RedirectResponse(url='/login')
 
-@app.post("/token")
+@router.post("/token")
 def token(request: Request):
     return request.session["token"]["access_token"]
 
-@app.get("/")
+@router.get("/")
 async def redirect_page(request: Request):
     if "token" not in request.session:
         try:
@@ -274,10 +276,10 @@ async def redirect_page(request: Request):
             return RedirectResponse(url="/logout", status_code=status.HTTP_303_SEE_OTHER)
     if "leaderboard_id" in request.session:
         request.session.pop("leaderboard_id")
-    return RedirectResponse(url="/mathgen", status_code=status.HTTP_303_SEE_OTHER)
+    return RedirectResponse(url="/mathgen/ui", status_code=status.HTTP_303_SEE_OTHER)
     # return RedirectResponse(url="/avery/leaderboards", status_code=status.HTTP_303_SEE_OTHER)
 
-@app.exception_handler(Exception)
+@router.exception_handler(Exception)
 async def exception_handler(request: Request, exc: Exception):
 
     # return RedirectResponse(url="/avery/logout", status_code=status.HTTP_303_SEE_OTHER)
@@ -290,7 +292,7 @@ def get_root_url(
     root_path = root_path or request.scope.get("root_path", "")
     return root_path
 
-@app.get('/routes')
+@router.get('/routes')
 def get_mounted_apps():
     routes = []
     for route in app.routes:
@@ -302,8 +304,10 @@ def get_mounted_apps():
 
     return JSONResponse(content={"mounted_routes": routes})
 
-@app.get("/go-to-gradio")
+@router.get("/go-to-gradio")
 async def go_to_gradio():
-    return RedirectResponse(url="/mathgen")  # Gradioが動いてるポート
+    return RedirectResponse(url="/mathgen/ui")  # Gradioが動いてるポート
 
-app.mount("/mathgen", gradio_app)
+app.include_router(router, prefix="/mathgen")
+
+app.mount("/mathgen/ui", gradio_app)
