@@ -2,6 +2,10 @@ from pylti.common import verify_request_common, LTIException
 from fastapi import Request
 import os, logging
 
+from dotenv import load_dotenv
+
+load_dotenv()
+
 logger = logging.getLogger(__name__)
 
 def load_lti_credentials():

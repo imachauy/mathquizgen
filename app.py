@@ -23,6 +23,11 @@ from typing import Dict, Optional
 import asyncio
 import time, pytz
 
+
+from dotenv import load_dotenv
+
+load_dotenv()
+
 def convert_to_japan_time(dt):
     """
     Converts a given datetime object to Japan time zone (Asia/Tokyo).

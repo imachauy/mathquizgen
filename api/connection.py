@@ -9,6 +9,10 @@ import io, datetime, time, zoneinfo
 from logging import getLogger
 from wsproto.utilities import LocalProtocolError
 
+from dotenv import load_dotenv
+
+load_dotenv()
+
 logger = getLogger(__name__)
 
 from api import models
