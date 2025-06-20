@@ -957,4 +957,5 @@ with gr.Blocks() as demo:
         outputs=None
     )
 
-demo.launch(server_name="0.0.0.0", show_api=False)
+# ASGIアプリを作る
+gradio_app = gr.routes.App.create_app(demo)
