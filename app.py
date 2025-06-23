@@ -298,7 +298,7 @@ async def go_to_gradio():
 
 app.include_router(router, prefix="/mathgen")
 
-mount_gradio_app(app, demo, path="/mathgen/ui")
+mount_gradio_app(app, demo, path="/ui")
 
 if __name__ == '__main__':
     uvicorn.run(app, root_path="/mathgen")
