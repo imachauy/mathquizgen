@@ -41,9 +41,6 @@ load_dotenv()
 
 app.add_middleware(SessionMiddleware, secret_key=os.environ.get('FASTAPI_SECRET_KEY'))
 
-# Gradio Mount（/ui以下はGradio専用にする！）
-mount_gradio_app(app, demo, path="/ui")
-
 @app.on_event("startup")
 def startup_event():
     print("[46] Server startup: Initializing database")
@@ -217,7 +214,7 @@ async def proxy_request(client, request: Request, path: str):
     print(f"[214] Max retries reached for proxying request to {url}")
     raise HTTPException(status_code=502, detail="Max retries reached")
 
-@app.api_route("/mathgen/lti/{path:path}") # legacy path
+@app.api_route("/mathgen/{path:path}") # legacy path
 async def proxy_to_mathgen(request: Request, path: str, user: dict = Depends(get_current_user)):
     return await proxy_request(app.state.mathgen_client, request, path)
 
@@ -300,6 +297,9 @@ async def go_to_gradio():
     return RedirectResponse(url="/mathgen/ui/")
 
 app.include_router(router, prefix="/mathgen")
+
+# Gradio Mount（/ui以下はGradio専用にする！）
+mount_gradio_app(app, demo, path="/ui")
 
 if __name__ == '__main__':
     uvicorn.run(app, root_path="/mathgen")
