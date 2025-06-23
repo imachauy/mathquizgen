@@ -41,6 +41,9 @@ load_dotenv()
 
 app.add_middleware(SessionMiddleware, secret_key=os.environ.get('FASTAPI_SECRET_KEY'))
 
+# Gradio Mount（/ui以下はGradio専用にする！）
+mount_gradio_app(app, demo, path="/ui")
+
 @app.on_event("startup")
 def startup_event():
     print("[46] Server startup: Initializing database")
@@ -297,9 +300,6 @@ async def go_to_gradio():
     return RedirectResponse(url="/mathgen/ui/")
 
 app.include_router(router, prefix="/mathgen")
-
-# Gradio Mount（/ui以下はGradio専用にする！）
-mount_gradio_app(app, demo, path="/ui/")
 
 if __name__ == '__main__':
     uvicorn.run(app, root_path="/mathgen")
