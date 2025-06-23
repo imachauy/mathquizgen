@@ -1,316 +1,316 @@
-from fastapi import FastAPI, Request, Depends, status, HTTPException
-from fastapi.templating import Jinja2Templates
-from fastapi.responses import HTMLResponse, RedirectResponse
+########## 勉強用 ##########
+
+#lti
+from fastapi import FastAPI, Request, HTTPException, Depends, status, APIRouter
+from fastapi.responses import HTMLResponse, JSONResponse, Response, StreamingResponse, PlainTextResponse
+from fastapi.middleware.cors import CORSMiddleware # for autocomplete
 from fastapi.staticfiles import StaticFiles
-from fastapi.middleware.cors import CORSMiddleware
+from starlette.responses import RedirectResponse
 from starlette.middleware.sessions import SessionMiddleware
-from starlette.routing import Mount
-from lti import validate_lti_request
-from fastapi.responses import JSONResponse
-from gradio_app import gradio_app
-from fastapi import APIRouter
-
-import os
-import json
-from typing import Annotated
-import datetime, zoneinfo
-
-from api import models
-from api.connection import *
-
-from functools import wraps
-from typing import Dict, Optional
-import asyncio
-import time, pytz
-
-
+from starlette.status import HTTP_404_NOT_FOUND
+import uvicorn
+import httpx
+from pylti.common import verify_request_common, LTIException
 from dotenv import load_dotenv
 
-load_dotenv()
 
-def convert_to_japan_time(dt):
-    """
-    Converts a given datetime object to Japan time zone (Asia/Tokyo).
+# gradio_app.pyのASGIアプリをインポート！
+from gradio_app import gradio_app
 
-    Parameters:
-        dt (datetime): The datetime object to be converted.
+#general
+import os
+from dotenv import load_dotenv
+import gradio as gr
 
-    Returns:
-        datetime: The converted datetime in Japan time zone.
-    """
-    # Define the Japan time zone
-    japan_tz = pytz.timezone('Asia/Tokyo')
-    
-    # If the datetime is naive, assume it is in UTC and localize it
-    if dt.tzinfo is None:
-        dt = pytz.utc.localize(dt)
-    
-    # Convert to Japan time zone
-    return dt.astimezone(japan_tz)
+from fastapi.templating import Jinja2Templates
 
-class EndpointConcurrencyControl:
-    def __init__(self):
-        # Store semaphores for each endpoint
-        self.endpoint_semaphores: Dict[str, asyncio.Semaphore] = {}
-        # Store active requests for each endpoint-client combination
-        self.active_requests: Dict[str, Dict[str, float]] = {}
-    
-    def limit_concurrency(self, max_concurrent: int = 40, per_client: bool = True):
-        def decorator(func):
-            # Create a unique key for this endpoint
-            endpoint_key = f"{func.__module__}.{func.__name__}"
-            
-            # Initialize semaphore and active requests tracking for this endpoint
-            self.endpoint_semaphores[endpoint_key] = asyncio.Semaphore(max_concurrent)
-            self.active_requests[endpoint_key] = {}
-            
-            @wraps(func)
-            async def wrapper(*args, **kwargs):
-                # Extract request object from args or kwargs
-                request = next((arg for arg in args if isinstance(arg, Request)), 
-                             kwargs.get('request'))
-                
-                if not request:
-                    raise HTTPException(
-                        status_code=500,
-                        detail="Request object not found in endpoint arguments"
-                    )
-                
-                client_id = request.client.host if per_client else "global"
-                request_key = f"{endpoint_key}:{client_id}"
-                
-                # Check if client already has an active request for this endpoint
-                if per_client and client_id in self.active_requests[endpoint_key]:
-                    last_request_time = self.active_requests[endpoint_key][client_id]
-                    while time.time() - last_request_time < 1:  # 1 second cooldown
-                        asyncio.sleep(1)
-                
-                try:
-                    async with self.endpoint_semaphores[endpoint_key]:
-                        if per_client:
-                            self.active_requests[endpoint_key][client_id] = time.time()
-                        response = await func(*args, **kwargs)
-                        return response
-                finally:
-                    if per_client and client_id in self.active_requests[endpoint_key]:
-                        del self.active_requests[endpoint_key][client_id]
-            
-            return wrapper
-        return decorator
-
-# Initialize the concurrency control
-concurrency_control = EndpointConcurrencyControl()
-
-app = FastAPI(
-    # root_path="/avery",
-    docs_url=None,
-    redoc_url=None,
-    openapi_url=None,
-    title="MathQuizGen",
-)
-
+app = FastAPI() # main app
 router = APIRouter()
 
-app.mount("/static", StaticFiles(directory="static"), name="static")
-@router.on_event("shutdown")
-async def shutdown_client():
-    await http_client.aclose()
+app.add_middleware( # for autocomplete TODO add API key
+        CORSMiddleware,
+        allow_origins=["*"],  # Allow all origins (you can restrict it to specific domains)
+        allow_credentials=True,
+        allow_methods=["*"],  # Allow all HTTP methods (GET, POST, etc.)
+        allow_headers=["*"],  # Allow all headers
+    )
 
-BACKEND_URL = os.getenv("BACKEND_URL2")
+# Load environment variables from .env file
+load_dotenv()
 
-origins = [
-    BACKEND_URL,
-]
+app.add_middleware(SessionMiddleware, secret_key=os.environ.get('FASTAPI_SECRET_KEY'))
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=origins,
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+@app.on_event("startup")
+def startup_event():
+    print("Server startup: Initializing database")
+    app.mount("/mathgen/static", StaticFiles(directory="static"), name="static")
 
-app.add_middleware(SessionMiddleware, secret_key=os.environ.get('SECRET_KEY'))
+def get_browser_language(request: Request):
+    try:
+        accept_language = request.headers.get("accept-language", "en")
+        languages = accept_language.split(',')
+        for lang in languages:
+            if lang.strip().lower().startswith('ja'):
+                print(f"Browser language: {lang}")
+                return 'ja'
+            elif lang.strip().lower().startswith('en'):
+                print(f"Browser language: {lang}")
+                return 'en'
+        # If no match found, default to the first language in the list
+        primary_language = languages[0].split(';')[0].split('-')[0].lower()
+        print(f"Browser language: {primary_language}")
+    except Exception as e:
+        primary_language = 'en'  # default to English
+        print(f"Error getting browser language: {str(e)}")
+    return primary_language
 
+# Set up Jinja2 templates
 templates = Jinja2Templates(directory="templates")
 
-MAX_GENERATION = int(os.getenv("MAX_GENERATION", 5))
+LTI_URL = os.getenv("LTI_URL", "https://dev.let.media.kyoto-u.ac.jp/mathgen/lti/login")
 
-@router.route("/login", methods=["GET", "POST"])
-@concurrency_control.limit_concurrency(max_concurrent=40, per_client=True)
-async def login_form(request: Request):
-    if request.method == "POST":
-        form_data = await request.form()
-        response = await get_access_token_from_backend(form_data=models.UserLogin(**form_data))
+css = """
+h1 {
+    text-align: center;
+    display: block;
+}
+"""
+###########################
 
-        # 認証失敗ならここで返す！
-        if response.status_code != 200:
-            return templates.TemplateResponse("login_form.html", {"request": request, "error": response.json()})
+# Function to load all LTI credentials from environment variables
+def load_lti_credentials():
+    consumers = {}
+    i = 1
+    while True:
+        key = os.getenv(f'LTI_CONSUMER_KEY_{i}')
+        secret = os.getenv(f'LTI_SHARED_SECRET_{i}')
+        if not key or not secret:
+            break
+        consumers[key] = {"secret": secret}
+        i += 1
+    return consumers
 
-        # 認証成功したらtoken取り出し
-        token = models.Token(**json.loads(response.json()))
-        request.session["token"] = token.model_dump()
-        request.session["username"] = form_data["username"]
-        request.session["roles"] = "instructor" if form_data["username"] == "admin" else "student"
-        request.session["program"] = form_data.get("program", "inlab_test")
+# Load all LTI consumers at startup
+LTI_CONSUMERS = load_lti_credentials()
 
-        return RedirectResponse(url='/mathgen/ui', status_code=status.HTTP_303_SEE_OTHER)
+# LTI Request validation
+async def validate_lti_request(request: Request):
+    # First, ensure you await the form data from the request
+    form_data = await request.form()
 
-    # GETのとき
-    return templates.TemplateResponse("login_form.html", {"request": request})
+    # dictionary of consumers
+    consumers = LTI_CONSUMERS
+    print("Validating LTI request")
+    common_request_verification = False
 
-'''
-@router.route("/login", methods=["GET", "POST"])
-@concurrency_control.limit_concurrency(max_concurrent=40, per_client=True)
-async def login_form(request: Request):
-    if request.method == "POST":
-        form = await request.form()
-        username = form.get("username")
-        password = form.get("password")
+    try: 
+        # Call verify_request_common with all the necessary parameters
+        common_request_verification = verify_request_common(
+            consumers=consumers,
+            url=LTI_URL,#str(request.url),
+            method=request.method,
+            headers=dict(request.headers),
+            params=dict(form_data)  # Ensure this is a dict if not already
+        )
+        print("LTI request validation successful")
 
-        # 仮ログイン：適当なユーザー名とパスワードでも通す
-        if username and password:
-            # 仮トークンを強制発行
-            token = {"access_token": "dummy_token"}
-            request.session["token"] = token
-            request.session["username"] = username
-            request.session["roles"] = "student"
-            request.session["program"] = "inlab_test"
+    except LTIException as e:
+        print(f"LTI validation failed: {e}")
 
-            # ログイン成功したらGradioに飛ばす
-            return RedirectResponse(url='/mathgen/ui', status_code=status.HTTP_303_SEE_OTHER)
-        else:
-            # 入力なければログイン画面に戻す
-            return templates.TemplateResponse("login_form.html", {"request": request, "error": "Invalid login"})
+    return common_request_verification
 
-    # GETリクエスト時はログイン画面を表示
-    return templates.TemplateResponse("login_form.html", {"request": request})
-'''
+
+async def get_current_user(request: Request): # Dependsと関わってくる
+    #user = request.session['user']
+
+    user = request.session.get('user', {})
+
+    #print(f"### get_current_user user: {user}")
+
+    if not user:
+        #print("### get_current_user: Not authenticated")
+        print(f"Not authenticated. Request: {request}")
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    return user
+
+
+####################################### apps in separate dockers
+
+@app.exception_handler(Exception)
+async def universal_exception_handler(request: Request, exc: Exception):
+    # Log the error if needed
+    print(f"Unhandled exception in FastAPI routing: {exc} for {request}")
+
+    # Check the type of exception and handle it accordingly
+    if isinstance(exc, HTTPException):
+        status_code = exc.status_code
+    else:
+        status_code = 500  # Default to 500 for all other exceptions
     
-@router.route('/lti/login',methods=["POST"])
-@concurrency_control.limit_concurrency(max_concurrent=40, per_client=True)
-async def lti_login(request: Request):
-    valid = await validate_lti_request(request)
+    return JSONResponse(
+        status_code,
+        content={"detail": "サーバー内部でエラーが発生しました"}
+    )
+
+# Create a single client for each service to be reused
+async def get_httpx_client(base_url: str):
+    return httpx.AsyncClient(
+        base_url=base_url,
+        timeout=httpx.Timeout(30.0, connect=10.0),
+        limits=httpx.Limits(max_keepalive_connections=100, max_connections=100),
+        http2=True
+    )
+
+@app.on_event("startup")
+async def startup_event():
+    print("Server startup: Initializing HTML clients")
+
+    # Fetch URLs from environment variables
+    mathgen_saikyo_url = os.getenv("MATHGEN_SAIKYO_URL", "http://henry:7860")
+    mathgen_dcat_url = os.getenv("MATHGEN_DCAT_URL", "http://archie:7860")
+
+    app.state.mathgen_saikyo_client = await get_httpx_client(mathgen_saikyo_url)
+    app.state.mathgen_dcat_client = await get_httpx_client(mathgen_dcat_url)
+
+
+@app.on_event("shutdown")
+async def shutdown_event():
+    print("Server shutdown: Closing HTTP clients")
+    await app.state.mathgen_saikyo_client.aclose()
+    await app.state.mathgen_dcat_client.aclose()
+
+
+# Log incoming requests
+@app.middleware("http") 
+async def log_request(request: Request, call_next):
+    #logger.info(f"Incoming request: {request.method} {request.url}")
+    response = await call_next(request)
+    print(f"Request: {request.method} {request.url} - Response: {response.status_code}")
+    return response
+
+async def stream_response(response):
+    async for chunk in response.aiter_raw():
+        yield chunk
+
+async def proxy_request(client, request: Request, path: str):
+    url = httpx.URL(path=path, query=request.url.query.encode("utf-8"))
+    
+    headers = dict(request.headers)
+    headers.pop("host", None)
+
+    max_retries = 3
+    for attempt in range(max_retries):
+        try:
+            rp_req = client.build_request(
+                request.method, 
+                url,
+                headers=headers,
+                content=await request.body()
+            )
+            rp_resp = await client.send(rp_req, stream=True)
+            print(f"Proxy request to {url} completed with status {rp_resp.status_code} (attempt {attempt + 1})")
+            return StreamingResponse(
+                stream_response(rp_resp),
+                status_code=rp_resp.status_code,
+                headers=dict(rp_resp.headers)
+            )
+        except (httpx.RequestError, TimeoutError) as e:
+            print(f"Attempt {attempt + 1} failed for proxying request to {url}: {e}")      
+
+    # This line should never be reached due to the exception in the loop
+    print(f"Max retries reached for proxying request to {url}")
+    raise HTTPException(status_code=502, detail="Max retries reached")
+
+@app.api_route("/mathgen/{path:path}") # legacy path
+async def proxy_to_mathgen(request: Request, path: str, user: dict = Depends(get_current_user)):
+    return await proxy_request(app.state.tammy_saikyo_client, request, path)
+
+####### LTI #############################################################################
+
+@app.post('/mathgen/lti/login') #/mathgen/lti/login に「POST」でアクセスされた時だけ、この関数が呼ばれます。
+async def lti_launch(request: Request):
+    print(f"Validating LTI request. Request headers: {dict(request.headers)}")
+    valid = await validate_lti_request(request) #ltiリクエストをpostする
     if not valid:
         return {'error': 'Invalid LTI request'} 
-    
+
     # Extracting additional fields from the form data
     form_data = await request.form()
 
     user_id = form_data.get('user_id')
+    name_full = form_data.get('lis_person_name_full', 'Unknown User')
+    name_given = form_data.get('lis_person_name_given', '')
+    name_family = form_data.get('lis_person_name_family', '')
+    ext_user_username = form_data.get('ext_user_username', '')
+    roles = form_data.get('roles', '')
     oauth_consumer_key = form_data.get('oauth_consumer_key')
+    context_id = form_data.get('context_id')
+    context_label = form_data.get('context_label')
+    context_title = form_data.get('context_title')
+    resource_link_title = form_data.get('resource_link_title')
+    resource_link_id = form_data.get('resource_link_id')
+    email = form_data.get('lis_person_contact_email_primary', '')
+    tool_consumer_instance_guid = form_data.get('tool_consumer_instance_guid', '')
+    
+
+    # print(f"### lti_launch form_data: {form_data}")
+    # print(f"### lti_launch learning_app: {learning_app}")
 
     if user_id:
+
+        print(f"LTI launch successful for user {user_id}")
+
+        browser_language=get_browser_language(request)
         school = "School not provided"
+
         if oauth_consumer_key == "saikyo_consumer_key":
             school = "saikyo"
         elif oauth_consumer_key == "hikone_consumer_key":
             school = "hikone"
         elif oauth_consumer_key == "lms_consumer_key":
             school = "lms"
-
-        if "instructor" in form_data.get('roles', '').lower():
-            role = "instructor"
         else:
-            role = "student"
+            print(f"Unknown school for user {user_id} with key {oauth_consumer_key}")
 
-        username = form_data.get('ext_user_username')
-        user_login = models.UserLti(
-            user_id=form_data.get('user_id'),
-            username=username,
-            display_name=form_data.get('lis_person_name_full', 'Unknown User'),
-            roles=role,
-            email=form_data.get('lis_person_contact_email_primary', ''),
-            school=school,
-        )
+        school_context = f"{school}.{context_id}"
 
-        response = await get_access_token_from_backend_lti(user=user_login)
-        
-        if not hasattr(response, 'status_code'):
-            token = response
-        elif response.status_code == 400:
-            # Create user
-            response = await create_user_lti(newuser=user_login)
-            token = await get_access_token_from_backend_lti(user=user_login)
-        else:
-            response.raise_for_status()
-        
-        request.session["school"] = school
-        request.session["token"] = token.model_dump()
-        request.session["username"] = username
-        request.session["roles"] = role
-        request.session["program"] = form_data.get('custom_program', 'none')
+        # Extending user information in session including new fields
+        user_info = {
+            'user_id': user_id,
+            'full_name': name_full,
+            'given_name': name_given,
+            'family_name': name_family,
+            'username': ext_user_username,
+            'roles': roles,
+            'browser_language': browser_language,
+            'oauth_consumer_key': oauth_consumer_key,
+            'context_id': context_id,
+            'context_label': context_label, # short course name
+            'context_title': context_title, # course name
+            'resource_link_title': resource_link_title,
+            'resource_link_id': resource_link_id,
+            'email': email,
+            'tool_consumer_instance_guid': tool_consumer_instance_guid,
+            'school': school,
+            'school_context': school_context
+        }
+        print(f"Successful LTI login: {user_info}")
+        request.session['user'] = user_info
+
+
         return RedirectResponse(url='/mathgen/ui', status_code=status.HTTP_303_SEE_OTHER)
-
-    raise HTTPException(status_code=500, detail="Failed to login")
-
-@router.route('/logout')
-@concurrency_control.limit_concurrency(max_concurrent=40, per_client=True)
-async def logout(request: Request):
-
-    school = request.session.pop('school', None)
-
-    token = request.session.pop('token', None)
-
-    username = request.session.pop('username', None)
-
-    program = request.session.pop('program', None)
-
-    role = request.session.pop('roles', None)
-
-    if school == "saikyo":
-        return RedirectResponse(url='https://sk.let.media.kyoto-u.ac.jp')
-    elif school == "hikone":
-        return RedirectResponse(url='https://leaf02.uchida.co.jp/moodle/')
-    elif school == "lms":
-        return RedirectResponse(url='https://lms.let.media.kyoto-u.ac.jp/moodle/')
-    else:
-        return RedirectResponse(url='/mathgen/login')
-
-@router.post("/token")
-def token(request: Request):
-    return request.session["token"]["access_token"]
-
-@router.get("/")
-async def redirect_page(request: Request):
-    if "token" not in request.session:
-        try:
-            response = await read_leaderboard(request)
-            assert response.status_code == 401
-        except:
-            return RedirectResponse(url="/mathgen/logout", status_code=status.HTTP_303_SEE_OTHER)
-    if "leaderboard_id" in request.session:
-        request.session.pop("leaderboard_id")
-    return RedirectResponse(url="/mathgen/ui", status_code=status.HTTP_303_SEE_OTHER)
-
-@app.exception_handler(Exception)
-async def exception_handler(request: Request, exc: Exception):
-
-    return RedirectResponse(url="/mathgen/logout", status_code=status.HTTP_303_SEE_OTHER)
-
-def get_root_url(
-    request: Request, route_path: str, root_path: Optional[str] = None
-):
-    # print(f"route_path: {route_path}\nroot_path: {root_path}\nrequest: {request.url if hasattr(request, 'url') else None}")
-    root_path = root_path or request.scope.get("root_path", "")
-    return root_path
-
-@router.get('/routes')
-def get_mounted_apps():
-    routes = []
-    for route in app.routes:
-        methods = ', '.join(route.methods) if hasattr(route, 'methods') else 'No methods'
-        routes.append({"path": route.path, "name": getattr(route, 'name', 'No name'), "methods": methods})
-
-        if isinstance(route, Mount):
-                routes.append({"path": route.path, "name": route.name, "app": str(route.app), "root_path":route.root_path if hasattr(route, 'root_path') else 'No root path'})
-
-    return JSONResponse(content={"mounted_routes": routes})
+    
+    print("User ID missing in LTI request")
+    return {'error': 'User ID missing in LTI request'}
 
 @router.get("/go-to-gradio")
 async def go_to_gradio():
-    return RedirectResponse(url="/mathgen/ui")  # Gradioが動いてるポート
+    return RedirectResponse(url="/mathgen/ui")
 
 app.include_router(router, prefix="/mathgen")
 
+# GradioアプリをFastAPIにmount
 app.mount("/mathgen/ui", gradio_app)
+
+if __name__ == '__main__':
+    uvicorn.run(app, root_path="/mathgen")

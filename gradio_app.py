@@ -957,5 +957,5 @@ with gr.Blocks() as demo:
         outputs=None
     )
 
-# ASGIアプリを作る
-gradio_app = gr.routes.App.create_app(demo)
+# Gradio 5.x系なら to_mountable() でASGIアプリを取得
+gradio_app = demo.to_mountable()
