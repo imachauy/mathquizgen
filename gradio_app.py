@@ -956,6 +956,3 @@ with gr.Blocks() as demo:
         inputs=[user_state, operationname_state, session_state],
         outputs=None
     )
-
-# Gradio 5.x系なら to_mountable() でASGIアプリを取得
-gradio_app = demo.to_mountable()

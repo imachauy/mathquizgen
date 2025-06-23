@@ -15,7 +15,8 @@ from dotenv import load_dotenv
 
 
 # gradio_app.pyのASGIアプリをインポート！
-from gradio_app import gradio_app
+from gradio import mount_gradio_app
+from gradio_app import demo  # ← gradio_app.pyで定義したBlocks
 
 #general
 import os
@@ -166,11 +167,9 @@ async def startup_event():
     print("Server startup: Initializing HTML clients")
 
     # Fetch URLs from environment variables
-    mathgen_saikyo_url = os.getenv("MATHGEN_SAIKYO_URL", "http://henry:7860")
-    mathgen_dcat_url = os.getenv("MATHGEN_DCAT_URL", "http://archie:7860")
+    mathgen_url = os.getenv("MATHGEN_URL", "http://fastapi-app:7860")
 
-    app.state.mathgen_saikyo_client = await get_httpx_client(mathgen_saikyo_url)
-    app.state.mathgen_dcat_client = await get_httpx_client(mathgen_dcat_url)
+    app.state.mathgen_client = await get_httpx_client(mathgen_url)
 
 
 @app.on_event("shutdown")
@@ -183,7 +182,6 @@ async def shutdown_event():
 # Log incoming requests
 @app.middleware("http") 
 async def log_request(request: Request, call_next):
-    #logger.info(f"Incoming request: {request.method} {request.url}")
     response = await call_next(request)
     print(f"Request: {request.method} {request.url} - Response: {response.status_code}")
     return response
@@ -223,7 +221,7 @@ async def proxy_request(client, request: Request, path: str):
 
 @app.api_route("/mathgen/{path:path}") # legacy path
 async def proxy_to_mathgen(request: Request, path: str, user: dict = Depends(get_current_user)):
-    return await proxy_request(app.state.tammy_saikyo_client, request, path)
+    return await proxy_request(app.state.mathgen_client, request, path)
 
 ####### LTI #############################################################################
 
@@ -309,8 +307,7 @@ async def go_to_gradio():
 
 app.include_router(router, prefix="/mathgen")
 
-# GradioアプリをFastAPIにmount
-app.mount("/mathgen/ui", gradio_app)
+mount_gradio_app(app, demo, path="/mathgen/ui")
 
 if __name__ == '__main__':
     uvicorn.run(app, root_path="/mathgen")
