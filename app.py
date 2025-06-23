@@ -287,18 +287,18 @@ async def lti_launch(request: Request):
         request.session['user'] = user_info
 
 
-        return RedirectResponse(url='/mathgen/ui', status_code=status.HTTP_303_SEE_OTHER)
+        return RedirectResponse(url='/mathgen/ui/', status_code=status.HTTP_303_SEE_OTHER)
     
     print("[292] User ID missing in LTI request")
     return {'error': 'User ID missing in LTI request'}
 
 @router.get("/go-to-gradio")
 async def go_to_gradio():
-    return RedirectResponse(url="/mathgen/ui")
+    return RedirectResponse(url="/mathgen/ui/")
 
 app.include_router(router, prefix="/mathgen")
 
-mount_gradio_app(app, demo, path="/ui")
+mount_gradio_app(app, demo, path="/ui/")
 
 if __name__ == '__main__':
     uvicorn.run(app, root_path="/mathgen")
