@@ -43,7 +43,7 @@ app.add_middleware(SessionMiddleware, secret_key=os.environ.get('FASTAPI_SECRET_
 
 @app.on_event("startup")
 def startup_event():
-    print("Server startup: Initializing database")
+    print("[46] Server startup: Initializing database")
     app.mount("/mathgen/static", StaticFiles(directory="static"), name="static")
 
 def get_browser_language(request: Request):
@@ -52,17 +52,17 @@ def get_browser_language(request: Request):
         languages = accept_language.split(',')
         for lang in languages:
             if lang.strip().lower().startswith('ja'):
-                print(f"Browser language: {lang}")
+                print(f"[55] Browser language: {lang}")
                 return 'ja'
             elif lang.strip().lower().startswith('en'):
-                print(f"Browser language: {lang}")
+                print(f"[57] Browser language: {lang}")
                 return 'en'
         # If no match found, default to the first language in the list
         primary_language = languages[0].split(';')[0].split('-')[0].lower()
-        print(f"Browser language: {primary_language}")
+        print(f"[62] Browser language: {primary_language}")
     except Exception as e:
         primary_language = 'en'  # default to English
-        print(f"Error getting browser language: {str(e)}")
+        print(f"[65] Error getting browser language: {str(e)}")
     return primary_language
 
 # Set up Jinja2 templates
@@ -101,7 +101,7 @@ async def validate_lti_request(request: Request):
 
     # dictionary of consumers
     consumers = LTI_CONSUMERS
-    print("Validating LTI request")
+    print("[104] Validating LTI request")
     common_request_verification = False
 
     try: 
@@ -113,24 +113,19 @@ async def validate_lti_request(request: Request):
             headers=dict(request.headers),
             params=dict(form_data)  # Ensure this is a dict if not already
         )
-        print("LTI request validation successful")
+        print("[116] LTI request validation successful")
 
     except LTIException as e:
-        print(f"LTI validation failed: {e}")
+        print(f"[119] LTI validation failed: {e}")
 
     return common_request_verification
 
 
 async def get_current_user(request: Request): # Dependsと関わってくる
-    #user = request.session['user']
-
     user = request.session.get('user', {})
 
-    #print(f"### get_current_user user: {user}")
-
     if not user:
-        #print("### get_current_user: Not authenticated")
-        print(f"Not authenticated. Request: {request}")
+        print(f"[128] Not authenticated. Request: {request}")
         raise HTTPException(status_code=401, detail="Not authenticated")
     return user
 
@@ -140,7 +135,7 @@ async def get_current_user(request: Request): # Dependsと関わってくる
 @app.exception_handler(Exception)
 async def universal_exception_handler(request: Request, exc: Exception):
     # Log the error if needed
-    print(f"Unhandled exception in FastAPI routing: {exc} for {request}")
+    print(f"[138] Unhandled exception in FastAPI routing: {exc} for {request}")
 
     # Check the type of exception and handle it accordingly
     if isinstance(exc, HTTPException):
@@ -164,7 +159,7 @@ async def get_httpx_client(base_url: str):
 
 @app.on_event("startup")
 async def startup_event():
-    print("Server startup: Initializing HTML clients")
+    print("[162] Server startup: Initializing HTML clients")
 
     # Fetch URLs from environment variables
     mathgen_url = os.getenv("MATHGEN_URL", "http://fastapi-app:7860")
@@ -174,7 +169,7 @@ async def startup_event():
 
 @app.on_event("shutdown")
 async def shutdown_event():
-    print("Server shutdown: Closing HTTP clients")
+    print("[172] Server shutdown: Closing HTTP clients")
     await app.state.mathgen_saikyo_client.aclose()
     await app.state.mathgen_dcat_client.aclose()
 
@@ -183,7 +178,7 @@ async def shutdown_event():
 @app.middleware("http") 
 async def log_request(request: Request, call_next):
     response = await call_next(request)
-    print(f"Request: {request.method} {request.url} - Response: {response.status_code}")
+    print(f"[181] Request: {request.method} {request.url} - Response: {response.status_code}")
     return response
 
 async def stream_response(response):
@@ -206,17 +201,17 @@ async def proxy_request(client, request: Request, path: str):
                 content=await request.body()
             )
             rp_resp = await client.send(rp_req, stream=True)
-            print(f"Proxy request to {url} completed with status {rp_resp.status_code} (attempt {attempt + 1})")
+            print(f"[204] Proxy request to {url} completed with status {rp_resp.status_code} (attempt {attempt + 1})")
             return StreamingResponse(
                 stream_response(rp_resp),
                 status_code=rp_resp.status_code,
                 headers=dict(rp_resp.headers)
             )
         except (httpx.RequestError, TimeoutError) as e:
-            print(f"Attempt {attempt + 1} failed for proxying request to {url}: {e}")      
+            print(f"[211] Attempt {attempt + 1} failed for proxying request to {url}: {e}")      
 
     # This line should never be reached due to the exception in the loop
-    print(f"Max retries reached for proxying request to {url}")
+    print(f"[214] Max retries reached for proxying request to {url}")
     raise HTTPException(status_code=502, detail="Max retries reached")
 
 @app.api_route("/mathgen/{path:path}") # legacy path
@@ -227,7 +222,7 @@ async def proxy_to_mathgen(request: Request, path: str, user: dict = Depends(get
 
 @app.post('/mathgen/lti/login') #/mathgen/lti/login に「POST」でアクセスされた時だけ、この関数が呼ばれます。
 async def lti_launch(request: Request):
-    print(f"Validating LTI request. Request headers: {dict(request.headers)}")
+    print(f"[225] Validating LTI request. Request headers: {dict(request.headers)}")
     valid = await validate_lti_request(request) #ltiリクエストをpostする
     if not valid:
         return {'error': 'Invalid LTI request'} 
@@ -249,14 +244,10 @@ async def lti_launch(request: Request):
     resource_link_id = form_data.get('resource_link_id')
     email = form_data.get('lis_person_contact_email_primary', '')
     tool_consumer_instance_guid = form_data.get('tool_consumer_instance_guid', '')
-    
-
-    # print(f"### lti_launch form_data: {form_data}")
-    # print(f"### lti_launch learning_app: {learning_app}")
 
     if user_id:
 
-        print(f"LTI launch successful for user {user_id}")
+        print(f"[250] LTI launch successful for user {user_id}")
 
         browser_language=get_browser_language(request)
         school = "School not provided"
@@ -268,7 +259,7 @@ async def lti_launch(request: Request):
         elif oauth_consumer_key == "lms_consumer_key":
             school = "lms"
         else:
-            print(f"Unknown school for user {user_id} with key {oauth_consumer_key}")
+            print(f"[262] Unknown school for user {user_id} with key {oauth_consumer_key}")
 
         school_context = f"{school}.{context_id}"
 
@@ -292,13 +283,13 @@ async def lti_launch(request: Request):
             'school': school,
             'school_context': school_context
         }
-        print(f"Successful LTI login: {user_info}")
+        print(f"[286] Successful LTI login: {user_info}")
         request.session['user'] = user_info
 
 
         return RedirectResponse(url='/mathgen/ui', status_code=status.HTTP_303_SEE_OTHER)
     
-    print("User ID missing in LTI request")
+    print("[292] User ID missing in LTI request")
     return {'error': 'User ID missing in LTI request'}
 
 @router.get("/go-to-gradio")
