@@ -331,6 +331,15 @@ def initial_register():
     return
 
 with gr.Blocks() as demo:
+    user_state = gr.State({})  # ここにユーザー情報を保存
+
+    def show_user_info(user):
+        if not user:
+            return "（ユーザー情報なし）"
+        return f"ようこそ、{user.get('full_name', '不明なユーザー')} さん！"
+
+    user_info_output = gr.Markdown()
+    
     user_state = gr.State("imachauy")
     session_state = gr.State()
     operationname_state = gr.State()
@@ -937,6 +946,28 @@ with gr.Blocks() as demo:
 
     # ✅ 初回自動読み込み（表示直後に1回実行）
     demo.load(
+        None,
+        None,
+        user_info_output,
+        _js="""
+        async () => {
+            try {
+                const res = await fetch("/mathgen/api/session_user", {
+                  credentials: "include"
+                });
+                if (res.ok) {
+                    const user = await res.json();
+                    return [user];
+                } else {
+                    return [{}];
+                }
+            } catch (e) {
+                return [{}];
+            }
+        }
+        """,
+        outputs=user_state
+    ).then(
         fn=initial_register,
         inputs=None,
         outputs=None
@@ -956,3 +987,5 @@ with gr.Blocks() as demo:
         inputs=[user_state, operationname_state, session_state],
         outputs=None
     )
+
+    user_state.change(show_user_info, inputs=user_state, outputs=user_info_output)

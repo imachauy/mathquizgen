@@ -296,10 +296,18 @@ async def lti_launch(request: Request):
 async def go_to_gradio():
     return RedirectResponse(url="/mathgen/ui/")
 
+@app.get("/mathgen/api/session_user")
+async def get_session_user(request: Request):
+    user = request.session.get("user")
+    if user:
+        return user
+    else:
+        raise HTTPException(status_code=401, detail="Not logged in")
+
 app.include_router(router, prefix="/mathgen")
 
 # Gradio Mount（/ui以下はGradio専用にする！）
-mount_gradio_app(app, demo, path="/ui")
+mount_gradio_app(app, demo, path="/ui/", root_path="/ui")
 
 if __name__ == '__main__':
     uvicorn.run(app, root_path="/mathgen")
