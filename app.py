@@ -77,6 +77,7 @@ h1 {
 ###########################
 
 # Function to load all LTI credentials from environment variables
+max_number = os.environ.get('MAX_GENERATION')
 def load_lti_credentials():
     consumers = {}
     i = 1
@@ -87,6 +88,8 @@ def load_lti_credentials():
             break
         consumers[key] = {"secret": secret}
         i += 1
+        if i == max_number:
+            break
     return consumers
 
 # Load all LTI consumers at startup
@@ -229,57 +232,26 @@ async def lti_launch(request: Request):
     form_data = await request.form()
 
     user_id = form_data.get('user_id')
-    name_full = form_data.get('lis_person_name_full', 'Unknown User')
-    name_given = form_data.get('lis_person_name_given', '')
-    name_family = form_data.get('lis_person_name_family', '')
-    ext_user_username = form_data.get('ext_user_username', '')
-    roles = form_data.get('roles', '')
-    oauth_consumer_key = form_data.get('oauth_consumer_key')
-    context_id = form_data.get('context_id')
-    context_label = form_data.get('context_label')
-    context_title = form_data.get('context_title')
-    resource_link_title = form_data.get('resource_link_title')
-    resource_link_id = form_data.get('resource_link_id')
-    email = form_data.get('lis_person_contact_email_primary', '')
-    tool_consumer_instance_guid = form_data.get('tool_consumer_instance_guid', '')
-
+    roles = form_data.get('roles', 'unknown')
+    oauth_consumer_key = form_data.get('oauth_consumer_key', 'unknown')
+    context_id = form_data.get('context_id', 'unknown')
     if user_id:
 
         print(f"[250] LTI launch successful for user {user_id}")
 
         browser_language=get_browser_language(request)
-        school = "School not provided"
-
-        if oauth_consumer_key == "saikyo_consumer_key":
-            school = "saikyo"
-        elif oauth_consumer_key == "hikone_consumer_key":
-            school = "hikone"
-        elif oauth_consumer_key == "lms_consumer_key":
-            school = "lms"
-        else:
-            print(f"[262] Unknown school for user {user_id} with key {oauth_consumer_key}")
-
-        school_context = f"{school}.{context_id}"
+        school = "unknown"
+        if oauth_consumer_key:
+            school = oauth_consumer_key
 
         # Extending user information in session including new fields
         user_info = {
             'user_id': user_id,
-            'full_name': name_full,
-            'given_name': name_given,
-            'family_name': name_family,
-            'username': ext_user_username,
             'roles': roles,
             'browser_language': browser_language,
             'oauth_consumer_key': oauth_consumer_key,
             'context_id': context_id,
-            'context_label': context_label, # short course name
-            'context_title': context_title, # course name
-            'resource_link_title': resource_link_title,
-            'resource_link_id': resource_link_id,
-            'email': email,
-            'tool_consumer_instance_guid': tool_consumer_instance_guid,
-            'school': school,
-            'school_context': school_context
+            'school_id': school
         }
         print(f"[286] Successful LTI login: {user_info}")
         request.session['user'] = user_info

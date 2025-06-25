@@ -7,6 +7,7 @@ from dotenv import load_dotenv
 from datetime import datetime, timezone, timedelta
 from pymongo import MongoClient
 import uuid
+import json
 
 JST = timezone(timedelta(hours=9))
 
@@ -21,17 +22,44 @@ exercise_col = quiz_generator_db["exercises"]
 history_col = quiz_generator_db["history"]
 logs_col = quiz_generator_db["logs"]
 
+#quiz.json読み込み
+quiz_path = os.path.join(os.path.dirname(__file__), "static", "quiz.json")
+
+with open(quiz_path, encoding="utf-8") as f:
+    quiz_list = json.load(f)
+
+#ltiセッション情報読み込み
 def load_session_info(request: gr.Request):
     lti = request.session['user']
     return lti
 
-def handle_answer(user_id, session, contents_id, page, no, user_answer, result, evaluation, report_type, report_text):
+# openaiのapi情報
+openai_client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
+models = ["gpt-3.5-turbo", "gpt-4-turbo", "gpt-4o", "gpt-4o-mini", "o1-preview", "o1-mini", "o3-mini"]
+
+# genaiのapiを走らせる
+def gpt_exection(model, query):
+    '''
+    str: model, str: query
+    '''
+    completion = openai_client.chat.completions.create(
+        model=model,
+        messages=[
+            {
+            "role": "user", "content": query
+            }
+        ]
+    ) 
+    return completion.choices[0].message.content
+
+def handle_answer(user_id, session, contents_id, page, no, user_answer, result, evaluation, report_type, report_text, lti):
     report = {
         "report_type": report_type,
         "report_text": report_text
     }
     history_doc = {
         "user": user_id,
+        "user_role": lti["roles"],
         "contents_id": contents_id,
         "page": page,
         "no": no,
@@ -40,13 +68,16 @@ def handle_answer(user_id, session, contents_id, page, no, user_answer, result, 
         "evaluation": evaluation,
         "report": report,
         "timestamp": datetime.now(JST),
+        "school_id": lti["school_id"],
+        "course_id": lti["context_id"],
         "session_id": session
     }
     history_col.insert_one(history_doc)
     return
 
-def handle_exercise(save, no, quiz_text, standard_answer, user, exercise_creation_time, answer_creation_time, model, session, rubric=None, figure_explanation=""):
+def handle_exercise(save, no, quiz_text, standard_answer, user, exercise_creation_time, answer_creation_time, model, session, lti, rubric=None, figure_explanation=""):
     if save:
+        title = gpt_exection("gpt-4.1-nano", "以下の問題に短いタイトルをつけてください。タイトルのみを出力してください。\n{}".format(quiz_text))
         # rubricがNoneなら空にする
         rubric = rubric or {}
 
@@ -55,6 +86,7 @@ def handle_exercise(save, no, quiz_text, standard_answer, user, exercise_creatio
             "contents_id": "ai_generated",
             "page": user,
             "no": no,
+            "quiz_title": title,
             "quiz_text": quiz_text,
             "standard_answer": standard_answer,
             "figure_explanation": figure_explanation,
@@ -62,15 +94,20 @@ def handle_exercise(save, no, quiz_text, standard_answer, user, exercise_creatio
             "exercise_creation_time": exercise_creation_time,
             "answer_creation_time": answer_creation_time,
             "creation_model": model,
+            "school_id": lti["school_id"],
+            "course_id": lti["context_id"],
             "session_id": session,
             "show": True
         }
         exercise_col.insert_one(new_entry)
     return
 
-def handle_logs(user_id, operationname, session, value=None):
+def handle_logs(user_id, operationname, session, lti, value=None):
     logs_col.insert_one({
+        "school_id": lti["school_id"],
+        "course_id": lti["context_id"],
         "user": user_id,
+        "user_role": lti["roles"],
         "session_id": session,
         "timestamp": datetime.now(JST),
         "operationname": operationname,
@@ -148,21 +185,6 @@ reason = ["この問題についてはよくできています。さらに知識
           "途中までよくできています。元の問題を解くために必要なステップを確認するために、以下の問題に取り組みましょう！\n",
           "説明がところどころ間違っているようです。怪しいポイントを確認して、カンペキに解けるようになりましょう！\n",
           "ちょっと難しすぎましたね。でも大丈夫。ひとつずつ確認しましょう。\n"]
-
-openai_client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
-models = ["gpt-3.5-turbo", "gpt-4-turbo", "gpt-4o", "gpt-4o-mini", "o1-preview", "o1-mini", "o3-mini"]
-
-# 測定したい関数
-def gpt_exection(model, query):
-    completion = openai_client.chat.completions.create(
-        model=model,
-        messages=[
-            {
-            "role": "user", "content": query
-            }
-        ]
-    ) 
-    return completion.choices[0].message.content
 
 def classify_binary(binary_string, knowledge):
     if all(c == '1' for c in binary_string):  # すべて1の場合
@@ -249,8 +271,6 @@ def execute0006_ks(question, answer, knowledge, tags, model):
     end_time_all = time.time()
     elapsed_time_all = end_time_all - start_time_all
     return reason[bittype], ans, f"{elapsed_time_creation:.2f}", solver, f"{elapsed_time_solve:.2f}", f"{elapsed_time_all:.2f}"
-    # return reason[bittype] + "\n" + ans + f"\n問題生成時間: {elapsed_time_creation:.2f}秒", solver + f"\n解答生成時間: {elapsed_time_solve:.2f}秒" + f"\n(全体実行時間: {elapsed_time_all:.2f}秒)"
-    # return reason[bittype] + "\n" + "sample_question", "sample_answer"
 
 # rubricの説明を抽出する関数
 def get_main_explanations(quiz_text, quiz_text_dict):
@@ -262,54 +282,6 @@ def get_main_explanations(quiz_text, quiz_text_dict):
     return main_list
 
 def initial_register():
-    sample_problem = {
-        "contents_id": "sample_001",
-        "page": "1",
-        "no": "1",
-        "quiz_title": "二次方程式の解と係数の関係",
-        "quiz_text": "(1-1) 二次方程式x^2+(a+2)x+2a=0の2つの異なる解α,βについて,α(α-1)＋β(β-1)=12である。この時,aの値を求めなさい。",
-        "standard_answer": "[解答の過程] \\n x^2+(a+2)x+2a=0の2つの異なる解α,βは、解と係数の関係からα+β=-a-2, αβ=2aを満たす。 \\n また、α(α-1)＋β(β-1)=α^2-α+β^2-β=α^2+β^2-α-β=(α+β)^2-2αβ-(α+β)=(-a-2)^2-2 \\times 2a-(-a-2)=a^2+a+6 \\n よって、a^2+a+6=12 \\n (a-2)(a+3)=0 より、a=2, -3 \\n a=2のとき、方程式はx^2+4x+4=0 これを解くとx=-2より、異なる解α,βと矛盾するため、不適。 \\n a=-3のとき、方程式はx^2-x-6=0 これを解くとx=-2, 3 こちらは題意を満たす。 \\n よって、a=-3 \\n [最終的な解答] \\n a=-3",
-        "figure_explanation": "",
-        "rubric": {
-            "1": {
-                "main": "解と係数の関係を用いて、αβ、α＋βをaを用いて表そうとしている。",
-                "example": {
-                    "1": "「解と係数の関係」を表す言葉",
-                    "2": "α+β=-a-2, αβ=2aという式"
-                }
-            },
-            "2": {
-                "main": "α(α-1)＋β(β-1)=12を用いて、aを求める二次方程式が導出されている。",
-                "example": {
-                    "1": "式変形をして、α(α-1)＋β(β-1)=a^2+a-6",
-                    "2": "方程式を連立する"
-                }
-            },
-            "3": {
-                "main": "aの候補が導出できている。",
-                "example": {
-                    "1": "a=2, -3",
-                    "2": "aの候補を求める"
-                }
-            },
-            "4": {
-                "main": "二つのaの値が、それぞれ条件を満たすか吟味する記述がある。",
-                "example": {
-                    "1": "解の吟味をする",
-                    "2": "a=2のとき、α,βは異なる解にならず、矛盾する。",
-                    "3": "a=2のとき、方程式を解くとx=-2となり、これは重解であるから、矛盾する。",
-                    "4": "a=2のとき、方程式を解くとx=-2となるから、矛盾する。"
-                }
-            },
-            "5": {
-                "main": "a=-3と導出している。",
-                "example": {
-                    "1": "a=-3"
-                }
-            }
-        },
-        "show": True
-    }
 
     # 追加または置き換え（重複を避けたい場合）
     exercise_col.replace_one({"contents_id": "sample_001", "page": "1", "no":"1"}, sample_problem, upsert=True)
@@ -539,7 +511,7 @@ with gr.Blocks() as demo:
         outputs=[title, vanish_btn, operationname_state]
     ).then(
         fn=handle_logs,
-        inputs=[user_state, operationname_state, session_state, title],
+        inputs=[user_state, operationname_state, session_state, lti_state, title],
         outputs=None
     )
 
@@ -616,7 +588,7 @@ with gr.Blocks() as demo:
         ]
     ).then(
         fn=handle_logs,
-        inputs=[user_state, operationname_state, session_state, dropdown_state],
+        inputs=[user_state, operationname_state, session_state, lti_state, dropdown_state],
         outputs=None
     )
 
@@ -640,7 +612,7 @@ with gr.Blocks() as demo:
         outputs=[operationname_state]
     ).then(
         fn=handle_logs,
-        inputs=[user_state, operationname_state, session_state, checkbox_state],
+        inputs=[user_state, operationname_state, session_state, lti_state, checkbox_state],
         outputs=None
     )
 
@@ -688,7 +660,7 @@ with gr.Blocks() as demo:
                  student_answer]
     ).then(
         fn=handle_logs,
-        inputs=[user_state, operationname_state, session_state, checkbox_state],
+        inputs=[user_state, operationname_state, session_state, lti_state, checkbox_state],
         outputs=None
     )
 
@@ -737,7 +709,7 @@ with gr.Blocks() as demo:
                  operationname_state]
     ).then(
         fn=handle_logs,
-        inputs=[user_state, operationname_state, session_state, student_answer],
+        inputs=[user_state, operationname_state, session_state, lti_state, student_answer],
         outputs=None
     )
 
@@ -757,7 +729,7 @@ with gr.Blocks() as demo:
         outputs=[operationname_state]
     ).then(
         fn=handle_logs,
-        inputs=[user_state, operationname_state, session_state, understanding],
+        inputs=[user_state, operationname_state, session_state, lti_state, understanding],
         outputs=None
     )
 
@@ -771,7 +743,7 @@ with gr.Blocks() as demo:
         outputs=[operationname_state]
     ).then(
         fn=handle_logs,
-        inputs=[user_state, operationname_state, session_state, rating],
+        inputs=[user_state, operationname_state, session_state, lti_state, rating],
         outputs=None
     )
 
@@ -785,7 +757,7 @@ with gr.Blocks() as demo:
         outputs=[operationname_state]
     ).then(
         fn=handle_logs,
-        inputs=[user_state, operationname_state, session_state, rating],
+        inputs=[user_state, operationname_state, session_state, lti_state, rating],
         outputs=None
     )
 
@@ -799,7 +771,7 @@ with gr.Blocks() as demo:
         outputs=[operationname_state]
     ).then(
         fn=handle_logs,
-        inputs=[user_state, operationname_state, session_state, rating],
+        inputs=[user_state, operationname_state, session_state, lti_state, rating],
         outputs=None
     )
 
@@ -813,7 +785,7 @@ with gr.Blocks() as demo:
         outputs=[operationname_state]
     ).then(
         fn=handle_logs,
-        inputs=[user_state, operationname_state, session_state, rating],
+        inputs=[user_state, operationname_state, session_state, lti_state, rating],
         outputs=None
     )
 
@@ -827,7 +799,7 @@ with gr.Blocks() as demo:
         outputs=[operationname_state]
     ).then(
         fn=handle_logs,
-        inputs=[user_state, operationname_state, session_state, report_type],
+        inputs=[user_state, operationname_state, session_state, lti_state, report_type],
         outputs=None
     )
     
@@ -856,11 +828,11 @@ with gr.Blocks() as demo:
         outputs=[new_contentsid_state, new_page_state, new_no_state]
     ).then(
         fn=handle_exercise,
-        inputs=[exercise_saving_state, new_no_state, exercise_state, answer_state, user_state, exercise_creation_time_state, answer_creation_time_state, model_state, session_state],
+        inputs=[exercise_saving_state, new_no_state, exercise_state, answer_state, user_state, exercise_creation_time_state, answer_creation_time_state, model_state, session_state, lti_state],
         outputs=None
     ).then(
         fn=handle_answer,
-        inputs=[user_state, session_state, new_contentsid_state, new_page_state, new_no_state, student_answer, understanding, rating, report_type, report_text],
+        inputs=[user_state, session_state, new_contentsid_state, new_page_state, new_no_state, student_answer, understanding, rating, report_type, report_text, lti_state],
         outputs=None
     ).then(
         fn=lambda: (
@@ -870,7 +842,7 @@ with gr.Blocks() as demo:
         outputs=[operationname_state]
     ).then(
         fn=handle_logs,
-        inputs=[user_state, operationname_state, session_state, report_type],
+        inputs=[user_state, operationname_state, session_state, lti_state, report_type],
         outputs=None
     ).then(
         fn=lambda: (
@@ -939,7 +911,7 @@ with gr.Blocks() as demo:
         outputs=[operationname_state, session_state]
     ).then(
         fn=handle_logs,
-        inputs=[user_state, operationname_state, session_state],
+        inputs=[user_state, operationname_state, session_state, lti_state],
         outputs=None
     )
 
@@ -965,6 +937,6 @@ with gr.Blocks() as demo:
         outputs=[operationname_state, session_state]
     ).then(
         fn=handle_logs,
-        inputs=[user_state, operationname_state, session_state],
+        inputs=[user_state, operationname_state, session_state, lti_state],
         outputs=None
     )
