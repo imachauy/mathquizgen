@@ -21,6 +21,10 @@ exercise_col = quiz_generator_db["exercises"]
 history_col = quiz_generator_db["history"]
 logs_col = quiz_generator_db["logs"]
 
+def load_session_info(request: gr.Request):
+    lti = request.session['user']
+    return lti
+
 def handle_answer(user_id, session, contents_id, page, no, user_answer, result, evaluation, report_type, report_text):
     report = {
         "report_type": report_type,
@@ -331,12 +335,7 @@ def initial_register():
     return
 
 with gr.Blocks() as demo:
-    user_state = gr.State({})  # ここにユーザー情報を保存
-
-    def show_user_info(user):
-        if not user:
-            return "（ユーザー情報なし）"
-        return f"ようこそ、{user.get('full_name', '不明なユーザー')} さん！"
+    lti_state = gr.State()  # ここにユーザー情報を保存
 
     user_info_output = gr.Markdown()
     
@@ -946,27 +945,9 @@ with gr.Blocks() as demo:
 
     # ✅ 初回自動読み込み（表示直後に1回実行）
     demo.load(
-        None,
-        None,
-        user_info_output,
-        _js="""
-        async () => {
-            try {
-                const res = await fetch("/mathgen/api/session_user", {
-                  credentials: "include"
-                });
-                if (res.ok) {
-                    const user = await res.json();
-                    return [user];
-                } else {
-                    return [{}];
-                }
-            } catch (e) {
-                return [{}];
-            }
-        }
-        """,
-        outputs=user_state
+        fn=load_session_info,
+        inputs=None,
+        outputs=[lti_state]
     ).then(
         fn=initial_register,
         inputs=None,
@@ -987,5 +968,3 @@ with gr.Blocks() as demo:
         inputs=[user_state, operationname_state, session_state],
         outputs=None
     )
-
-    user_state.change(show_user_info, inputs=user_state, outputs=user_info_output)

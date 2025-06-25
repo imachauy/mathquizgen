@@ -1,5 +1,3 @@
-########## 勉強用 ##########
-
 #lti
 from fastapi import FastAPI, Request, HTTPException, Depends, status, APIRouter
 from fastapi.responses import HTMLResponse, JSONResponse, Response, StreamingResponse, PlainTextResponse
@@ -295,14 +293,6 @@ async def lti_launch(request: Request):
 @router.get("/go-to-gradio")
 async def go_to_gradio():
     return RedirectResponse(url="/mathgen/ui/")
-
-@app.get("/mathgen/api/session_user")
-async def get_session_user(request: Request):
-    user = request.session.get("user")
-    if user:
-        return user
-    else:
-        raise HTTPException(status_code=401, detail="Not logged in")
 
 app.include_router(router, prefix="/mathgen")
 
