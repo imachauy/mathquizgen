@@ -8,6 +8,7 @@ from datetime import datetime, timezone, timedelta
 from pymongo import MongoClient
 import uuid
 import json
+import base64
 
 JST = timezone(timedelta(hours=9))
 
@@ -17,21 +18,16 @@ load_dotenv()
 mongo_client = MongoClient(os.getenv("MONGO_URL"))
 
 # データベースとコレクションを定義
-quiz_generator_db = mongo_client["db_quiz_generator"]
-exercise_col = quiz_generator_db["exercises"]
+quiz_generator_db = mongo_client["prime"]
+exercise_col = quiz_generator_db["question_bank"]
 history_col = quiz_generator_db["history"]
 logs_col = quiz_generator_db["logs"]
-
-#quiz.json読み込み
-quiz_path = os.path.join(os.path.dirname(__file__), "static", "quiz.json")
-
-with open(quiz_path, encoding="utf-8") as f:
-    quiz_list = json.load(f)
 
 #ltiセッション情報読み込み
 def load_session_info(request: gr.Request):
     lti = request.session['user']
-    return lti
+    user = lti['user_id']
+    return lti, user
 
 # openaiのapi情報
 openai_client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
@@ -96,6 +92,7 @@ def handle_exercise(save, no, quiz_text, standard_answer, user, exercise_creatio
             "creation_model": model,
             "school_id": lti["school_id"],
             "course_id": lti["context_id"],
+            "created_user": user,
             "session_id": session,
             "show": True
         }
@@ -122,17 +119,25 @@ def reload_quiz_map_from_mongo():
     if not documents:
         return {}, {}, gr.update(choices=[], value=None)
 
-    # quiz_text_dict = quiz_text → (contentid, page, no)
+    def shorten_sessionid(sessionid, n=5):
+        s = base64.urlsafe_b64encode(sessionid.bytes)
+        return s.decode('ascii').rstrip('=')[:n]
+    
+    # quiz_text_dict = quiz_title(問題ID:{short_session_id}) → (quiz_textsession, contentid, page, no)
     quiz_text_dict = {}
 
     for doc in documents:
-        quiz_text = doc.get("quiz_text")
+        text = doc.get("quiz_text")
         contents_id = doc.get("contents_id")
         page = str(doc.get("page"))
         no = str(doc.get("no"))
+        title = doc.get("quiz_title")
+        if contents_id == "ai_generated":
+            sessionid = shorten_sessionid(doc.get("session_id"))
+            title = title + " (問題ID: {})".format(sessionid)
 
-        if quiz_text and contents_id and page and no:
-            quiz_text_dict[quiz_text] = (contents_id, page, no)
+        if title and text and contents_id and page and no:
+            quiz_text_dict[title] = (text, contents_id, page, no)
     return quiz_text_dict, gr.update(choices=list(quiz_text_dict.keys()), value=None)
 
 phrases = [
@@ -219,8 +224,7 @@ def check_if_solvable(question, knowledge, num, prev_exercise, prev_ans, model):
         $$ \\begin{}{}{} XXXX \\end{}{} $$
         [最終的な答え] \n
         $$YYYY$$
-        '''.format(question, knowledge, r"{a}", r"{b}", r"text{の値から、}", r"text{を求める}", "{array", "}l{", "}", "{array", "}")
-        print(prompt)
+        '''.format(question, knowledge, r"{a}", r"{b}", r"text{の値から、}", r"text{を求める}", "{array", "}{l", "}", "{array", "}")
     count = 0
     start_time_solve1 = time.time()
     while True:
@@ -249,7 +253,7 @@ def execute0006_ks(question, answer, knowledge, tags, model):
     以下のフォーマットで、XXXXに問題を挿入して、左揃えで答えること。
     [問題] \n
     $$ \\begin{}{}{} XXXX \\end{}{} $$
-    '''.format(knowledge, stats, r"{a}", r"{b}", r"text{の値から、}", r"text{を求める}", "{array", "}l{", "}", "{array", "}")
+    '''.format(knowledge, stats, r"{a}", r"{b}", r"text{の値から、}", r"text{を求める}", "{array", "}{l", "}", "{array", "}")
 
     count = 0
     start_time_all = time.time()
@@ -282,36 +286,26 @@ def get_main_explanations(quiz_text, quiz_text_dict):
     return main_list
 
 def initial_register():
+    #quiz.json読み込み
+    quiz_path = os.path.join(os.path.dirname(__file__), "static", "quiz.json")
 
-    # 追加または置き換え（重複を避けたい場合）
-    exercise_col.replace_one({"contents_id": "sample_001", "page": "1", "no":"1"}, sample_problem, upsert=True)
+    with open(quiz_path, encoding="utf-8") as f:
+        quiz_list = json.load(f)
 
-    sample_history = {
-        "user": "imachauy",
-        "contents_id": "sample_001",
-        "page": "1",
-        "no": "1",
-        "user_answer": "",
-        "result": "すべて自力で解けた",
-        "evaluation": "",
-        "report": {
-            "report_type": "",
-            "report_text": ""
-        },
-        "timestamp": datetime.now(JST),
-        "session_id": "sample_001"
-    }
+    for quiz in quiz_list:
+        contents_id = quiz["contents_id"]
+        page = quiz["page"]
+        no = quiz["no"]
+        school = quiz["school_id"]
+        user = quiz["created_user"]
+        # 追加または置き換え
+        exercise_col.replace_one({"contents_id": contents_id, "page": page, "no": no, "school_id": school, "created_user": user}, quiz, upsert=True)
 
-    # 登録
-    history_col.replace_one({"session_id": "sample_001"}, sample_history, upsert=True)
     return
 
 with gr.Blocks() as demo:
-    lti_state = gr.State()  # ここにユーザー情報を保存
-
-    user_info_output = gr.Markdown()
-    
-    user_state = gr.State("imachauy")
+    lti_state = gr.State()  # ここにユーザー情報を保存   
+    user_state = gr.State()
     session_state = gr.State()
     operationname_state = gr.State()
     contentsid_state = gr.State()
@@ -320,10 +314,19 @@ with gr.Blocks() as demo:
     quiz_map_state = gr.State()
     exercise_saving_state = gr.State(True)
 
+    exercise_state = gr.State()
+    exercise_creation_time_state = gr.State()
+    answer_creation_time_state = gr.State()
+    overall_creation_time_state = gr.State()
+    new_contentsid_state = gr.State()
+    new_page_state = gr.State()
+    new_no_state = gr.State()
+    model_state = gr.State("o4-mini")
+
     gr.Markdown(
         """
-        <div style="background-color: #fff2a8; padding: 24px; border-radius: 8px; text-align: center;">
-        <h1> 復 習 し M a t h </h1>
+        <div style="background-color: #fff2a8; padding: 24px; border-radius: 8px; text-align: center; color: black;">
+        <h1> $$\\mathfrak{PRIME} - AI数学塾へようこそ$$ </h1>
         </div>
         """
     )
@@ -376,7 +379,12 @@ with gr.Blocks() as demo:
     checkbox_state = gr.State()
     checkbox_all_items_state = gr.State()
     
-    gen_quiz_btn = gr.Button("復習問題を作成する（まだ押せません）", visible=True, interactive=False, variant="stop")
+    with gr.Row():  
+        with gr.Column(scale=1):    
+            gen_quiz_btn = gr.Button("選んだ問題の復習問題を作成する（まだ押せません）", visible=True, interactive=False, variant="stop")
+
+        with gr.Column(scale=1):
+            rev_quiz_btn = gr.Button("選んだ問題を復習する（まだ押せません）", visible=True, interactive=False, variant="stop")
 
     with gr.Row():
         with gr.Column(scale=1):
@@ -393,14 +401,6 @@ with gr.Blocks() as demo:
                 visible=True,
                 interactive=False
             )
-    exercise_state = gr.State()
-    exercise_creation_time_state = gr.State()
-    answer_creation_time_state = gr.State()
-    overall_creation_time_state = gr.State()
-    new_contentsid_state = gr.State()
-    new_page_state = gr.State()
-    new_no_state = gr.State()
-    model_state = gr.State("o3-mini")
 
     answer_btn = gr.Button("模範解答を表示", visible=False)
 
@@ -419,38 +419,38 @@ with gr.Blocks() as demo:
                 visible=False
             )
 
-            difficulty = gr.Radio(
-                choices=["難しかった", "ちょうどよかった", "簡単だった"],
-                label="この問題は難しかったですか？",
-                visible=False
-            )
-
-            relevance = gr.Radio(
-                choices=["関連していた", "関連していなかった"],
-                label="この問題はもとの問題と関連していましたか？",
-                visible=False
-            )
-
             fluency = gr.Radio(
-                choices=["自然だった", "不自然だった"],
+                choices=["自然だった", "不自然な箇所があった", "全体的に不自然だった"],
                 label="この問題の問題文は自然な日本語でしたか？",
                 visible=False
             )
 
+            difficulty = gr.Radio(
+                choices=["5(難しい)", "4", "3", "2", "1(簡単)"],
+                label="この問題はどのくらい難しかったですか？",
+                visible=False
+            )
+
+            relevance = gr.Radio(
+                choices=["5(関連していた)", "4", "3", "2", "1(関連していなかった)"],
+                label="この問題はもとの問題とどのくらい関連していましたか？",
+                visible=False
+            )
+
             rating = gr.Radio(
-                choices=["復習になった", "復習にならなかった"],
+                choices=["5(復習になった)", "4", "3", "2", "1(復習にならなかった)"],
                 label="この問題は復習の役に立ちましたか？",
                 visible=False
             )
 
             report_markdown = gr.Markdown(
-                "この問題はみんなに共有されます（あなたの名前は共有されません）。言葉でみんなに伝えたいことがあれば、以下から報告できます。",
+                "この問題について、感想・意見があれば記入してください（任意）。",
                 visible=False
             )
 
             report_type = gr.Radio(
-            choices=["模範解答が間違ってるかも？", "わからない場所がある...", "こうすればより良い問題になる", "その他"],
-            label="報告の種類を選んでください",
+            choices=["模範解答が間違ってるかも？", "わからない場所がある...", "こうすればより良い問題になる", "その他感想"],
+            label="報告のカテゴリはどれですか？",
             visible=False,
             interactive=True
             )
@@ -480,23 +480,7 @@ with gr.Blocks() as demo:
         with gr.Column(scale=1):
             report_btn = gr.Button(
                 interactive=False, 
-                value="結果を送信して、別の復習用問題を解く", 
-                variant="secondary",
-                visible=False
-            )
-        
-        with gr.Column(scale=1):
-            report_btn_1 = gr.Button(
-                interactive=False, 
-                value="結果を送信して、元の問題を解く", 
-                variant="secondary",
-                visible=False
-            )
-        
-        with gr.Column(scale=1):
-            report_btn_2 = gr.Button(
-                interactive=False, 
-                value="結果を送信して、今の問題を解き直す", 
+                value="結果を送信する", 
                 variant="secondary",
                 visible=False
             )
@@ -552,16 +536,17 @@ with gr.Blocks() as demo:
             """
         return html
 
-    def update_when_dropdown(quiz_text, quiz_text_dict, user):
-        rubric_explanations = get_main_explanations(quiz_text, quiz_text_dict)
-        contents_id, page, no = quiz_text_dict[quiz_text]
+    def update_when_dropdown(quiz_title, quiz_text_dict, user):
+        quiz_text, contents_id, page, no = quiz_text_dict[quiz_title]
+        rubric_explanations = get_main_explanations(quiz_title, quiz_text_dict)
         count, result_text = get_result_from_db(contents_id, page, no, user)
         msg = generate_status_msg(count, result_text)
 
         return (
-            gr.update(value=f"### 問題文\n{quiz_text}"),
+            gr.update(value=f'<div style="background-color: #f5f5f5;border: 1px solid #ccc;padding: 24px;border-radius: 8px;text-align: center;"> \n{quiz_text} </div>', visible=True),
             gr.update(choices=rubric_explanations, value=[], visible=True, interactive=True),
-            gr.update(interactive=True, variant="stop", value="復習問題を作成する"),
+            gr.update(interactive=True, variant="stop", value="選んだ問題の復習問題を作成する"),
+            gr.update(interactive=True, variant="stop", value="選んだ問題を復習する"),
             gr.update(visible=True, value=msg),
             quiz_text,
             "SelectedExercise",
@@ -578,6 +563,7 @@ with gr.Blocks() as demo:
             quiz_text_display, 
             checkboxes, 
             gen_quiz_btn,
+            rev_quiz_btn,
             status_msg,
             dropdown_state,
             operationname_state,
@@ -616,12 +602,12 @@ with gr.Blocks() as demo:
         outputs=None
     )
 
-    def update_when_gen_quiz_btn(quiz_text, selections, quiz_text_dict, model):
-        rubrics = get_main_explanations(quiz_text, quiz_text_dict)
+    def update_when_gen_quiz_btn(quiz_title, selections, quiz_text_dict, model):
+        rubrics = get_main_explanations(quiz_title, quiz_text_dict)
         selected = selections or []
         tags = ['_o_' if item in selected else '_x_' for item in rubrics]
 
-        contents_id, page, no = quiz_text_dict[quiz_text]
+        quiz_text, contents_id, page, no = quiz_text_dict[quiz_title]
         exercise_info = exercise_col.find_one({"contents_id": contents_id, "page": page, "no": no})
         standard_answer = exercise_info.get("standard_answer", "")
 
@@ -643,10 +629,11 @@ with gr.Blocks() as demo:
         gr.update(interactive=False),
         gr.update(interactive=False),
         gr.update(interactive=False),
+        gr.update(interactive=False),
         "SubmittedCheck"
         ),
         inputs=None,
-        outputs=[quiz_dropdown, checkboxes, gen_quiz_btn, operationname_state]
+        outputs=[quiz_dropdown, checkboxes, gen_quiz_btn, rev_quiz_btn, operationname_state]
     ).then(
         fn=update_when_gen_quiz_btn,
         inputs=[quiz_dropdown, checkboxes, quiz_map_state, model_state],
@@ -664,8 +651,49 @@ with gr.Blocks() as demo:
         outputs=None
     )
 
+    def update_when_rev_quiz_btn(quiz_title, quiz_text_dict):
+        quiz_text, contents_id, page, no = quiz_text_dict[quiz_title]
+        exercise_info = exercise_col.find_one({"contents_id": contents_id, "page": page, "no": no})
+        standard_answer = exercise_info.get("standard_answer", "")
+
+        return (
+            quiz_text, 
+            standard_answer,
+            gr.update(value=quiz_text), 
+            gr.update(visible=True, variant="primary", interactive=True),
+            gr.update(placeholder="ここに記述してください", visible=True, interactive=True, lines=10)
+        )
+
+    rev_quiz_btn.click(
+        fn=lambda: (
+        gr.update(interactive=False),
+        gr.update(interactive=False),
+        gr.update(interactive=False),
+        gr.update(interactive=False),
+        False,
+        "RevSubmittedCheck"
+        ),
+        inputs=None,
+        outputs=[quiz_dropdown, checkboxes, gen_quiz_btn, rev_quiz_btn, exercise_saving_state, operationname_state]
+    ).then(
+        fn=update_when_rev_quiz_btn,
+        inputs=[quiz_dropdown, quiz_map_state],
+        outputs=[exercise_state,
+                 answer_state, 
+                 exercise_output, 
+                 answer_btn, 
+                 student_answer]
+    ).then(
+        fn=handle_logs,
+        inputs=[user_state, operationname_state, session_state, lti_state, checkbox_state],
+        outputs=None
+    )
+
     def update_when_answer_btn(solver, answer_time, overall_time):
-        return solver + f"\n解答生成時間: {answer_time}秒" + f"\n(全体実行時間: {overall_time}秒)"
+        if answer_time:
+            return solver + f"\n解答生成時間: {answer_time}秒" + f"\n(全体実行時間: {overall_time}秒)"
+        else:
+            return solver
     
     answer_btn.click(
         fn=update_when_answer_btn,
@@ -685,8 +713,6 @@ with gr.Blocks() as demo:
         gr.update(visible=True),
         gr.update(visible=True, interactive=False),
         gr.update(visible=True, interactive=False),
-        gr.update(visible=True, interactive=False),
-        gr.update(visible=True, interactive=False),
         gr.update(visible=True),
         "AnsweredExercise"
         ),
@@ -702,8 +728,6 @@ with gr.Blocks() as demo:
                  report_text, 
                  report_markdown, 
                  report_btn, 
-                 report_btn_1, 
-                 report_btn_2, 
                  student_answer, 
                  note_mkdwn, 
                  operationname_state]
@@ -715,14 +739,14 @@ with gr.Blocks() as demo:
 
     def enable_submit(understanding_val, rating_val, difficulty_val, fluency_val, relevance_val):
         if (understanding_val is not None) and (rating_val is not None) and (difficulty_val is not None) and (fluency_val is not None) and (relevance_val is not None):
-            return gr.update(interactive=True, value="結果を送信して、別の復習用問題を解く", variant="primary"), gr.update(interactive=True, value="結果を送信して、元の問題を解く", variant="primary"), gr.update(interactive=True, value="結果を送信して、今の問題を解き直す", variant="primary")
+            return gr.update(interactive=True, value="結果を送信する", variant="primary")
         else:
-            return gr.update(interactive=False, value="結果を送信して、別の復習用問題を解く", variant="secondary"), gr.update(interactive=False, value="結果を送信して、元の問題を解く", variant="secondary"), gr.update(interactive=False, value="結果を送信して、今の問題を解き直す", variant="secondary")
+            return gr.update(interactive=False, value="結果を送信する", variant="secondary")
 
     understanding.change(
         fn=enable_submit,
         inputs=[understanding, rating, difficulty, fluency, relevance],
-        outputs=[report_btn, report_btn_1, report_btn_2]
+        outputs=[report_btn]
     ).then(
         fn=lambda: ("SelectedComprehensibility"),
         inputs=None,
@@ -736,7 +760,7 @@ with gr.Blocks() as demo:
     rating.change(
         fn=enable_submit,
         inputs=[understanding, rating, difficulty, fluency, relevance],
-        outputs=[report_btn, report_btn_1, report_btn_2]
+        outputs=[report_btn]
     ).then(
         fn=lambda: ("SelectedUsefulness"),
         inputs=None,
@@ -750,42 +774,42 @@ with gr.Blocks() as demo:
     difficulty.change(
         fn=enable_submit,
         inputs=[understanding, rating, difficulty, fluency, relevance],
-        outputs=[report_btn, report_btn_1, report_btn_2]
+        outputs=[report_btn]
     ).then(
         fn=lambda: ("SelectedDifficulty"),
         inputs=None,
         outputs=[operationname_state]
     ).then(
         fn=handle_logs,
-        inputs=[user_state, operationname_state, session_state, lti_state, rating],
+        inputs=[user_state, operationname_state, session_state, lti_state, difficulty],
         outputs=None
     )
 
     fluency.change(
         fn=enable_submit,
         inputs=[understanding, rating, difficulty, fluency, relevance],
-        outputs=[report_btn, report_btn_1, report_btn_2]
+        outputs=[report_btn]
     ).then(
         fn=lambda: ("SelectedFluency"),
         inputs=None,
         outputs=[operationname_state]
     ).then(
         fn=handle_logs,
-        inputs=[user_state, operationname_state, session_state, lti_state, rating],
+        inputs=[user_state, operationname_state, session_state, lti_state, fluency],
         outputs=None
     )
 
     relevance.change(
         fn=enable_submit,
-        inputs=[understanding, rating, difficulty, fluency, relevance],
-        outputs=[report_btn, report_btn_1, report_btn_2]
+        inputs=[understanding, rating, difficulty, fluency, lti_state, relevance],
+        outputs=[report_btn]
     ).then(
         fn=lambda: ("SelectedRelevance"),
         inputs=None,
         outputs=[operationname_state]
     ).then(
         fn=handle_logs,
-        inputs=[user_state, operationname_state, session_state, lti_state, rating],
+        inputs=[user_state, operationname_state, session_state, lti_state, relevance],
         outputs=None
     )
 
@@ -828,11 +852,11 @@ with gr.Blocks() as demo:
         outputs=[new_contentsid_state, new_page_state, new_no_state]
     ).then(
         fn=handle_exercise,
-        inputs=[exercise_saving_state, new_no_state, exercise_state, answer_state, user_state, exercise_creation_time_state, answer_creation_time_state, model_state, session_state, lti_state],
+        inputs=[exercise_saving_state, new_no_state, exercise_state, answer_state, user_state, exercise_creation_time_state, answer_creation_time_state, model_state, session_state],
         outputs=None
     ).then(
         fn=handle_answer,
-        inputs=[user_state, session_state, new_contentsid_state, new_page_state, new_no_state, student_answer, understanding, rating, report_type, report_text, lti_state],
+        inputs=[user_state, session_state, new_contentsid_state, new_page_state, new_no_state, student_answer, understanding, rating, difficulty, fluency, relevance, report_type, report_text],
         outputs=None
     ).then(
         fn=lambda: (
@@ -851,7 +875,8 @@ with gr.Blocks() as demo:
             gr.update(visible=False),
             gr.update(visible=False),
             gr.update(visible=False),
-            gr.update(visible=True, interactive=False),
+            gr.update(visible=True, interactive=False, value="選んだ問題の復習問題を作成する（まだ押せません）"),
+            gr.update(visible=True, interactive=False, value="選んだ問題を復習する（まだ押せません）"),
             gr.update(value="復習問題はここに出てきます"),
             gr.update(visible=True, interactive=False, placeholder="(まだ入力できません)", value="", lines=1),
             gr.update(visible=False, interactive=False),
@@ -865,9 +890,10 @@ with gr.Blocks() as demo:
             gr.update(visible=False, interactive=False, value=None),
             gr.update(visible=False, interactive=False, placeholder="(報告の種類を選ぶまでは書けません)", value="", lines=1),
             gr.update(visible=False, interactive=False, value="", variant="secondary"),
-            gr.update(visible=False, interactive=False, value="", variant="secondary"),
-            gr.update(visible=False, interactive=False, value="", variant="secondary"),
             gr.update(value="## " + random.choice(phrases)),
+            gr.update(value=None),
+            gr.update(value=None),
+            gr.update(value=None),
             gr.update(visible=False),
             True
         ),
@@ -879,6 +905,7 @@ with gr.Blocks() as demo:
             status_msg,
             checkboxes,
             gen_quiz_btn,
+            rev_quiz_btn,
             exercise_output,
             student_answer,
             answer_btn,
@@ -892,10 +919,11 @@ with gr.Blocks() as demo:
             report_type,
             report_text,
             report_btn,
-            report_btn_1,
-            report_btn_2,
             title,
             note_mkdwn,
+            exercise_creation_time_state, 
+            answer_creation_time_state,
+            overall_creation_time_state,
             exercise_saving_state
         ]
     ).then(
@@ -919,7 +947,7 @@ with gr.Blocks() as demo:
     demo.load(
         fn=load_session_info,
         inputs=None,
-        outputs=[lti_state]
+        outputs=[lti_state, user_state]
     ).then(
         fn=initial_register,
         inputs=None,
