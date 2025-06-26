@@ -47,7 +47,7 @@
         },
         "school_id": "C126210001533",
         "context_id": "prime",
-        "created_user": "prime",
+        "user": "prime",
         "show": true
     }
 ]

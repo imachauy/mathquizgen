@@ -9,6 +9,7 @@ from pymongo import MongoClient
 import uuid
 import json
 import base64
+import clickhouse_connect
 
 JST = timezone(timedelta(hours=9))
 
@@ -48,17 +49,24 @@ def gpt_exection(model, query):
     ) 
     return completion.choices[0].message.content
 
-def handle_answer(user_id, session, contents_id, page, no, user_answer, understanding, rating, difficulty, fluency, relevance, lti, report_type, report_text):
+def handle_answer(user_id, session, contents_id, page, no, tags, school, new_contents_id, new_page, new_no, user_answer, understanding, rating, difficulty, fluency, relevance, lti, report_type, report_text):
     report = {
         "report_type": report_type,
         "report_text": report_text
     }
-    history_doc = {
-        "user": user_id,
-        "user_role": lti["roles"],
+    previous_quiz = {
+        "school_id": school,
         "contents_id": contents_id,
         "page": page,
         "no": no,
+        "tags": tags
+    }
+    history_doc = {
+        "user": user_id,
+        "user_role": lti["roles"],
+        "contents_id": new_contents_id,
+        "page": new_page,
+        "no": new_no,
         "user_answer": user_answer,
         "understanding": understanding,
         "rating": rating,
@@ -66,6 +74,7 @@ def handle_answer(user_id, session, contents_id, page, no, user_answer, understa
         "fluency": fluency,
         "relevance": relevance,
         "report": report,
+        "previous_quiz": previous_quiz,
         "timestamp": datetime.now(JST),
         "school_id": lti["school_id"],
         "course_id": lti["context_id"],
@@ -95,7 +104,7 @@ def handle_exercise(save, no, quiz_text, standard_answer, user, exercise_creatio
             "creation_model": model,
             "school_id": lti["school_id"],
             "course_id": lti["context_id"],
-            "created_user": user,
+            "user": user,
             "session_id": session,
             "show": True
         }
@@ -116,8 +125,21 @@ def handle_logs(user_id, operationname, session, lti, value=None):
     return
 
 # ✅ MongoDBから再読み込みして State と Dropdown を更新する関数
-def reload_quiz_map_from_mongo():
-    documents = list(exercise_col.find({}))  # ← 全件取得
+def reload_quiz_map_from_mongo(lti):
+    
+    documents = list(
+        exercise_col.find({
+            "school_id": lti["school_id"],
+            "$or": [
+                {"course_id": lti["context_id"]},
+                {"course_id": "prime"}
+            ],
+            "$or": [
+                {"user": lti["user_id"]},
+                {"user": "prime"}
+            ]
+        })
+    )
 
     if not documents:
         return {}, {}, gr.update(choices=[], value=None)
@@ -136,12 +158,13 @@ def reload_quiz_map_from_mongo():
         page = str(doc.get("page"))
         no = str(doc.get("no"))
         title = doc.get("quiz_title")
+        school = doc.get("school_id")
         if contents_id == "ai_generated":
             sessionid = shorten_sessionid(doc.get("session_id"))
             title = title + " (問題ID: {})".format(sessionid)
 
-        if title and text and contents_id and page and no:
-            quiz_text_dict[title] = (text, contents_id, page, no)
+        if title and text and contents_id and page and no and school:
+            quiz_text_dict[title] = (text, contents_id, page, no, school)
     return quiz_text_dict, gr.update(choices=list(quiz_text_dict.keys()), value=None)
 
 phrases = [
@@ -160,34 +183,49 @@ phrases = [
 ]
 
 # userのこれまでのresultを入手する
-def get_result_from_db(contents_id, page, no, user):
+def get_result_from_db(school, contents_id, page, no, user, lti):
+    
+    # 該当の問題に取り組んだ数
+    num_workingquiz = 0
+
+    # BookRollのデータを取得
+    if lti["school_id"] == os.getenv("LTI_CONSUMER_KEY_1"):
+        clickhouse_client = clickhouse_connect.get_client(
+            host=os.getenv("BOOKROLL_DATABASE_HOST_1"), 
+            username=os.getenv("BOOKROLL_DATABASE_USER_1"), 
+            password=os.getenv("BOOKROLL_DATABASE_PASS_1")
+        )
+
+        brquizdata = clickhouse_client.query("SELECT actor_name_id, contents_id, description, timestamp from saikyo_new.statements_target WHERE operation_name='ANSWER_QUIZ' AND actor_name_id={} AND contents_id={};").format(str(user), contents_id)
+
+        num_workingquiz += len(brquizdata)
+    
     # MongoDBクエリ
     query = {
+        "school_id": school,
         "user": user,
         "contents_id": contents_id,
         "page": page,
         "no": no
     }
-
-    # 条件に一致する全ドキュメント取得
     matching_docs = list(history_col.find(query))
+    num_workingquiz += len(matching_docs)
 
-    if not matching_docs:
-        return 0, None  # 該当なし
+    # 該当の問題を復習した数
+    num_reviewquiz = 0
+    query = {
+        "user": user,
+        "previous_quiz":{
+            "school_id": school,
+            "contents_id": contents_id,
+            "page": page,
+            "no": no
+        }
+    }
+    matching_docs = list(history_col.find(query))
+    num_reviewquiz += len(matching_docs)
 
-    # タイムスタンプ順で最新の1件を取得
-    def parse_ts(doc):
-        ts = doc.get("timestamp")
-        if isinstance(ts, datetime):
-            return ts
-        try:
-            return datetime.fromisoformat(ts)
-        except:
-            return datetime.min
-
-    latest_doc = max(matching_docs, key=parse_ts)
-
-    return len(matching_docs), latest_doc.get("result")
+    return num_workingquiz, num_reviewquiz
 
 reason = ["この問題についてはよくできています。さらに知識を応用した問題で復習しましょう！\n",
           "最後の最後でミスをしています。最後まで気を抜かずに、しっかり解き切りましょう！\n",
@@ -282,8 +320,8 @@ def execute0006_ks(question, answer, knowledge, tags, model):
 
 # rubricの説明を抽出する関数
 def get_main_explanations(quiz_title, quiz_text_dict):
-    quiz_text, contents_id, page, no = quiz_text_dict[quiz_title]
-    exercise_info = exercise_col.find_one({"contents_id": contents_id, "page": page, "no": no})
+    quiz_text, contents_id, page, no, school = quiz_text_dict[quiz_title]
+    exercise_info = exercise_col.find_one({"school_id": school, "contents_id": contents_id, "page": page, "no": no})
     rubrics = exercise_info.get("rubric", {})
     main_list = [item["main"] for item in rubrics.values() if "main" in item]
 
@@ -301,9 +339,9 @@ def initial_register():
         page = quiz["page"]
         no = quiz["no"]
         school = quiz["school_id"]
-        user = quiz["created_user"]
+        user = quiz["user"]
         # 追加または置き換え
-        exercise_col.replace_one({"contents_id": contents_id, "page": page, "no": no, "school_id": school, "created_user": user}, quiz, upsert=True)
+        exercise_col.replace_one({"contents_id": contents_id, "page": page, "no": no, "school_id": school, "user": user}, quiz, upsert=True)
 
     return
 
@@ -325,12 +363,14 @@ with gr.Blocks() as demo:
     new_contentsid_state = gr.State()
     new_page_state = gr.State()
     new_no_state = gr.State()
+    tags_state = gr.State()
+    school_state = gr.State()
     model_state = gr.State("o4-mini")
 
     gr.Markdown(
         """
         <div style="background-color: #fff2a8; padding: 24px; border-radius: 8px; text-align: center; color: black;">
-        <h1 style="font-size: 4rem;"> $$\\mathfrak{PRIME} - \\text{AI数学塾へようこそ}$$ </h1>
+        <h1> $$\\Huge \\mathfrak{PRIME} - \\textbf{AI数学塾へようこそ}$$ </h1>
         </div>
         """
     )
@@ -503,7 +543,7 @@ with gr.Blocks() as demo:
         outputs=None
     )
 
-    def generate_status_msg(count, result_text):
+    def generate_status_msg(count_work, count_review):
         color_map = {
             "まったくわからなかった": "red",
             "解説を見てもわからなかった": "red",
@@ -513,17 +553,14 @@ with gr.Blocks() as demo:
             "正解": "green",
             "不正解": "red"
         }
-        color = color_map.get(result_text, "black")
 
-        if result_text:
+        if count_work + count_review > 0:
             html = f"""
             <div style="text-align: center;">
-                あなたは、この問題を <span style="font-weight: bold;">{count}回解きました</span> <br><br>
-                そして、最後に<br>
-                <span style="font-size: 28px; font-weight: bold; color: {color};">
-                    {result_text}
-                </span><br>
-                と答えました。<br><br>
+                <span style="font-size: 28px; font-weight: bold;">
+                あなたは <span style="color: green;">{count_work}回解き、</span> <br><br>
+                <span style="color: green;">{count_work}回 </span> 類題で復習しました。 <br><br>
+                </span>
                 <span style="font-weight: bold; color: gray;"> まずはセルフチェックをしましょう！ </span><br><br>
                 右の項目から、自分が理解している部分にチェックを入れましょう。<br>
                 一つも理解していなければ、チェックをしなくても良いです。
@@ -540,11 +577,11 @@ with gr.Blocks() as demo:
             """
         return html
 
-    def update_when_dropdown(quiz_title, quiz_text_dict, user):
+    def update_when_dropdown(quiz_title, quiz_text_dict, user, lti):
         if quiz_title:
-            quiz_text, contents_id, page, no = quiz_text_dict[quiz_title]
+            quiz_text, contents_id, page, no, school = quiz_text_dict[quiz_title]
             rubric_explanations = get_main_explanations(quiz_title, quiz_text_dict)
-            count, result_text = get_result_from_db(contents_id, page, no, user)
+            count, result_text = get_result_from_db(school, contents_id, page, no, user, lti)
             msg = generate_status_msg(count, result_text)
     
             return (
@@ -577,7 +614,7 @@ with gr.Blocks() as demo:
 
     quiz_dropdown.change(
         fn=update_when_dropdown,
-        inputs=[quiz_dropdown, quiz_map_state, user_state],
+        inputs=[quiz_dropdown, quiz_map_state, user_state, lti_state],
         outputs=[
             quiz_text_display, 
             checkboxes, 
@@ -626,11 +663,13 @@ with gr.Blocks() as demo:
         selected = selections or []
         tags = ['_o_' if item in selected else '_x_' for item in rubrics]
 
-        quiz_text, contents_id, page, no = quiz_text_dict[quiz_title]
-        exercise_info = exercise_col.find_one({"contents_id": contents_id, "page": page, "no": no})
+        quiz_text, contents_id, page, no, school = quiz_text_dict[quiz_title]
+        exercise_info = exercise_col.find_one({"school_id": school, "contents_id": contents_id, "page": page, "no": no})
         standard_answer = exercise_info.get("standard_answer", "")
 
         reason, new_exercise, exercise_creation_time, new_answer, answer_creation_time, overall_creation_time = execute0006_ks(quiz_text, standard_answer, rubrics, tags, model)
+
+        tags_for_saving = [True if item in selected else False for item in rubrics]
 
         return (
             new_exercise, 
@@ -640,7 +679,9 @@ with gr.Blocks() as demo:
             overall_creation_time, 
             gr.update(value=reason + "\n" + new_exercise + f"\n問題生成時間:" + exercise_creation_time + "秒"), 
             gr.update(visible=True, variant="primary", interactive=True),
-            gr.update(placeholder="ここに記述してください", visible=True, interactive=True, lines=10)
+            gr.update(placeholder="ここに記述してください", visible=True, interactive=True, lines=10),
+            tags_for_saving,
+            school
         )
 
     gen_quiz_btn.click(
@@ -663,7 +704,9 @@ with gr.Blocks() as demo:
                  overall_creation_time_state,
                  exercise_output, 
                  answer_btn, 
-                 student_answer]
+                 student_answer,
+                 tags_state,
+                 school_state]
     ).then(
         fn=handle_logs,
         inputs=[user_state, operationname_state, session_state, lti_state, checkbox_state],
@@ -671,8 +714,8 @@ with gr.Blocks() as demo:
     )
 
     def update_when_rev_quiz_btn(quiz_title, quiz_text_dict):
-        quiz_text, contents_id, page, no = quiz_text_dict[quiz_title]
-        exercise_info = exercise_col.find_one({"contents_id": contents_id, "page": page, "no": no})
+        quiz_text, contents_id, page, no, school = quiz_text_dict[quiz_title]
+        exercise_info = exercise_col.find_one({"school_id": school, "contents_id": contents_id, "page": page, "no": no})
         standard_answer = exercise_info.get("standard_answer", "")
 
         return (
@@ -680,7 +723,9 @@ with gr.Blocks() as demo:
             standard_answer,
             gr.update(value=quiz_text), 
             gr.update(visible=True, variant="primary", interactive=True),
-            gr.update(placeholder="ここに記述してください", visible=True, interactive=True, lines=10)
+            gr.update(placeholder="ここに記述してください", visible=True, interactive=True, lines=10),
+            [],
+            school
         )
 
     rev_quiz_btn.click(
@@ -701,7 +746,9 @@ with gr.Blocks() as demo:
                  answer_state, 
                  exercise_output, 
                  answer_btn, 
-                 student_answer]
+                 student_answer,
+                 tags_state,
+                 school_state]
     ).then(
         fn=handle_logs,
         inputs=[user_state, operationname_state, session_state, lti_state, checkbox_state],
@@ -875,7 +922,7 @@ with gr.Blocks() as demo:
         outputs=None
     ).then(
         fn=handle_answer,
-        inputs=[user_state, session_state, new_contentsid_state, new_page_state, new_no_state, student_answer, understanding, rating, difficulty, fluency, relevance, lti_state, report_type, report_text],
+        inputs=[user_state, session_state, contentsid_state, page_state, no_state, tags_state, school_state, new_contentsid_state, new_page_state, new_no_state, student_answer, understanding, rating, difficulty, fluency, relevance, lti_state, report_type, report_text],
         outputs=None
     ).then(
         fn=lambda: (
@@ -910,10 +957,12 @@ with gr.Blocks() as demo:
             gr.update(visible=False, interactive=False, placeholder="(報告の種類を選ぶまでは書けません)", value="", lines=1),
             gr.update(visible=False, interactive=False, value="", variant="secondary"),
             gr.update(value="## " + random.choice(phrases)),
-            gr.update(value=None),
-            gr.update(value=None),
-            gr.update(value=None),
             gr.update(visible=False),
+            gr.update(value=None),
+            gr.update(value=None),
+            gr.update(value=None),
+            gr.update(value=None),
+            gr.update(value=None),
             True
         ),
         inputs=None,
@@ -943,11 +992,13 @@ with gr.Blocks() as demo:
             exercise_creation_time_state, 
             answer_creation_time_state,
             overall_creation_time_state,
+            tags_state,
+            school_state,
             exercise_saving_state
         ]
     ).then(
         fn=reload_quiz_map_from_mongo,
-        inputs=None,
+        inputs=[lti_state],
         outputs=[quiz_map_state, quiz_dropdown]
     ).then(
         fn=lambda: (
@@ -973,7 +1024,7 @@ with gr.Blocks() as demo:
         outputs=None
     ).then(
         fn=reload_quiz_map_from_mongo,
-        inputs=None,
+        inputs=[lti_state],
         outputs=[quiz_map_state, quiz_dropdown]
     ).then(
         fn=lambda: (
