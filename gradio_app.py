@@ -277,8 +277,8 @@ def execute0006_ks(question, answer, knowledge, tags, model):
     return reason[bittype], ans, f"{elapsed_time_creation:.2f}", solver, f"{elapsed_time_solve:.2f}", f"{elapsed_time_all:.2f}"
 
 # rubricの説明を抽出する関数
-def get_main_explanations(quiz_text, quiz_text_dict):
-    contents_id, page, no = quiz_text_dict[quiz_text]
+def get_main_explanations(quiz_title, quiz_text_dict):
+    quiz_text, contents_id, page, no = quiz_text_dict[quiz_title]
     exercise_info = exercise_col.find_one({"contents_id": contents_id, "page": page, "no": no})
     rubrics = exercise_info.get("rubric", {})
     main_list = [item["main"] for item in rubrics.values() if "main" in item]
@@ -537,24 +537,25 @@ with gr.Blocks() as demo:
         return html
 
     def update_when_dropdown(quiz_title, quiz_text_dict, user):
-        quiz_text, contents_id, page, no = quiz_text_dict[quiz_title]
-        rubric_explanations = get_main_explanations(quiz_title, quiz_text_dict)
-        count, result_text = get_result_from_db(contents_id, page, no, user)
-        msg = generate_status_msg(count, result_text)
-
-        return (
-            gr.update(value=f'<div style="background-color: #f5f5f5;border: 1px solid #ccc;padding: 24px;border-radius: 8px;text-align: center;"> \n{quiz_text} </div>', visible=True),
-            gr.update(choices=rubric_explanations, value=[], visible=True, interactive=True),
-            gr.update(interactive=True, variant="stop", value="選んだ問題の復習問題を作成する"),
-            gr.update(interactive=True, variant="stop", value="選んだ問題を復習する"),
-            gr.update(visible=True, value=msg),
-            quiz_text,
-            "SelectedExercise",
-            rubric_explanations,
-            contents_id,
-            page,
-            no
-        )
+        if quiz_title:
+            quiz_text, contents_id, page, no = quiz_text_dict[quiz_title]
+            rubric_explanations = get_main_explanations(quiz_title, quiz_text_dict)
+            count, result_text = get_result_from_db(contents_id, page, no, user)
+            msg = generate_status_msg(count, result_text)
+    
+            return (
+                gr.update(value=f'<div style="background-color: #f5f5f5;border: 1px solid #ccc;padding: 24px;border-radius: 8px;text-align: center;"> \n{quiz_text} </div>', visible=True),
+                gr.update(choices=rubric_explanations, value=[], visible=True, interactive=True),
+                gr.update(interactive=True, variant="stop", value="選んだ問題の復習問題を作成する"),
+                gr.update(interactive=True, variant="stop", value="選んだ問題を復習する"),
+                gr.update(visible=True, value=msg),
+                quiz_text,
+                "SelectedExercise",
+                rubric_explanations,
+                contents_id,
+                page,
+                no
+            )
 
     quiz_dropdown.change(
         fn=update_when_dropdown,
