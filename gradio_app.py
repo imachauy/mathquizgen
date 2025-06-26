@@ -212,7 +212,7 @@ def get_result_from_db(school, contents_id, page, no, user, lti):
     
     # MongoDBクエリ
     query = {
-        "school_id": school,
+        "school_id": lti["school_id"],
         "user": user,
         "contents_id": contents_id,
         "page": page,
@@ -225,12 +225,10 @@ def get_result_from_db(school, contents_id, page, no, user, lti):
     num_reviewquiz = 0
     query = {
         "user": user,
-        "previous_quiz":{
-            "school_id": school,
-            "contents_id": contents_id,
-            "page": page,
-            "no": no
-        }
+        "previous_quiz.school_id": lti["school_id"],
+        "previous_quiz.contents_id": contents_id,
+        "previous_quiz.page": page,
+        "previous_quiz.no": no
     }
     matching_docs = list(history_col.find(query))
     num_reviewquiz += len(matching_docs)
@@ -936,7 +934,7 @@ with gr.Blocks() as demo:
         outputs=None
     ).then(
         fn=lambda: (
-        "ReportedtoSolveAnotherProblem"
+        "Reported"
         ),
         inputs=None,
         outputs=[operationname_state]
