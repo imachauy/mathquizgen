@@ -870,7 +870,7 @@ with gr.Blocks() as demo:
         outputs=[new_contentsid_state, new_page_state, new_no_state]
     ).then(
         fn=handle_exercise,
-        inputs=[exercise_saving_state, new_no_state, exercise_state, answer_state, user_state, exercise_creation_time_state, answer_creation_time_state, model_state, session_state],
+        inputs=[exercise_saving_state, new_no_state, exercise_state, answer_state, user_state, exercise_creation_time_state, answer_creation_time_state, model_state, session_state, lti_state],
         outputs=None
     ).then(
         fn=handle_answer,
