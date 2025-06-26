@@ -123,6 +123,7 @@ def reload_quiz_map_from_mongo():
         return {}, {}, gr.update(choices=[], value=None)
 
     def shorten_sessionid(sessionid, n=5):
+        sessionid = uuid.UUID(sessionid)
         s = base64.urlsafe_b64encode(sessionid.bytes)
         return s.decode('ascii').rstrip('=')[:n]
     
