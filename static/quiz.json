@@ -45,7 +45,7 @@
                 }
             }
         },
-        "school_id": "C126210001533",
+        "school_id": ["C126210001533", "F126110107407"],
         "context_id": "prime",
         "user": "prime",
         "show": true

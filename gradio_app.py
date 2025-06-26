@@ -196,9 +196,19 @@ def get_result_from_db(school, contents_id, page, no, user, lti):
             password=os.getenv("BOOKROLL_DATABASE_PASS_1")
         )
 
-        brquizdata = clickhouse_client.query("SELECT actor_name_id, contents_id, description, timestamp from saikyo_new.statements_target WHERE operation_name='ANSWER_QUIZ' AND actor_name_id={} AND contents_id={};").format(str(user), contents_id)
-
-        num_workingquiz += len(brquizdata)
+        sql = """
+        SELECT actor_name_id, contents_id, description, timestamp
+        FROM saikyo_new.statements_target
+        WHERE operation_name='ANSWER_QUIZ'
+        AND actor_name_id={user:String}
+        AND contents_id={contents_id:String}
+        """
+        params = {
+        "user": str(user),  # userの値をセット
+        "contents_id": str(contents_id)  # contents_idも同様に
+        }
+        brquizdata = clickhouse_client.query(sql, params)
+        num_workingquiz += len(brquizdata.result_rows)
     
     # MongoDBクエリ
     query = {
