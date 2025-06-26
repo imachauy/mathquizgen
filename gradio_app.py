@@ -48,7 +48,7 @@ def gpt_exection(model, query):
     ) 
     return completion.choices[0].message.content
 
-def handle_answer(user_id, session, contents_id, page, no, user_answer, result, evaluation, report_type, report_text, lti):
+def handle_answer(user_id, session, contents_id, page, no, user_answer, understanding, rating, difficulty, fluency, relevance, lti, report_type, report_text):
     report = {
         "report_type": report_type,
         "report_text": report_text
@@ -60,8 +60,11 @@ def handle_answer(user_id, session, contents_id, page, no, user_answer, result, 
         "page": page,
         "no": no,
         "user_answer": user_answer,
-        "result": result,
-        "evaluation": evaluation,
+        "understanding": understanding,
+        "rating": rating,
+        "difficulty": difficulty,
+        "fluency": fluency,
+        "relevance": relevance,
         "report": report,
         "timestamp": datetime.now(JST),
         "school_id": lti["school_id"],
@@ -816,7 +819,7 @@ with gr.Blocks() as demo:
 
     relevance.change(
         fn=enable_submit,
-        inputs=[understanding, rating, difficulty, fluency, lti_state, relevance],
+        inputs=[understanding, rating, difficulty, fluency, relevance],
         outputs=[report_btn]
     ).then(
         fn=lambda: ("SelectedRelevance"),
@@ -871,7 +874,7 @@ with gr.Blocks() as demo:
         outputs=None
     ).then(
         fn=handle_answer,
-        inputs=[user_state, session_state, new_contentsid_state, new_page_state, new_no_state, student_answer, understanding, rating, difficulty, fluency, relevance, report_type, report_text],
+        inputs=[user_state, session_state, new_contentsid_state, new_page_state, new_no_state, student_answer, understanding, rating, difficulty, fluency, relevance, lti_state, report_type, report_text],
         outputs=None
     ).then(
         fn=lambda: (
