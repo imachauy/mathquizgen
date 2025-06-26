@@ -4,8 +4,8 @@
         "page": "1",
         "no": "1",
         "quiz_title": "二次方程式の解と係数の関係",
-        "quiz_text": "(1-1) 二次方程式x^2+(a+2)x+2a=0の2つの異なる解α,βについて,α(α-1)＋β(β-1)=12である。この時,aの値を求めなさい。",
-        "standard_answer": "[解答の過程] \\n x^2+(a+2)x+2a=0の2つの異なる解α,βは、解と係数の関係からα+β=-a-2, αβ=2aを満たす。 \\n また、α(α-1)＋β(β-1)=α^2-α+β^2-β=α^2+β^2-α-β=(α+β)^2-2αβ-(α+β)=(-a-2)^2-2 \\times 2a-(-a-2)=a^2+a+6 \\n よって、a^2+a+6=12 \\n (a-2)(a+3)=0 より、a=2, -3 \\n a=2のとき、方程式はx^2+4x+4=0 これを解くとx=-2より、異なる解α,βと矛盾するため、不適。 \\n a=-3のとき、方程式はx^2-x-6=0 これを解くとx=-2, 3 こちらは題意を満たす。 \\n よって、a=-3 \\n [最終的な解答] \\n a=-3",
+        "quiz_text": "$$\\begin{array}{l}\\text{二次方程式 }x^2+(a+2)x+2a=0\\text{ の2つの異なる解 }\\alpha,\\beta\\text{ について,}\\\\\\alpha(\\alpha-1)+\\beta(\\beta-1)=12\\text{ である。このとき, }a\\text{ の値を求めなさい。}\\end{array}$$",
+        "standard_answer": "[解答の過程] $$\\begin{array}{l}x^2+(a+2)x+2a=0の2つの異なる解\\alpha,\\betaは、解と係数の関係から\\alpha+\\beta=-a-2、\\alpha\\beta=2aを満たす。\\\\\\alpha(\\alpha-1)+\\beta(\\beta-1)=\\alpha^2-\\alpha+\\beta^2-\\beta=\\alpha^2+\\beta^2-\\alpha-\\beta\\\\\\quad=(\\alpha+\\beta)^2-2\\alpha\\beta-(\\alpha+\\beta)\\\\\\quad=(-a-2)^2-2\\times2a-(-a-2)=a^2+a+6\\\\よって\\;a^2+a+6=12\\;\\Rightarrow\\;a^2+a-6=0\\;\\Rightarrow\\;(a-2)(a+3)=0\\;\\Rightarrow\\;a=2,-3\\\\a=2のとき\\;x^2+4x+4=0\\;\\Rightarrow\\;x=-2\\;(重解)\\;\\Rightarrow\\;異なる解と矛盾\\\\a=-3のとき\\;x^2-x-6=0\\;\\Rightarrow\\;x=-2,3\\;\\Rightarrow\\;異なる解を持つ\\\\以上より\\;a=-3\\end{array}$$[最終的な答え] $$a=-3$$",
         "figure_explanation": "",
         "rubric": {
             "1": {
