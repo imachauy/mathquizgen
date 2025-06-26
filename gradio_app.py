@@ -556,6 +556,20 @@ with gr.Blocks() as demo:
                 page,
                 no
             )
+        else:
+            return (
+                gr.update(),
+                gr.update(),
+                gr.update(),
+                gr.update(),
+                gr.update(),
+                "",
+                "SelectedExercise",
+                "",
+                "",
+                "",
+                ""
+            )
 
     quiz_dropdown.change(
         fn=update_when_dropdown,
