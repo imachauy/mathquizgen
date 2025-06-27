@@ -49,18 +49,23 @@ def gpt_exection(model, query):
     ) 
     return completion.choices[0].message.content
 
-def handle_answer(user_id, session, contents_id, page, no, tags, school, new_contents_id, new_page, new_no, user_answer, understanding, rating, difficulty, fluency, relevance, lti, report_type, report_text):
+def handle_answer(save, user_id, session, contents_id, page, no, tags, school, new_contents_id, new_page, new_no, user_answer, understanding, rating, difficulty, fluency, relevance, lti, report_type, report_text):
     report = {
         "report_type": report_type,
         "report_text": report_text
     }
-    previous_quiz = {
-        "school_id": school,
-        "contents_id": contents_id,
-        "page": page,
-        "no": no,
-        "tags": tags
-    }
+    if save:
+        previous_quiz = {
+            "school_id": school,
+            "contents_id": contents_id,
+            "page": page,
+            "no": no,
+            "tags": tags
+        }
+    else:
+        previous_quiz = {
+            ""
+        }
     history_doc = {
         "user": user_id,
         "user_role": lti["roles"],
@@ -197,17 +202,21 @@ def get_result_from_db(school, contents_id, page, no, user, lti):
         )
 
         sql = """
-        SELECT actor_name_id, contents_id, description, timestamp
+        SELECT actor_name_id, contents_id, page_no, description, timestamp
         FROM saikyo_new.statements_target
         WHERE operation_name='ANSWER_QUIZ'
         AND actor_name_id={user:String}
         AND contents_id={contents_id:String}
+        AND page_no={page:String}
         """
         params = {
         "user": str(user),  # userの値をセット
-        "contents_id": str(contents_id)  # contents_idも同様に
+        "contents_id": str(contents_id),  # contents_idも同様に
+        "page": str(page)
         }
         brquizdata = clickhouse_client.query(sql, params)
+        result = brquizdata.result_rows
+        print(result)
         num_workingquiz += len(brquizdata.result_rows)
     
     # MongoDBクエリ
@@ -930,7 +939,7 @@ with gr.Blocks() as demo:
         outputs=None
     ).then(
         fn=handle_answer,
-        inputs=[user_state, session_state, contentsid_state, page_state, no_state, tags_state, school_state, new_contentsid_state, new_page_state, new_no_state, student_answer, understanding, rating, difficulty, fluency, relevance, lti_state, report_type, report_text],
+        inputs=[exercise_saving_state, user_state, session_state, contentsid_state, page_state, no_state, tags_state, school_state, new_contentsid_state, new_page_state, new_no_state, student_answer, understanding, rating, difficulty, fluency, relevance, lti_state, report_type, report_text],
         outputs=None
     ).then(
         fn=lambda: (
