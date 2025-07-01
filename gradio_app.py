@@ -392,7 +392,7 @@ with gr.Blocks() as demo:
     gr.Markdown(
         """
         <div style="background-color: #2196f3; padding: 24px; border-radius: 8px; text-align: center; color: black;">
-        <h1> $$\\Huge \\mathfrak{PRIME} - \\textbf{AI数学塾へようこそ}$$ </h1>
+        <h1> $$\\Huge \\mathfrak{PRIME} - \\textgt{AI数学塾へようこそ！}$$ </h1>
         </div>
         """
     )
@@ -538,7 +538,7 @@ with gr.Blocks() as demo:
         with gr.Column(scale=1):
             report_btn = gr.Button(
                 interactive=False, 
-                value="結果を送信する", 
+                value="結果を送信する(まずは問題を振り返ってください！)", 
                 variant="secondary",
                 visible=False
             )
@@ -729,7 +729,7 @@ with gr.Blocks() as demo:
             exercise_creation_time,
             answer_creation_time,
             overall_creation_time, 
-            gr.update(value=reason + "\n" + new_exercise + f"\n問題生成時間:" + exercise_creation_time + "秒" + "\n### 注意：AIの生成問題には誤りを含むことがあります。"), 
+            gr.update(value=reason + "\n" + new_exercise + f"\n問題生成時間:" + exercise_creation_time + "秒" + "\n #### 右側の入力欄に解答の過程を入力するか、紙に解いて答えを出した後、模範解答を見て確認しましょう。\n### 注意：AIの生成問題には誤りを含むことがあります。"), 
             gr.update(visible=True, variant="primary", interactive=True),
             gr.update(placeholder="ここに記述してください", visible=True, interactive=True, lines=10),
             tags_for_saving,
@@ -775,7 +775,7 @@ with gr.Blocks() as demo:
         return (
             quiz_text, 
             standard_answer,
-            gr.update(value=quiz_text + "\n### 注意：AIの生成問題には誤りを含むことがあります。"), 
+            gr.update(value=quiz_text + "\n #### 右側の入力欄に解答の過程を入力するか、紙に解いて答えを出した後、模範解答を見て確認しましょう。\n### 注意：AIの生成問題には誤りを含むことがあります。"), 
             gr.update(visible=True, variant="primary", interactive=True),
             gr.update(placeholder="ここに記述してください", visible=True, interactive=True, lines=10),
             [],
