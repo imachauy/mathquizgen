@@ -386,7 +386,7 @@ with gr.Blocks() as demo:
 
     gr.Markdown(
         """
-        <div style="background-color: #fff2a8; padding: 24px; border-radius: 8px; text-align: center; color: black;">
+        <div style="background-color: #2196f3; padding: 24px; border-radius: 8px; text-align: center; color: black;">
         <h1> $$\\Huge \\mathfrak{PRIME} - \\textbf{AI数学塾へようこそ}$$ </h1>
         </div>
         """
@@ -575,8 +575,8 @@ with gr.Blocks() as demo:
             html = f"""
             <div style="text-align: center;">
                 <span style="font-size: 28px; font-weight: bold;">
-                あなたは <span style="color: green;">{count_work}回解き、</span> <br><br>
-                <span style="color: green;">{count_work}回 </span> 類題で復習しました。 <br><br>
+                あなたは <span style="color: #00c853;">{count_work}回</span>解き、 <br><br>
+                <span style="color: #00c853;">{count_work}回 </span> 類題で復習しました。 <br><br>
                 </span>
                 <span style="font-weight: bold; color: gray;"> まずはセルフチェックをしましょう！ </span><br><br>
                 右の項目から、自分が理解している部分にチェックを入れましょう。<br>
@@ -600,20 +600,34 @@ with gr.Blocks() as demo:
             rubric_explanations = get_main_explanations(quiz_title, quiz_text_dict)
             count, result_text = get_result_from_db(school, contents_id, page, no, user, lti)
             msg = generate_status_msg(count, result_text)
-    
-            return (
-                gr.update(value=f'<div style="background-color: #f5f5f5;border: 1px solid #ccc;padding: 24px;border-radius: 8px;text-align: center;"> \n{quiz_text} </div>', visible=True),
-                gr.update(choices=rubric_explanations, value=[], visible=True, interactive=True),
-                gr.update(interactive=True, variant="stop", value="選んだ問題の復習問題を作成する"),
-                gr.update(interactive=True, variant="stop", value="選んだ問題を復習する"),
-                gr.update(visible=True, value=msg),
-                quiz_text,
-                "SelectedExercise",
-                rubric_explanations,
-                contents_id,
-                page,
-                no
-            )
+            if len(rubric_explanations) > 0:
+                return (
+                    gr.update(value=f'<div style="text-align: center;"><h1> あなたが選んだ問題 </h1></div><div style="border: 3px solid #2196f3;padding: 24px;border-radius: 8px;text-align: center;"> \n{quiz_text} </div>', visible=True),
+                    gr.update(choices=rubric_explanations, value=[], visible=True, interactive=True),
+                    gr.update(interactive=True, variant="stop", value="選んだ問題の復習問題を作成する"),
+                    gr.update(interactive=True, variant="stop", value="選んだ問題を復習する"),
+                    gr.update(visible=True, value=msg),
+                    quiz_text,
+                    "SelectedExercise",
+                    rubric_explanations,
+                    contents_id,
+                    page,
+                    no
+                )
+            else:
+                return (
+                    gr.update(value=f'<div style="text-align: center;"><h1> あなたが選んだ問題 </h1></div><div style="border: 3px solid #2196f3;padding: 24px;border-radius: 8px;text-align: center;"> \n{quiz_text} </div>', visible=True),
+                    gr.update(choices=rubric_explanations, value=[], visible=True, interactive=True),
+                    gr.update(interactive=False, variant="stop", value="選んだ問題の復習問題を作成する"),
+                    gr.update(interactive=True, variant="stop", value="選んだ問題を復習する"),
+                    gr.update(visible=True, value=msg),
+                    quiz_text,
+                    "SelectedExercise",
+                    rubric_explanations,
+                    contents_id,
+                    page,
+                    no
+                )
         else:
             return (
                 gr.update(),
@@ -1055,3 +1069,5 @@ with gr.Blocks() as demo:
         inputs=[user_state, operationname_state, session_state, lti_state],
         outputs=None
     )
+
+demo.queue()
