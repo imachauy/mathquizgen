@@ -576,7 +576,7 @@ with gr.Blocks() as demo:
             <div style="text-align: center;">
                 <span style="font-size: 28px; font-weight: bold;">
                 あなたは <span style="color: #00c853;">{count_work}回</span>解き、 <br><br>
-                <span style="color: #00c853;">{count_work}回 </span> 類題で復習しました。 <br><br>
+                <span style="color: #00c853;">{count_review}回 </span> 類題で復習しました。 <br><br>
                 </span>
                 <span style="font-weight: bold; color: gray;"> まずはセルフチェックをしましょう！ </span><br><br>
                 右の項目から、自分が理解している部分にチェックを入れましょう。<br>
