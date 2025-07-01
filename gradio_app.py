@@ -183,7 +183,13 @@ phrases = [
     "ステップアップの数式は、君の中にありMath！",
     "失敗しても大丈夫、それも経験値に変えMath！",
     "つまずいた数だけ、君は強くなりMath！",
-    "どんな問題も、君なら解けMath！"
+    "どんな問題も、君なら解けMath！",
+    "苦手だって、向き合えば得意に変わりMath！",
+    "一歩ずつ前に進めば、ゴールに近づきMath！",
+    "何度でも挑戦できる、それが君の強さでありMath！",
+    "考え抜いた先に、答えが待っていMath！",
+    "答えだけじゃない、プロセスも大事にしMath！",
+    "確実に力になっていMath！"
 ]
 
 # userのこれまでのresultを入手する
@@ -392,12 +398,12 @@ with gr.Blocks() as demo:
     )
     
     report_result = gr.Markdown(
-        "## 正常に送信されました！ 次も...！",
+        "### 正常に送信されました！",
         visible=False
     )
     
     with gr.Row():
-        with gr.Column(scale=5): 
+        with gr.Column(scale=3): 
             title = gr.Markdown(
                 "## " + random.choice(phrases),
                 visible=True
@@ -405,7 +411,7 @@ with gr.Blocks() as demo:
 
         with gr.Column(scale=1): 
             vanish_btn = gr.Button(
-                value="メッセージを消す",
+                value="応援メッセージを消す",
                 visible=True,
                 interactive=True,
                 variant="secondary"
@@ -501,12 +507,12 @@ with gr.Blocks() as demo:
 
             rating = gr.Radio(
                 choices=["5(復習になった)", "4", "3", "2", "1(復習にならなかった)"],
-                label="この問題は復習の役に立ちましたか？",
+                label="この問題はどのぐらい復習の役に立ちましたか（みんなにオススメしたいですか）？",
                 visible=False
             )
 
             report_markdown = gr.Markdown(
-                "この問題について、感想・意見があれば記入してください（任意）。",
+                "この問題について、感想や意見を自由に書いてみよう（任意）。",
                 visible=False
             )
 
@@ -567,7 +573,7 @@ with gr.Blocks() as demo:
                 html = f"""
                 <div style="text-align: center;">
                     <span style="font-size: 28px; font-weight: bold;">
-                    あなたはこの問題を <span style="color: #00c853;">{count_work}回</span> 解き、
+                    あなたはこの問題を <span style="color: #00c853;">{count_work}回</span> 解き、<br>
                     <span style="color: #00c853;">{count_review}回 </span> 類題で復習しました。 <br>
                     </span>
                     <span style="font-weight: bold; color: #2196f3;"> <h3>まずはセルフチェックをしましょう！</h3></span><br>
@@ -580,8 +586,7 @@ with gr.Blocks() as demo:
                 html = f"""
                 <div style="text-align: center;">
                     <span style="font-size: 28px; font-weight: bold;">
-                    あなたはこの問題を <span style="color: #00c853;">{count_work}回</span> 解き、
-                    <span style="color: #00c853;">{count_review}回 </span> 類題で復習しました。 <br>
+                    あなたはこの問題を <span style="color: #00c853;">{count_work}回</span> 解きました。 <br>
                     </span>
                     <span style="font-weight: bold; color: #2196f3;"> <h3>問題を復習しましょう！</h3></span><br>
                 </div>
@@ -737,11 +742,12 @@ with gr.Blocks() as demo:
         gr.update(interactive=False),
         gr.update(interactive=False),
         gr.update(interactive=False),
-        gr.update("## 復習に最適な問題と解答を作成中..."),
+        gr.update(interactive=False),
+        gr.update(value="## 復習に最適な問題と解答を作成中..."),
         "SubmittedCheck"
         ),
         inputs=None,
-        outputs=[quiz_dropdown, checkboxes, gen_quiz_btn, rev_quiz_btn, exercise_output, operationname_state]
+        outputs=[vanish_btn, quiz_dropdown, checkboxes, gen_quiz_btn, rev_quiz_btn, exercise_output, operationname_state]
     ).then(
         fn=update_when_gen_quiz_btn,
         inputs=[quiz_dropdown, checkboxes, quiz_map_state, model_state],
@@ -769,7 +775,7 @@ with gr.Blocks() as demo:
         return (
             quiz_text, 
             standard_answer,
-            gr.update(value=quiz_text), 
+            gr.update(value=quiz_text + "\n### 注意：AIの生成問題には誤りを含むことがあります。"), 
             gr.update(visible=True, variant="primary", interactive=True),
             gr.update(placeholder="ここに記述してください", visible=True, interactive=True, lines=10),
             [],
@@ -782,11 +788,12 @@ with gr.Blocks() as demo:
         gr.update(interactive=False),
         gr.update(interactive=False),
         gr.update(interactive=False),
+        gr.update(interactive=False),
         False,
         "RevSubmittedCheck"
         ),
         inputs=None,
-        outputs=[quiz_dropdown, checkboxes, gen_quiz_btn, rev_quiz_btn, exercise_saving_state, operationname_state]
+        outputs=[vanish_btn, quiz_dropdown, checkboxes, gen_quiz_btn, rev_quiz_btn, exercise_saving_state, operationname_state]
     ).then(
         fn=update_when_rev_quiz_btn,
         inputs=[quiz_dropdown, quiz_map_state],
@@ -805,9 +812,9 @@ with gr.Blocks() as demo:
 
     def update_when_answer_btn(solver, answer_time, overall_time):
         if answer_time:
-            return solver + f"\n解答生成時間: {answer_time}秒" + f"\n(全体実行時間: {overall_time}秒)" + "\n### 注意：AIの生成問題には誤りを含むことがあります。"
+            return solver + f"\n解答生成時間: {answer_time}秒" + f"\n(全体実行時間: {overall_time}秒)" + "\n### 注意：AIの生成した解答には誤りを含むことがあります。"
         else:
-            return solver
+            return solver + "\n### 注意：AIの生成した解答には誤りを含むことがあります。"
     
     answer_btn.click(
         fn=update_when_answer_btn,
@@ -855,7 +862,7 @@ with gr.Blocks() as demo:
         if (understanding_val is not None) and (rating_val is not None) and (difficulty_val is not None) and (fluency_val is not None) and (relevance_val is not None):
             return gr.update(interactive=True, value="結果を送信する", variant="primary")
         else:
-            return gr.update(interactive=False, value="結果を送信する(まずは生成問題を評価してください！)", variant="secondary")
+            return gr.update(interactive=False, value="結果を送信する(まずは問題を振り返ってください！)", variant="secondary")
 
     understanding.change(
         fn=enable_submit,
@@ -984,6 +991,7 @@ with gr.Blocks() as demo:
         outputs=None
     ).then(
         fn=lambda: (
+            gr.update(interactive=True),
             gr.update(visible=True),
             gr.update(visible=True, interactive=True, value=None),
             gr.update(visible=False),
@@ -1003,7 +1011,7 @@ with gr.Blocks() as demo:
             gr.update(visible=False),
             gr.update(visible=False, interactive=False, value=None),
             gr.update(visible=False, interactive=False, placeholder="(報告の種類を選ぶまでは書けません)", value="", lines=1),
-            gr.update(visible=False, interactive=False, value="", variant="secondary"),
+            gr.update(visible=False, interactive=False, value="結果を送信する(まずは問題を振り返ってください！)", variant="secondary"),
             gr.update(value="## " + random.choice(phrases)),
             gr.update(visible=False),
             gr.update(value=None),
@@ -1015,6 +1023,7 @@ with gr.Blocks() as demo:
         ),
         inputs=None,
         outputs=[
+            vanish_btn,
             report_result,
             quiz_dropdown,
             quiz_text_display,
