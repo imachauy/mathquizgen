@@ -346,7 +346,8 @@ def get_main_explanations(quiz_title, quiz_text_dict):
     exercise_info = exercise_col.find_one({"school_id": school, "contents_id": contents_id, "page": page, "no": no})
     rubrics = exercise_info.get("rubric", {})
     main_list = [item["main"] for item in rubrics.values() if "main" in item]
-
+    if len(main_list) > 0:
+        main_list.append("上記の項目について、ひとつも理解できなかった")
     return main_list
 
 def initial_register():
@@ -445,9 +446,11 @@ with gr.Blocks() as demo:
     status_msg_state = gr.State()
     checkbox_state = gr.State()
     checkbox_all_items_state = gr.State()
+    current_checkbox_state = gr.State([])
     check_flaw_state = gr.State()
     new_checkbox_all_items_state = gr.State()
     new_checkbox_state = gr.State()
+    new_current_checkbox_state = gr.State([])
     
     with gr.Row():  
         with gr.Column(scale=1):    
@@ -760,18 +763,27 @@ with gr.Blocks() as demo:
         outputs=None
     )
 
-    def update_when_checkboxes(all_items, selected):
+    def update_when_checkboxes(all_items, selected, current_status):
+        #checkboxのチェックの変更
+        current_select = list(set(selected) ^ set(current_status))
+        # 上記の項目について、ひとつも理解できなかった を選択した
+        if len(selected) > len(current_status):
+            if current_select[0] == "上記の項目について、ひとつも理解できなかった":
+                updated_status = ["上記の項目について、ひとつも理解できなかった"]
+            else:
+                updated_status = [x for x in selected if x != "上記の項目について、ひとつも理解できなかった"]
+        
         # 選択結果を "o" / "x" で辞書化
         result = {
-            choice: "o" if choice in selected else "x"
+            choice: "o" if choice in updated_status else "x"
             for choice in all_items
         }
-        return result
+        return result, updated_status, gr.update(choices=updated_status)
     
     checkboxes.change(
         fn=update_when_checkboxes,
-        inputs=[checkbox_all_items_state, checkboxes],
-        outputs=checkbox_state
+        inputs=[checkbox_all_items_state, checkboxes, current_checkbox_state],
+        outputs=[checkbox_state, current_checkbox_state, checkboxes]
     ).then(
         fn=lambda: (
         "SelectedRubricStatus"
@@ -1024,8 +1036,8 @@ with gr.Blocks() as demo:
 
     new_checkboxes.change(
         fn=update_when_checkboxes,
-        inputs=[new_checkbox_all_items_state, new_checkboxes],
-        outputs=new_checkbox_state
+        inputs=[new_checkbox_all_items_state, new_checkboxes, new_current_checkbox_state],
+        outputs=[new_checkbox_state, new_current_checkbox_state, new_checkboxes]
     ).then(
         fn=lambda: (
         "SelectedNewRubricStatus"
@@ -1192,6 +1204,10 @@ with gr.Blocks() as demo:
             gr.update(visible=False),
             gr.update(visible=False, show_label=False),
             gr.update(visible=False, show_label=False),
+            {},
+            [],
+            {},
+            [],
             gr.update(visible=True, interactive=False, value="選んだ問題の復習問題を作成する（まだ押せません）"),
             gr.update(visible=True, interactive=False, value="選んだ問題を復習する（まだ押せません）"),
             gr.update(value="復習問題はここに出てきます"),
@@ -1230,6 +1246,10 @@ with gr.Blocks() as demo:
             status_msg,
             checkboxes,
             new_checkboxes,
+            checkbox_state,
+            current_checkbox_state,
+            new_checkbox_state,
+            new_current_checkbox_state,
             gen_quiz_btn,
             rev_quiz_btn,
             exercise_output,
