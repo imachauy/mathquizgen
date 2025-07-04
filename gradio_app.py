@@ -410,7 +410,7 @@ with gr.Blocks() as demo:
                 visible=True
             )
 
-        with gr.Column(scale=1): 
+        with gr.Column(scale=2): 
             vanish_btn = gr.Button(
                 value="応援メッセージを消す",
                 visible=True,
@@ -475,14 +475,14 @@ with gr.Blocks() as demo:
     answer_btn = gr.Button("模範解答を表示", visible=False)
 
     with gr.Row():
-        with gr.Column(scale=5):
+        with gr.Column(scale=3):
             answer_output = gr.Markdown(
                 "",
                 visible=False
             )
         answer_state = gr.State()
 
-        with gr.Column(scale=3):
+        with gr.Column(scale=2):
             note_mkdwn = gr.Markdown("### 解いた問題を振り返ろう", visible=False)
 
             understanding = gr.Radio(
