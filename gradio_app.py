@@ -165,11 +165,11 @@ def reload_quiz_map_from_mongo(lti):
         school = doc.get("school_id")
         if contents_id == "ai_generated":
             sessionid = shorten_sessionid(doc.get("session_id"))
-            title = title + " (問題ID: {})".format(sessionid)
-
+            title = "類題" + f"{int(no):04d}: " + title + " (問題ID:{})".format(sessionid)
+        
         if title and text and contents_id and page and no and school:
             quiz_text_dict[title] = (text, contents_id, page, no, school)
-    return quiz_text_dict, gr.update(choices=list(quiz_text_dict.keys()), value=None)
+    return quiz_text_dict, gr.update(choices=sorted(quiz_text_dict.keys()), value=None)
 
 phrases = [
     "がんばるでありMath！",
@@ -252,7 +252,7 @@ def get_result_from_db(school, contents_id, page, no, user, lti):
 reason = ["この問題についてはよくできています。さらに知識を応用した問題で復習しましょう！\n",
           "最後の最後でミスをしています。最後まで気を抜かずに、しっかり解き切りましょう！\n",
           "途中までよくできています。元の問題を解くために必要なステップを確認するために、以下の問題に取り組みましょう！\n",
-          "説明がところどころ間違っているようです。怪しいポイントを確認して、カンペキに解けるようになりましょう！\n",
+          "ところどころ間違っているようです。怪しいポイントを確認して、カンペキに解けるようになりましょう！\n",
           "ちょっと難しすぎましたね。でも大丈夫。ひとつずつ確認しましょう。\n"]
 
 def classify_binary(binary_string, knowledge):
@@ -388,11 +388,12 @@ with gr.Blocks() as demo:
     tags_state = gr.State()
     school_state = gr.State()
     model_state = gr.State("o4-mini")
+    gen_state = gr.State()
 
     gr.Markdown(
         """
         <div style="background-color: #2196f3; padding: 24px; border-radius: 8px; text-align: center; color: black;">
-        <h1> $$\\Huge \\mathfrak{PRIME} - \\textgt{AI数学塾へようこそ！}$$ </h1>
+        <h1> $$\\Huge \\mathfrak{PRIME} - \\textsf{AI数学塾へようこそ！}$$ </h1>
         </div>
         """
     )
@@ -420,7 +421,7 @@ with gr.Blocks() as demo:
 
     quiz_dropdown = gr.Dropdown(
         choices=[],
-        label="問題を選んでください",
+        label="まずは、復習する問題を選んでください",
         value=None
     )
     dropdown_state = gr.State()
@@ -444,13 +445,16 @@ with gr.Blocks() as demo:
     status_msg_state = gr.State()
     checkbox_state = gr.State()
     checkbox_all_items_state = gr.State()
+    check_flaw_state = gr.State()
+    new_checkbox_all_items_state = gr.State()
+    new_checkbox_state = gr.State()
     
     with gr.Row():  
         with gr.Column(scale=1):    
-            gen_quiz_btn = gr.Button("選んだ問題の復習問題を作成する（まだ押せません）", visible=True, interactive=False, variant="stop")
+            gen_quiz_btn = gr.Button("類題をつくる（まだ押せません）", visible=True, interactive=False, variant="stop")
 
         with gr.Column(scale=1):
-            rev_quiz_btn = gr.Button("選んだ問題を復習する（まだ押せません）", visible=True, interactive=False, variant="stop")
+            rev_quiz_btn = gr.Button("そのまま解く（まだ押せません）", visible=True, interactive=False, variant="stop")
 
     with gr.Row():
         with gr.Column(scale=1):
@@ -461,7 +465,7 @@ with gr.Blocks() as demo:
 
         with gr.Column(scale=1):
             student_answer = gr.Textbox(
-                label="生成問題の解答を書いてみよう",
+                label="左側の問題の解答を書いてみよう",
                 lines=1,
                 placeholder="(まだ入力できません)",
                 visible=True,
@@ -487,6 +491,13 @@ with gr.Blocks() as demo:
                 visible=False
             )
 
+            new_checkboxes = gr.CheckboxGroup(
+                choices=[],
+                label="いま解いた問題について、できたポイントをすべてチェックしよう。復習できましたか？", 
+                visible=False, 
+                show_label = False
+            )
+
             fluency = gr.Radio(
                 choices=["自然だった", "不自然な箇所があった", "全体的に不自然だった"],
                 label="この問題の問題文は自然な日本語でしたか？",
@@ -506,8 +517,8 @@ with gr.Blocks() as demo:
             )
 
             rating = gr.Radio(
-                choices=["5(復習になった)", "4", "3", "2", "1(復習にならなかった)"],
-                label="この問題はどのぐらい復習の役に立ちましたか（みんなにオススメしたいですか）？",
+                choices=["5(役に立った)", "4", "3", "2", "1(役に立たなかった)"],
+                label="この問題はどのぐらい復習の役に立ちましたか？",
                 visible=False
             )
 
@@ -517,7 +528,7 @@ with gr.Blocks() as demo:
             )
 
             report_type = gr.Radio(
-            choices=["模範解答が間違ってるかも？", "わからない場所がある...", "こうすればより良い問題になる", "その他感想"],
+            choices=["模範解答が間違ってるかも？", "わからない場所がある...", "こうすればより良い問題になる", "その他"],
             label="報告のカテゴリはどれですか？",
             visible=False,
             interactive=True
@@ -531,6 +542,9 @@ with gr.Blocks() as demo:
             )
         understanding_state = gr.State()
         rating_state = gr.State()
+        fluency_state = gr.State()
+        difficulty_state = gr.State()
+        relevance_state = gr.State()
         report_type_state = gr.State()
         report_text_state = gr.State()
 
@@ -557,7 +571,7 @@ with gr.Blocks() as demo:
         outputs=None
     )
 
-    def generate_status_msg(count_work, count_review, num_rubrics):
+    def generate_status_msg(count_work, count_review, num_rubrics, school):
         color_map = {
             "まったくわからなかった": "red",
             "解説を見てもわからなかった": "red",
@@ -568,6 +582,33 @@ with gr.Blocks() as demo:
             "不正解": "red"
         }
 
+        # 2025夏実証用
+        if school=="C126210001533":
+            if count_work==0:
+                html = f"""
+                <div style="text-align: center;">
+                    <span style="font-size: 22px; font-weight: bold;">
+                    あなたが解いたデータが見つかりませんでした。<br>
+                    </span>
+                    <span style="font-weight: bold; color: #2196f3;"> <h2>まずはBookRollで、該当の問題を解きましょう！</h2></span><br>
+                    <span style="font-weight: bold; color: #2196f3;"> <h3>BookRollで解かないと、下のボタンが有効になりません。<br>BookRollで解いてから、システムに入り直してください。</h3></span><br>
+                </div>
+                """
+                return html
+            elif count_review==0:
+                html = f"""
+                <div style="text-align: center;">
+                    <span style="font-size: 28px; font-weight: bold;">
+                    あなたはこの問題を <span style="color: #00c853;">{count_work}回</span> 解きました。<br>
+                    </span>
+                    <span style="font-weight: bold; color: #2196f3;"> <h3>まずはセルフチェックをしましょう！</h3></span><br>
+                    右の項目から、自分が理解している部分にチェックを入れましょう。<br>
+                    ＊わからないところだらけならチェック0個にしてみよう。<br>
+                    ＊全部わかっていたら全部にチェックを入れてみよう。より難しい問題が生成されます。<br>
+                    <span style="font-weight: bold; color: #2196f3;"> <h3>チェックを入れたら、「類題をつくる」を押してください</h3></span><br>
+                </div>
+                """
+                return html
         if count_work + count_review > 0:
             if num_rubrics > 0:
                 html = f"""
@@ -619,14 +660,47 @@ with gr.Blocks() as demo:
         if quiz_title:
             quiz_text, contents_id, page, no, school = quiz_text_dict[quiz_title]
             rubric_explanations = get_main_explanations(quiz_title, quiz_text_dict)
-            count, result_text = get_result_from_db(school, contents_id, page, no, user, lti)
-            msg = generate_status_msg(count, result_text, len(rubric_explanations))
+            count_work, count_review = get_result_from_db(school, contents_id, page, no, user, lti)
+            msg = generate_status_msg(count_work, count_review, len(rubric_explanations), lti["school_id"])
+        
+            # 2025夏実証用
+            if school=="C126210001533":
+                if count_work==0:
+                    return (
+                        gr.update(value=f'<div style="text-align: center;"><h1> あなたが選んだ問題 </h1></div><div style="border: 3px solid #2196f3;padding: 24px;border-radius: 8px;text-align: center;"> \n{quiz_text} </div>', visible=True),
+                        gr.update(choices=rubric_explanations, value=[], visible=True, interactive=True, show_label=True, label="できたポイントをチェックしよう！"),
+                        gr.update(),
+                        gr.update(),
+                        gr.update(visible=True, value=msg),
+                        quiz_text,
+                        "SelectedExercise",
+                        rubric_explanations,
+                        contents_id,
+                        page,
+                        no
+                    )
+                elif count_review==0:
+                    if len(rubric_explanations) > 0:
+                        return (
+                            gr.update(value=f'<div style="text-align: center;"><h1> あなたが選んだ問題 </h1></div><div style="border: 3px solid #2196f3;padding: 24px;border-radius: 8px;text-align: center;"> \n{quiz_text} </div>', visible=True),
+                            gr.update(choices=rubric_explanations, value=[], visible=True, interactive=True, label="できたポイントをチェックしよう！", show_label=True),
+                            gr.update(interactive=False, variant="stop", value="類題をつくる"),
+                            gr.update(interactive=True, variant="stop", value="そのまま解く(類題を解くと選べるようになります)"),
+                            gr.update(visible=True, value=msg),
+                            quiz_text,
+                            "SelectedExercise",
+                            rubric_explanations,
+                            contents_id,
+                            page,
+                            no
+                        )
+
             if len(rubric_explanations) > 0:
                 return (
                     gr.update(value=f'<div style="text-align: center;"><h1> あなたが選んだ問題 </h1></div><div style="border: 3px solid #2196f3;padding: 24px;border-radius: 8px;text-align: center;"> \n{quiz_text} </div>', visible=True),
                     gr.update(choices=rubric_explanations, value=[], visible=True, interactive=True, show_label=True, label="できたポイントをチェックしよう！"),
-                    gr.update(interactive=True, variant="stop", value="選んだ問題の復習問題を作成する"),
-                    gr.update(interactive=True, variant="stop", value="選んだ問題を復習する"),
+                    gr.update(interactive=True, variant="stop", value="類題をつくる"),
+                    gr.update(interactive=True, variant="stop", value="そのまま解く"),
                     gr.update(visible=True, value=msg),
                     quiz_text,
                     "SelectedExercise",
@@ -639,8 +713,8 @@ with gr.Blocks() as demo:
                 return (
                     gr.update(value=f'<div style="text-align: center;"><h1> あなたが選んだ問題 </h1></div><div style="border: 3px solid #2196f3;padding: 24px;border-radius: 8px;text-align: center;"> \n{quiz_text} </div>', visible=True),
                     gr.update(choices=rubric_explanations, value=[], visible=True, interactive=True, label="この問題には解答のポイントがついていません。", show_label=True),
-                    gr.update(interactive=False, variant="stop", value="(解答のポイントがない問題は復習問題を作成できません)"),
-                    gr.update(interactive=True, variant="stop", value="選んだ問題を復習する"),
+                    gr.update(interactive=False, variant="stop", value="(解答のポイントがない問題は類題をつくれません)"),
+                    gr.update(interactive=True, variant="stop", value="そのまま解く"),
                     gr.update(visible=True, value=msg),
                     quiz_text,
                     "SelectedExercise",
@@ -658,7 +732,7 @@ with gr.Blocks() as demo:
                 gr.update(),
                 "",
                 "SelectedExercise",
-                "",
+                [],
                 "",
                 "",
                 ""
@@ -710,11 +784,15 @@ with gr.Blocks() as demo:
         outputs=None
     )
 
-    def update_when_gen_quiz_btn(quiz_title, selections, quiz_text_dict, model):
+    def update_when_gen_quiz_btn(quiz_title, selections, quiz_text_dict, model, lti):
         rubrics = get_main_explanations(quiz_title, quiz_text_dict)
         selected = selections or []
         tags = ['_o_' if item in selected else '_x_' for item in rubrics]
-
+        review_point = "この問題は、元の問題の応用問題として、どのくらい役に立ちましたか(どのくらい他の人にオススメしたいですか)？"
+        for i in range(len(tags)):
+            if tags[i] == "_x_":
+                review_point = "この問題は、もとの問題の理解できていなかったポイント「{}」を復習する問題として、どのくらい役に立ちましたか(どのくらい他の人にオススメしたいですか)？".format(rubrics[i])
+                break
         quiz_text, contents_id, page, no, school = quiz_text_dict[quiz_title]
         exercise_info = exercise_col.find_one({"school_id": school, "contents_id": contents_id, "page": page, "no": no})
         standard_answer = exercise_info.get("standard_answer", "")
@@ -733,7 +811,8 @@ with gr.Blocks() as demo:
             gr.update(visible=True, variant="primary", interactive=True),
             gr.update(placeholder="ここに記述してください", visible=True, interactive=True, lines=10),
             tags_for_saving,
-            school
+            school,
+            gr.update(label=review_point)
         )
 
     gen_quiz_btn.click(
@@ -744,13 +823,14 @@ with gr.Blocks() as demo:
         gr.update(interactive=False),
         gr.update(interactive=False),
         gr.update(value="## 復習に最適な問題と解答を作成中..."),
-        "SubmittedCheck"
+        "SubmittedCheck",
+        1
         ),
         inputs=None,
-        outputs=[vanish_btn, quiz_dropdown, checkboxes, gen_quiz_btn, rev_quiz_btn, exercise_output, operationname_state]
+        outputs=[vanish_btn, quiz_dropdown, checkboxes, gen_quiz_btn, rev_quiz_btn, exercise_output, operationname_state, gen_state]
     ).then(
         fn=update_when_gen_quiz_btn,
-        inputs=[quiz_dropdown, checkboxes, quiz_map_state, model_state],
+        inputs=[quiz_dropdown, checkboxes, quiz_map_state, model_state, lti_state],
         outputs=[exercise_state, 
                  answer_state,
                  exercise_creation_time_state, 
@@ -760,7 +840,8 @@ with gr.Blocks() as demo:
                  answer_btn, 
                  student_answer,
                  tags_state,
-                 school_state]
+                 school_state,
+                 rating]
     ).then(
         fn=handle_logs,
         inputs=[user_state, operationname_state, session_state, lti_state, checkbox_state],
@@ -771,15 +852,19 @@ with gr.Blocks() as demo:
         quiz_text, contents_id, page, no, school = quiz_text_dict[quiz_title]
         exercise_info = exercise_col.find_one({"school_id": school, "contents_id": contents_id, "page": page, "no": no})
         standard_answer = exercise_info.get("standard_answer", "")
+        rubrics = get_main_explanations(quiz_title, quiz_text_dict)
+        rubrics.append("上記の項目について、ひとつも理解できなかった")
 
         return (
-            quiz_text, 
+            quiz_text,
             standard_answer,
             gr.update(value=quiz_text + "\n #### 右側の入力欄に解答の過程を入力するか、紙に解いて答えを出した後、模範解答を見て確認しましょう。\n### 注意：AIの生成問題には誤りを含むことがあります。"), 
             gr.update(visible=True, variant="primary", interactive=True),
             gr.update(placeholder="ここに記述してください", visible=True, interactive=True, lines=10),
             [],
-            school
+            school,
+            gr.update(choices=rubrics),
+            rubrics
         )
 
     rev_quiz_btn.click(
@@ -790,10 +875,11 @@ with gr.Blocks() as demo:
         gr.update(interactive=False),
         gr.update(interactive=False),
         False,
-        "RevSubmittedCheck"
+        "RevSubmittedCheck",
+        0
         ),
         inputs=None,
-        outputs=[vanish_btn, quiz_dropdown, checkboxes, gen_quiz_btn, rev_quiz_btn, exercise_saving_state, operationname_state]
+        outputs=[vanish_btn, quiz_dropdown, checkboxes, gen_quiz_btn, rev_quiz_btn, exercise_saving_state, operationname_state, gen_state]
     ).then(
         fn=update_when_rev_quiz_btn,
         inputs=[quiz_dropdown, quiz_map_state],
@@ -803,7 +889,9 @@ with gr.Blocks() as demo:
                  answer_btn, 
                  student_answer,
                  tags_state,
-                 school_state]
+                 school_state,
+                 new_checkboxes,
+                 new_checkbox_all_items_state]
     ).then(
         fn=handle_logs,
         inputs=[user_state, operationname_state, session_state, lti_state, checkbox_state],
@@ -816,34 +904,68 @@ with gr.Blocks() as demo:
         else:
             return solver + "\n### 注意：AIの生成した解答には誤りを含むことがあります。"
     
+    def appear_questionnaire_box(is_gen):
+        if is_gen == 1: #類題を作った場合
+            return (
+                gr.update(visible=True),
+                gr.update(visible=False, interactive=False, show_label=False),
+                gr.update(visible=True, interactive=True), #understanding
+                gr.update(visible=True, interactive=True), #difficulty
+                gr.update(visible=True, interactive=True), #fluency
+                gr.update(visible=True, interactive=True), #relevance
+                gr.update(visible=True, interactive=True), #rating
+                gr.update(visible=True, interactive=False),
+                gr.update(visible=True, interactive=True),
+                gr.update(visible=True),
+                gr.update(visible=True),
+                gr.update(visible=True, interactive=False),
+                gr.update(visible=True, interactive=False),
+                gr.update(visible=True),
+                0, #understanding
+                0, #difficulty
+                0, #fluency
+                0, #relevance
+                0, #rating
+                "AnsweredExercise"
+            )
+        else: #そのまま解いた場合
+            return (
+                gr.update(visible=True),
+                gr.update(visible=True, interactive=True, show_label=True),
+                gr.update(visible=True, interactive=True), #understanding
+                gr.update(visible=True, interactive=True), #difficulty
+                gr.update(visible=False, interactive=False), #fluency
+                gr.update(visible=False, interactive=False), #relevance
+                gr.update(visible=False, interactive=False), #rating
+                gr.update(visible=True, interactive=False),
+                gr.update(visible=True, interactive=True),
+                gr.update(visible=True),
+                gr.update(visible=True),
+                gr.update(visible=True, interactive=False),
+                gr.update(visible=True, interactive=False),
+                gr.update(visible=True),
+                1, #understanding
+                1, #difficulty
+                0, #fluency
+                0, #relevance
+                0, #rating
+                "AnsweredExercise"
+            )
+
     answer_btn.click(
         fn=update_when_answer_btn,
         inputs=[answer_state, answer_creation_time_state, overall_creation_time_state],
         outputs=answer_output,
     ).then(
-        fn=lambda: (
-        gr.update(visible=True),
-        gr.update(visible=True, interactive=True),
-        gr.update(visible=True, interactive=True),
-        gr.update(visible=True, interactive=True),
-        gr.update(visible=True, interactive=True),
-        gr.update(visible=True, interactive=True),
-        gr.update(visible=True, interactive=False),
-        gr.update(visible=True, interactive=True),
-        gr.update(visible=True),
-        gr.update(visible=True),
-        gr.update(visible=True, interactive=False),
-        gr.update(visible=True, interactive=False),
-        gr.update(visible=True),
-        "AnsweredExercise"
-        ),
-        inputs=None,
-        outputs=[answer_output, 
+        fn=appear_questionnaire_box,
+        inputs=[gen_state],
+        outputs=[answer_output,
+                 new_checkboxes,
                  understanding,
                  difficulty,
                  fluency,
-                 relevance, 
-                 rating, 
+                 relevance,
+                 rating,
                  answer_btn, 
                  report_type, 
                  report_text, 
@@ -851,6 +973,11 @@ with gr.Blocks() as demo:
                  report_btn, 
                  student_answer, 
                  note_mkdwn, 
+                 understanding_state,
+                 difficulty_state,
+                 fluency_state,
+                 relevance_state,
+                 rating_state,
                  operationname_state]
     ).then(
         fn=handle_logs,
@@ -859,14 +986,40 @@ with gr.Blocks() as demo:
     )
 
     def enable_submit(understanding_val, rating_val, difficulty_val, fluency_val, relevance_val):
-        if (understanding_val is not None) and (rating_val is not None) and (difficulty_val is not None) and (fluency_val is not None) and (relevance_val is not None):
+        if understanding_val * rating_val * difficulty_val * fluency_val * relevance_val == 1:
             return gr.update(interactive=True, value="結果を送信する", variant="primary")
         else:
             return gr.update(interactive=False, value="結果を送信する(まずは問題を振り返ってください！)", variant="secondary")
+        
+    def change_questionnairestate(val):
+        if val is not None:
+            return 1
+        else:
+            return 0
+
+    new_checkboxes.change(
+        fn=update_when_checkboxes,
+        inputs=[new_checkbox_all_items_state, new_checkboxes],
+        outputs=new_checkbox_state
+    ).then(
+        fn=lambda: (
+        "SelectedNewRubricStatus"
+        ),
+        inputs=None,
+        outputs=[operationname_state]
+    ).then(
+        fn=handle_logs,
+        inputs=[user_state, operationname_state, session_state, lti_state, new_checkbox_state],
+        outputs=None
+    )
 
     understanding.change(
+        fn=change_questionnairestate,
+        inputs=[understanding],
+        outputs=[understanding_state]
+    ).then(
         fn=enable_submit,
-        inputs=[understanding, rating, difficulty, fluency, relevance],
+        inputs=[understanding_state, rating_state, difficulty_state, fluency_state, relevance_state],
         outputs=[report_btn]
     ).then(
         fn=lambda: ("SelectedComprehensibility"),
@@ -879,8 +1032,12 @@ with gr.Blocks() as demo:
     )
 
     rating.change(
+        fn=change_questionnairestate,
+        inputs=[rating],
+        outputs=[rating_state]
+    ).then(
         fn=enable_submit,
-        inputs=[understanding, rating, difficulty, fluency, relevance],
+        inputs=[understanding_state, rating_state, difficulty_state, fluency_state, relevance_state],
         outputs=[report_btn]
     ).then(
         fn=lambda: ("SelectedUsefulness"),
@@ -893,8 +1050,12 @@ with gr.Blocks() as demo:
     )
 
     difficulty.change(
+        fn=change_questionnairestate,
+        inputs=[difficulty],
+        outputs=[difficulty_state]
+    ).then(
         fn=enable_submit,
-        inputs=[understanding, rating, difficulty, fluency, relevance],
+        inputs=[understanding_state, rating_state, difficulty_state, fluency_state, relevance_state],
         outputs=[report_btn]
     ).then(
         fn=lambda: ("SelectedDifficulty"),
@@ -907,8 +1068,12 @@ with gr.Blocks() as demo:
     )
 
     fluency.change(
+        fn=change_questionnairestate,
+        inputs=[fluency],
+        outputs=[fluency_state]
+    ).then(
         fn=enable_submit,
-        inputs=[understanding, rating, difficulty, fluency, relevance],
+        inputs=[understanding_state, rating_state, difficulty_state, fluency_state, relevance_state],
         outputs=[report_btn]
     ).then(
         fn=lambda: ("SelectedFluency"),
@@ -921,8 +1086,12 @@ with gr.Blocks() as demo:
     )
 
     relevance.change(
+        fn=change_questionnairestate,
+        inputs=[relevance],
+        outputs=[relevance_state]
+    ).then(
         fn=enable_submit,
-        inputs=[understanding, rating, difficulty, fluency, relevance],
+        inputs=[understanding_state, rating_state, difficulty_state, fluency_state, relevance_state],
         outputs=[report_btn]
     ).then(
         fn=lambda: ("SelectedRelevance"),
@@ -997,6 +1166,7 @@ with gr.Blocks() as demo:
             gr.update(visible=False),
             gr.update(visible=False),
             gr.update(visible=False, show_label=False),
+            gr.update(visible=False, show_label=False),
             gr.update(visible=True, interactive=False, value="選んだ問題の復習問題を作成する（まだ押せません）"),
             gr.update(visible=True, interactive=False, value="選んだ問題を復習する（まだ押せません）"),
             gr.update(value="復習問題はここに出てきます"),
@@ -1019,6 +1189,11 @@ with gr.Blocks() as demo:
             gr.update(value=None),
             gr.update(value=None),
             gr.update(value=None),
+            0,
+            0,
+            0,
+            0,
+            0,
             True
         ),
         inputs=None,
@@ -1029,6 +1204,7 @@ with gr.Blocks() as demo:
             quiz_text_display,
             status_msg,
             checkboxes,
+            new_checkboxes,
             gen_quiz_btn,
             rev_quiz_btn,
             exercise_output,
@@ -1051,6 +1227,11 @@ with gr.Blocks() as demo:
             overall_creation_time_state,
             tags_state,
             school_state,
+            understanding_state,
+            difficulty_state,
+            fluency_state,
+            relevance_state,
+            rating_state,
             exercise_saving_state
         ]
     ).then(
