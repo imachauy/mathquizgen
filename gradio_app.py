@@ -615,7 +615,7 @@ with gr.Blocks() as demo:
                 <div style="text-align: center;">
                     <span style="font-size: 28px; font-weight: bold;">
                     あなたはこの問題を <span style="color: #00c853;">{count_work}回</span> 解き、<br>
-                    <span style="color: #00c853;">{count_review}回 </span> 類題で復習しました。 <br>
+                    <span style="color: #00c853;">{count_review}問 </span> 類題を作って解きました。 <br>
                     </span>
                     <span style="font-weight: bold; color: #2196f3;"> <h3>まずはセルフチェックをしましょう！</h3></span><br>
                     右の項目から、自分が理解している部分にチェックを入れましょう。<br>
@@ -664,13 +664,13 @@ with gr.Blocks() as demo:
             msg = generate_status_msg(count_work, count_review, len(rubric_explanations), lti["school_id"])
         
             # 2025夏実証用
-            if school=="C126210001533":
+            if lti["school_id"]=="C126210001533":
                 if count_work==0:
                     return (
                         gr.update(value=f'<div style="text-align: center;"><h1> あなたが選んだ問題 </h1></div><div style="border: 3px solid #2196f3;padding: 24px;border-radius: 8px;text-align: center;"> \n{quiz_text} </div>', visible=True),
                         gr.update(choices=rubric_explanations, value=[], visible=True, interactive=True, show_label=True, label="できたポイントをチェックしよう！"),
-                        gr.update(),
-                        gr.update(),
+                        gr.update(interactive=False, variant="stop", value="類題をつくる"),
+                        gr.update(interactive=False, variant="stop", value="そのまま解く"),
                         gr.update(visible=True, value=msg),
                         quiz_text,
                         "SelectedExercise",
@@ -684,8 +684,8 @@ with gr.Blocks() as demo:
                         return (
                             gr.update(value=f'<div style="text-align: center;"><h1> あなたが選んだ問題 </h1></div><div style="border: 3px solid #2196f3;padding: 24px;border-radius: 8px;text-align: center;"> \n{quiz_text} </div>', visible=True),
                             gr.update(choices=rubric_explanations, value=[], visible=True, interactive=True, label="できたポイントをチェックしよう！", show_label=True),
-                            gr.update(interactive=False, variant="stop", value="類題をつくる"),
-                            gr.update(interactive=True, variant="stop", value="そのまま解く(類題を解くと選べるようになります)"),
+                            gr.update(interactive=True, variant="stop", value="類題をつくる"),
+                            gr.update(interactive=False, variant="stop", value="そのまま解く(類題を解くと選べるようになります)"),
                             gr.update(visible=True, value=msg),
                             quiz_text,
                             "SelectedExercise",
@@ -853,7 +853,8 @@ with gr.Blocks() as demo:
         exercise_info = exercise_col.find_one({"school_id": school, "contents_id": contents_id, "page": page, "no": no})
         standard_answer = exercise_info.get("standard_answer", "")
         rubrics = get_main_explanations(quiz_title, quiz_text_dict)
-        rubrics.append("上記の項目について、ひとつも理解できなかった")
+        if len(rubrics) > 0:
+            rubrics.append("上記の項目について、ひとつも理解できなかった")
 
         return (
             quiz_text,
@@ -904,7 +905,7 @@ with gr.Blocks() as demo:
         else:
             return solver + "\n### 注意：AIの生成した解答には誤りを含むことがあります。"
     
-    def appear_questionnaire_box(is_gen):
+    def appear_questionnaire_box(is_gen, rubrics):
         if is_gen == 1: #類題を作った場合
             return (
                 gr.update(visible=True),
@@ -929,28 +930,52 @@ with gr.Blocks() as demo:
                 "AnsweredExercise"
             )
         else: #そのまま解いた場合
-            return (
-                gr.update(visible=True),
-                gr.update(visible=True, interactive=True, show_label=True),
-                gr.update(visible=True, interactive=True), #understanding
-                gr.update(visible=True, interactive=True), #difficulty
-                gr.update(visible=False, interactive=False), #fluency
-                gr.update(visible=False, interactive=False), #relevance
-                gr.update(visible=False, interactive=False), #rating
-                gr.update(visible=True, interactive=False),
-                gr.update(visible=True, interactive=True),
-                gr.update(visible=True),
-                gr.update(visible=True),
-                gr.update(visible=True, interactive=False),
-                gr.update(visible=True, interactive=False),
-                gr.update(visible=True),
-                1, #understanding
-                1, #difficulty
-                0, #fluency
-                0, #relevance
-                0, #rating
-                "AnsweredExercise"
-            )
+            if len(rubrics) > 0:
+                return (
+                    gr.update(visible=True),
+                    gr.update(visible=True, interactive=True, show_label=True),
+                    gr.update(visible=True, interactive=True), #understanding
+                    gr.update(visible=True, interactive=True), #difficulty
+                    gr.update(visible=False, interactive=False), #fluency
+                    gr.update(visible=False, interactive=False), #relevance
+                    gr.update(visible=False, interactive=False), #rating
+                    gr.update(visible=True, interactive=False),
+                    gr.update(visible=True, interactive=True),
+                    gr.update(visible=True),
+                    gr.update(visible=True),
+                    gr.update(visible=True, interactive=False),
+                    gr.update(visible=True, interactive=False),
+                    gr.update(visible=True),
+                    0, #understanding
+                    0, #difficulty
+                    1, #fluency
+                    1, #relevance
+                    1, #rating
+                    "AnsweredExercise"
+                )
+            else:
+                return (
+                    gr.update(visible=True),
+                    gr.update(visible=False, interactive=False, show_label=False),
+                    gr.update(visible=True, interactive=True), #understanding
+                    gr.update(visible=True, interactive=True), #difficulty
+                    gr.update(visible=False, interactive=False), #fluency
+                    gr.update(visible=False, interactive=False), #relevance
+                    gr.update(visible=False, interactive=False), #rating
+                    gr.update(visible=True, interactive=False),
+                    gr.update(visible=True, interactive=True),
+                    gr.update(visible=True),
+                    gr.update(visible=True),
+                    gr.update(visible=True, interactive=False),
+                    gr.update(visible=True, interactive=False),
+                    gr.update(visible=True),
+                    0, #understanding
+                    0, #difficulty
+                    1, #fluency
+                    1, #relevance
+                    1, #rating
+                    "AnsweredExercise"
+                )
 
     answer_btn.click(
         fn=update_when_answer_btn,
@@ -958,7 +983,7 @@ with gr.Blocks() as demo:
         outputs=answer_output,
     ).then(
         fn=appear_questionnaire_box,
-        inputs=[gen_state],
+        inputs=[gen_state, new_checkbox_all_items_state],
         outputs=[answer_output,
                  new_checkboxes,
                  understanding,
