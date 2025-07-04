@@ -49,7 +49,7 @@ def gpt_exection(model, query):
     ) 
     return completion.choices[0].message.content
 
-def handle_answer(save, user_id, session, contents_id, page, no, tags, school, new_contents_id, new_page, new_no, user_answer, understanding, rating, difficulty, fluency, relevance, lti, report_type, report_text):
+def handle_answer(save, user_id, session, contents_id, page, no, tags, school, new_contents_id, new_page, new_no, user_answer, understanding, rating, difficulty, fluency, relevance, new_checkbox, lti, report_type, report_text):
     report = {
         "report_type": report_type,
         "report_text": report_text
@@ -73,6 +73,7 @@ def handle_answer(save, user_id, session, contents_id, page, no, tags, school, n
         "no": new_no,
         "user_answer": user_answer,
         "understanding": understanding,
+        "understanding_details": new_checkbox,
         "rating": rating,
         "difficulty": difficulty,
         "fluency": fluency,
@@ -550,6 +551,7 @@ with gr.Blocks() as demo:
         fluency_state = gr.State()
         difficulty_state = gr.State()
         relevance_state = gr.State()
+        check_state = gr.State()
         report_type_state = gr.State()
         report_text_state = gr.State()
 
@@ -608,8 +610,8 @@ with gr.Blocks() as demo:
                     </span>
                     <span style="font-weight: bold; color: #2196f3;"> <h3>まずはセルフチェックをしましょう！</h3></span><br>
                     右の項目から、自分が理解している部分にチェックを入れましょう。<br>
-                    ＊わからないところだらけならチェック0個にしてみよう。<br>
-                    ＊全部わかっていたら全部にチェックを入れてみよう。より難しい問題が生成されます。<br>
+                    ＊わからないところだらけなら「上記の項目について、ひとつも理解できなかった」を選ぼう。<br>
+                    ＊全部わかっていたら全部のポイントにチェックを入れてみよう。より難しい問題が生成されます。<br>
                     <span style="font-weight: bold; color: #2196f3;"> <h3>チェックを入れたら、「類題をつくる」を押してください</h3></span><br>
                 </div>
                 """
@@ -624,8 +626,8 @@ with gr.Blocks() as demo:
                     </span>
                     <span style="font-weight: bold; color: #2196f3;"> <h3>まずはセルフチェックをしましょう！</h3></span><br>
                     右の項目から、自分が理解している部分にチェックを入れましょう。<br>
-                    ＊わからないところだらけならチェック0個にしてみよう。<br>
-                    ＊全部わかっていたら全部にチェックを入れてみよう。より難しい問題が生成されます。
+                    ＊わからないところだらけなら「上記の項目について、ひとつも理解できなかった」を選ぼう。<br>
+                    ＊全部わかっていたら全部のポイントにチェックを入れてみよう。より難しい問題が生成されます。
                 </div>
                 """
             else:
@@ -646,8 +648,8 @@ with gr.Blocks() as demo:
                     </span>
                     <span style="font-weight: bold; color: #2196f3;"> <h3>まずはセルフチェックをしましょう！</h3></span><br>
                     右の項目から、自分が理解している部分にチェックを入れましょう。<br>
-                    ＊わからないところだらけならチェック0個にしてみよう。<br>
-                    ＊全部わかっていたら全部にチェックを入れてみよう。より難しい問題が生成されます。
+                    ＊わからないところだらけなら「上記の項目について、ひとつも理解できなかった」を選ぼう。<br>
+                    ＊全部わかっていたら全部のポイントにチェックを入れてみよう。より難しい問題が生成されます。
                 </div>
                 """
             else:
@@ -970,7 +972,7 @@ with gr.Blocks() as demo:
         if is_gen == 1: #類題を作った場合
             return (
                 gr.update(visible=True),
-                gr.update(visible=False, interactive=False, show_label=False),
+                gr.update(visible=False, interactive=False, show_label=False), #checkbox
                 gr.update(visible=True, interactive=True), #understanding
                 gr.update(visible=True, interactive=True), #difficulty
                 gr.update(visible=True, interactive=True), #fluency
@@ -988,13 +990,14 @@ with gr.Blocks() as demo:
                 0, #fluency
                 0, #relevance
                 0, #rating
+                1, #checkbox
                 "AnsweredExercise"
             )
         else: #そのまま解いた場合
             if len(rubrics) > 0:
                 return (
                     gr.update(visible=True),
-                    gr.update(visible=True, interactive=True, show_label=True),
+                    gr.update(visible=True, interactive=True, show_label=True), # checkbox
                     gr.update(visible=True, interactive=True), #understanding
                     gr.update(visible=True, interactive=True), #difficulty
                     gr.update(visible=False, interactive=False), #fluency
@@ -1012,6 +1015,7 @@ with gr.Blocks() as demo:
                     1, #fluency
                     1, #relevance
                     1, #rating
+                    0, #checkbox
                     "AnsweredExercise"
                 )
             else:
@@ -1035,6 +1039,7 @@ with gr.Blocks() as demo:
                     1, #fluency
                     1, #relevance
                     1, #rating
+                    1, #checkbox
                     "AnsweredExercise"
                 )
 
@@ -1064,6 +1069,7 @@ with gr.Blocks() as demo:
                  fluency_state,
                  relevance_state,
                  rating_state,
+                 check_state,
                  operationname_state]
     ).then(
         fn=handle_logs,
@@ -1071,8 +1077,8 @@ with gr.Blocks() as demo:
         outputs=None
     )
 
-    def enable_submit(understanding_val, rating_val, difficulty_val, fluency_val, relevance_val):
-        if understanding_val * rating_val * difficulty_val * fluency_val * relevance_val == 1:
+    def enable_submit(understanding_val, rating_val, difficulty_val, fluency_val, relevance_val, check_val):
+        if understanding_val * rating_val * difficulty_val * fluency_val * relevance_val * check_val == 1:
             return gr.update(interactive=True, value="結果を送信する", variant="primary")
         else:
             return gr.update(interactive=False, value="結果を送信する(まずは問題を振り返ってください！)", variant="secondary")
@@ -1082,11 +1088,25 @@ with gr.Blocks() as demo:
             return 1
         else:
             return 0
+        
+    def change_box(val):
+        if len(val) > 0:
+            return 1
+        else:
+            return 0
 
     new_checkboxes.change(
         fn=update_when_checkboxes,
         inputs=[new_checkbox_all_items_state, new_checkboxes, new_current_checkbox_state],
         outputs=[new_checkbox_state, new_current_checkbox_state, new_checkboxes]
+    ).then(
+        fn=change_box,
+        inputs=[new_checkboxes],
+        outputs=check_state
+    ).then(
+        fn=enable_submit,
+        inputs=[understanding_state, rating_state, difficulty_state, fluency_state, relevance_state, check_state],
+        outputs=[report_btn]
     ).then(
         fn=lambda: (
         "SelectedNewRubricStatus"
@@ -1105,7 +1125,7 @@ with gr.Blocks() as demo:
         outputs=[understanding_state]
     ).then(
         fn=enable_submit,
-        inputs=[understanding_state, rating_state, difficulty_state, fluency_state, relevance_state],
+        inputs=[understanding_state, rating_state, difficulty_state, fluency_state, relevance_state, check_state],
         outputs=[report_btn]
     ).then(
         fn=lambda: ("SelectedComprehensibility"),
@@ -1123,7 +1143,7 @@ with gr.Blocks() as demo:
         outputs=[rating_state]
     ).then(
         fn=enable_submit,
-        inputs=[understanding_state, rating_state, difficulty_state, fluency_state, relevance_state],
+        inputs=[understanding_state, rating_state, difficulty_state, fluency_state, relevance_state, check_state],
         outputs=[report_btn]
     ).then(
         fn=lambda: ("SelectedUsefulness"),
@@ -1141,7 +1161,7 @@ with gr.Blocks() as demo:
         outputs=[difficulty_state]
     ).then(
         fn=enable_submit,
-        inputs=[understanding_state, rating_state, difficulty_state, fluency_state, relevance_state],
+        inputs=[understanding_state, rating_state, difficulty_state, fluency_state, relevance_state, check_state],
         outputs=[report_btn]
     ).then(
         fn=lambda: ("SelectedDifficulty"),
@@ -1159,7 +1179,7 @@ with gr.Blocks() as demo:
         outputs=[fluency_state]
     ).then(
         fn=enable_submit,
-        inputs=[understanding_state, rating_state, difficulty_state, fluency_state, relevance_state],
+        inputs=[understanding_state, rating_state, difficulty_state, fluency_state, relevance_state, check_state],
         outputs=[report_btn]
     ).then(
         fn=lambda: ("SelectedFluency"),
@@ -1177,7 +1197,7 @@ with gr.Blocks() as demo:
         outputs=[relevance_state]
     ).then(
         fn=enable_submit,
-        inputs=[understanding_state, rating_state, difficulty_state, fluency_state, relevance_state],
+        inputs=[understanding_state, rating_state, difficulty_state, fluency_state, relevance_state, check_state],
         outputs=[report_btn]
     ).then(
         fn=lambda: ("SelectedRelevance"),
@@ -1232,7 +1252,7 @@ with gr.Blocks() as demo:
         outputs=None
     ).then(
         fn=handle_answer,
-        inputs=[exercise_saving_state, user_state, session_state, contentsid_state, page_state, no_state, tags_state, school_state, new_contentsid_state, new_page_state, new_no_state, student_answer, understanding, rating, difficulty, fluency, relevance, lti_state, report_type, report_text],
+        inputs=[exercise_saving_state, user_state, session_state, contentsid_state, page_state, no_state, checkbox_state, school_state, new_contentsid_state, new_page_state, new_no_state, student_answer, understanding, rating, difficulty, fluency, relevance, new_checkbox_state, lti_state, report_type, report_text],
         outputs=None
     ).then(
         fn=lambda: (
