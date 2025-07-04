@@ -346,7 +346,7 @@ def get_main_explanations(quiz_title, quiz_text_dict):
     exercise_info = exercise_col.find_one({"school_id": school, "contents_id": contents_id, "page": page, "no": no})
     rubrics = exercise_info.get("rubric", {})
     main_list = [item["main"] for item in rubrics.values() if "main" in item]
-    if len(main_list) > 0:
+    if (len(main_list) > 0) and ("上記の項目について、ひとつも理解できなかった" not in main_list):
         main_list.append("上記の項目について、ひとつも理解できなかった")
     return main_list
 
@@ -781,7 +781,7 @@ with gr.Blocks() as demo:
         outputs=None
     )
 
-    def update_when_checkboxes(all_items, selected, current_status, lti, count_work, count_review):
+    def update_when_checkboxes(all_items, selected, current_status):
         #checkboxのチェックの変更
         current_select = list(set(selected) ^ set(current_status))
         # 上記の項目について、ひとつも理解できなかった を選択した
@@ -799,37 +799,39 @@ with gr.Blocks() as demo:
             for choice in all_items
         }
 
+        return (
+            result, 
+            updated_status, 
+            gr.update(value=updated_status)
+        )
+    
+    def update_genquizbtn_when_checkboxes(selected, lti, count_work, count_review):
         if len(selected) == 0:
             return (
                 gr.update(interactive=False, variant="stop", value="類題をつくる(できたポイントをチェックしてください)"),
-                gr.update(interactive=False, variant="stop", value="そのまま解く(できたポイントをチェックしてください)"),
-                result, 
-                updated_status, 
-                gr.update(value=updated_status)
+                gr.update(interactive=False, variant="stop", value="そのまま解く(できたポイントをチェックしてください)")
             )
             
         if lti["school_id"]=="C126210001533":
             if count_review == 0:
                 return (
                     gr.update(interactive=True, variant="stop", value="類題をつくる"),
-                    gr.update(interactive=False, variant="stop", value="そのまま解く(類題を解くと選べるようになります)"),
-                    result, 
-                    updated_status, 
-                    gr.update(value=updated_status)
+                    gr.update(interactive=False, variant="stop", value="そのまま解く(類題を解くと選べるようになります)")
                 )
         
         return (
             gr.update(interactive=True, variant="stop", value="類題をつくる"),
-            gr.update(interactive=True, variant="stop", value="そのまま解く"),
-            result, 
-            updated_status, 
-            gr.update(value=updated_status)
+            gr.update(interactive=True, variant="stop", value="そのまま解く")
         )
     
     checkboxes.change(
         fn=update_when_checkboxes,
-        inputs=[checkbox_all_items_state, checkboxes, current_checkbox_state, lti_state, cnt_work_state, cnt_review_state],
-        outputs=[gen_quiz_btn, rev_quiz_btn, checkbox_state, current_checkbox_state, checkboxes]
+        inputs=[checkbox_all_items_state, checkboxes, current_checkbox_state],
+        outputs=[checkbox_state, current_checkbox_state, checkboxes]
+    ).then(
+        fn=update_genquizbtn_when_checkboxes,
+        inputs=[checkboxes, lti_state, cnt_work_state, cnt_review_state],
+        outputs=[gen_quiz_btn, rev_quiz_btn]
     ).then(
         fn=lambda: (
         "SelectedRubricStatus"
@@ -912,7 +914,7 @@ with gr.Blocks() as demo:
         exercise_info = exercise_col.find_one({"school_id": school, "contents_id": contents_id, "page": page, "no": no})
         standard_answer = exercise_info.get("standard_answer", "")
         rubrics = get_main_explanations(quiz_title, quiz_text_dict)
-        if len(rubrics) > 0:
+        if (len(rubrics) > 0) and ("上記の項目について、ひとつも理解できなかった" not in rubrics):
             rubrics.append("上記の項目について、ひとつも理解できなかった")
 
         return (
