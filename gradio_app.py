@@ -555,7 +555,7 @@ with gr.Blocks() as demo:
             )
 
             report_type = gr.Radio(
-            choices=["模範解答が間違ってるかも？", "わからない場所がある...", "こうすればより良い問題になる", "その他"],
+            choices=["模範解答が間違ってるかも？", "わからない場所がある...", "こうすればより良い問題になる", "別解がある", "その他"],
             label="報告のカテゴリはどれですか？",
             visible=False,
             interactive=True
@@ -612,7 +612,7 @@ with gr.Blocks() as demo:
 
         # 2025夏実証用
         if school=="C126210001533":
-            if count_work==0:
+            if count_work==0: #BookRollで問題を解かせる
                 html = f"""
                 <div style="text-align: center;">
                     <span style="font-size: 22px; font-weight: bold;">
@@ -620,20 +620,6 @@ with gr.Blocks() as demo:
                     </span>
                     <span style="font-weight: bold; color: #2196f3;"> <h2>まずはBookRollで、該当の問題を解きましょう！</h2></span><br>
                     <span style="font-weight: bold; color: #2196f3;"> <h3>BookRollで解かないと、下のボタンが有効になりません。<br>BookRollで解いてから、システムに入り直してください。</h3></span><br>
-                </div>
-                """
-                return html
-            elif count_review==0:
-                html = f"""
-                <div style="text-align: center;">
-                    <span style="font-size: 28px; font-weight: bold;">
-                    あなたはこの問題を <span style="color: #00c853;">{count_work}回</span> 解きました。<br>
-                    </span>
-                    <span style="font-weight: bold; color: #2196f3;"> <h3>まずはセルフチェックをしましょう！</h3></span><br>
-                    右の項目から、自分が理解している部分にチェックを入れましょう。<br>
-                    ＊わからないところだらけなら「上記の項目について、ひとつも理解できなかった」を選ぼう。<br>
-                    ＊全部わかっていたら全部のポイントにチェックを入れてみよう。より難しい問題が生成されます。<br>
-                    <span style="font-weight: bold; color: #2196f3;"> <h3>チェックを入れたら、「類題をつくる」を押してください</h3></span><br>
                 </div>
                 """
                 return html
@@ -830,27 +816,31 @@ with gr.Blocks() as demo:
     
     def update_genquizbtn_when_checkboxes(selected, lti, count_work, count_review, all_items):
         if len(selected) == 0:
-            if len(all_items) > 0:
+            if all_items > 0:
                 return (
                     gr.update(interactive=False, variant="stop", value="類題をつくる(できたポイントをチェックしてください)"),
-                    gr.update(interactive=False, variant="stop", value="そのまま解く(できたポイントをチェックしてください)")
+                    gr.update(interactive=False, variant="stop", value="そのまま解く(できたポイントをチェックしてください)"),
+                    gr.update()
                 )
             else:
                 return (
                     gr.update(interactive=False, variant="stop", value="(解答のポイントがない問題は類題をつくれません)"),
-                    gr.update(interactive=True, variant="stop", value="そのまま解く")
+                    gr.update(interactive=True, variant="stop", value="そのまま解く"),
+                    gr.update()
                 )
             
         if lti["school_id"]=="C126210001533":
             if count_review == 0:
                 return (
                     gr.update(interactive=True, variant="stop", value="類題をつくる"),
-                    gr.update(interactive=False, variant="stop", value="そのまま解く(類題を解くと選べるようになります)")
+                    gr.update(interactive=False, variant="stop", value="そのまま解く(類題を解くと選べるようになります)"),
+                    gr.update(interactive=False)
                 )
         
         return (
             gr.update(interactive=True, variant="stop", value="類題をつくる"),
-            gr.update(interactive=True, variant="stop", value="そのまま解く")
+            gr.update(interactive=True, variant="stop", value="そのまま解く"),
+            gr.update(interactive=False)
         )
     
     checkboxes.change(
@@ -860,7 +850,7 @@ with gr.Blocks() as demo:
     ).then(
         fn=update_genquizbtn_when_checkboxes,
         inputs=[checkboxes, lti_state, cnt_work_state, cnt_review_state, checkbox_all_items_state],
-        outputs=[gen_quiz_btn, rev_quiz_btn]
+        outputs=[gen_quiz_btn, rev_quiz_btn, quiz_dropdown]
     ).then(
         fn=lambda: (
         "SelectedRubricStatus"
@@ -904,7 +894,7 @@ with gr.Blocks() as demo:
             exercise_info_2 = exercise_col.find_one({"contents_id": rev_question["contents_id"], "page": rev_question["page"], "no": rev_question["no"]})
             group_dict = {"2488": "A", "2494": "B", "2544": "A", "2591": "B", "2562": "A", "2570": "B", "2492": "A", "2505": "B", "2495": "A", "2487": "B", "2558": "A", "2599": "B", "2532": "A", "2517": "B", "2578": "A", "2520": "B", "2593": "A", "2598": "B", "2519": "A", "2587": "B", "2596": "A", "2485": "B", "2486": "A", "2512": "B", "2513": "A", "2533": "B", "2559": "A", "2528": "B", "2560": "A", "2583": "B", "2516": "A", "2515": "B", "2543": "A", "2567": "B", "2537": "A", "2489": "B", "2548": "A", "2509": "B", "2510": "A", "2557": "B", "2592": "A", "2497": "B", "2541": "A", "2572": "B", "2586": "A", "2521": "B", "2511": "A", "2503": "B", "2569": "A", "2525": "B", "2574": "A", "2482": "B", "2585": "A", "2549": "B", "2501": "A", "2529": "B", "2595": "A", "2524": "B", "2542": "A", "2584": "B", "2554": "A", "2589": "B", "2523": "A", "2556": "B", "2536": "A", "2546": "B", "2539": "A", "2564": "B", "2530": "A", "2493": "B", "2484": "A", "2534": "B", "2594": "A", "2545": "B", "2597": "A", "2481": "B", "2531": "A", "2575": "B", "2565": "A", "2579": "B", "2508": "A", "2552": "B", "2555": "A", "2551": "B", "2527": "A", "2550": "B", "2577": "A", "2540": "B", "2553": "A", "2563": "B", "2499": "A", "2561": "B", "2507": "A", "2588": "B", "2590": "A", "2504": "B", "2535": "A", "2547": "B", "2500": "A", "2566": "B", "2506": "A", "2526": "B", "2483": "A", "2502": "B", "2582": "A", "2518": "B", "2571": "A", "2581": "B", "2490": "A", "2576": "B", "2568": "A", "2580": "B", "2491": "A", "2573": "B", "2496": "A", "2522": "B", "2480": "A", "2498": "B", "2514": "A", "2538": "B", "121": "A", "2453": "B"}
 
-            group_st = group_dict[lti["user_id"]] if lti["user_id"] in group_dict else "A"
+            group_st = group_dict[lti["user_id"]] or "A"
             if group == group_st:
                 new_exercise = exercise_info_2.get("quiz_text", "")
                 new_answer = exercise_info_2.get("standard_answer", "")
