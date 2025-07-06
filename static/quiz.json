@@ -54,7 +54,7 @@
         "contents_id": "743394beff4b1282ba735e5e3723ed74",
         "page": "9",
         "no": "1",
-        "quiz_title": "(演習 課題9(1)) 三平方の定理の円と二等辺三角形への利用",
+        "quiz_title": "(演習09(1)) 三平方の定理の円と二等辺三角形への利用",
         "quiz_text": "$$\\begin{array}{l}AB=AC=8,\\ BC=6\\text{の二等辺三角形}ABC\\text{の各辺に接する円}O\\text{がある。}\\\\\\text{辺}AB\\text{を}1:3\\text{に分ける点を}D\\text{、辺}BC\\text{と円}O\\text{の接点を}E\\text{、点}E\\text{を通り、辺}AB\\text{と平行な直線と直線}CD\\text{との交点を}F\\text{、}\\\\\\text{直線}AE\\text{と}CD\\text{の交点を}G\\text{とする。}\\\\(1)\\quad \\text{円}O\\text{の半径の長さを求めよ。}\\end{array}$$",
         "standard_answer": "[解答の過程] $$\\begin{array}{l}(1)\\ \\triangle ABC\\text{の面積について}\\\\\\quad \\triangle ABC=\\triangle OAB+\\triangle OBC+\\triangle OCA\\text{．円}O\\text{の半径を}r\\text{とすると，}\\\\\\quad \\text{接線は接点を通る半径と垂直であるから，}\\\\\\quad \\triangle ABC =\\tfrac{1}{2}\\times AB\\times r+\\tfrac{1}{2}\\times BC\\times r+\\tfrac{1}{2}\\times CA\\times r\\\\\\quad\\quad =\\tfrac{1}{2}\\times\\bigl(AB+BC+CA\\bigr)\\times r\\quad\\cdots ①\\\\\\quad \\text{点}A\\text{から辺}BC\\text{へ垂線をひくと，垂線は円の中心}O\\text{，接点}E\\text{を通り，}BE=EC=3\\text{．}\\\\\\quad \\triangle ABE\\text{について，三平方の定理により}\\\\\\quad AE^{2}=AB^{2}-BE^{2}=8^{2}-3^{2}=55,\\quad AE>0\\text{より }AE=\\sqrt{55}\\text{．}\\\\\\quad したがって①より，\\\\\\quad \\tfrac{1}{2}\\times 6\\times \\sqrt{55} =\\tfrac{1}{2}\\times(8+6+8)\\times r\\text{，}\\\\\\quad よって\\\\\\quad r=\\tfrac{3\\sqrt{55}}{11}\\text{．}\\end{array}$$[最終的な答え] $$r=\\tfrac{3\\sqrt{55}}{11}$$",
         "figure_explanation": "AB=AC=8,\\ BC=6\\text{の二等辺三角形}ABC\\text{の各辺に接する円}O\\text{がある。}\\\\\\text{辺}AB\\text{を}1:3\\text{に分ける点を}D\\text{、辺}BC\\text{と円}O\\text{の接点を}E\\text{、点}E\\text{を通り、辺}AB\\text{と平行な直線と直線}CD\\text{との交点を}F\\text{、}\\\\\\text{直線}AE\\text{と}CD\\text{の交点を}G\\text{とする。}",
@@ -65,9 +65,9 @@
                     "1": "円Oの半径をrとする。"
                 },
                 "review_question": {
-                    "contents_id":"743394beff4b1282ba735e5e3723ed74",
-                    "page":"1",
-                    "no":""
+                    "contents_id": "2025summer_experiment",
+                    "page": "1",
+                    "no": "1"
                 }
             },
             "2": {
@@ -76,9 +76,9 @@
                     "1": "\\tfrac{1}{2}\\times 6\\times \\sqrt{55}"
                 },
                 "review_question": {
-                    "contents_id":"743394beff4b1282ba735e5e3723ed74",
-                    "page":"1",
-                    "no":""
+                    "contents_id": "2025summer_experiment",
+                    "page": "1",
+                    "no": "1"
                 }
             },
             "3": {
@@ -87,9 +87,9 @@
                     "1": "\\tfrac{1}{2}\\times(8+6+8)\\times r"
                 },
                 "review_question": {
-                    "contents_id":"743394beff4b1282ba735e5e3723ed74",
-                    "page":"1",
-                    "no":""
+                    "contents_id": "2025summer_experiment",
+                    "page": "2",
+                    "no": "1"
                 }
             },
             "4": {
@@ -98,9 +98,9 @@
                     "1": "\\tfrac{1}{2}\\times 6\\times \\sqrt{55} = \\tfrac{1}{2}\\times(8+6+8)\\times r"
                 },
                 "review_question": {
-                    "contents_id":"743394beff4b1282ba735e5e3723ed74",
-                    "page":"1",
-                    "no":""
+                    "contents_id": "2025summer_experiment",
+                    "page": "2",
+                    "no": "1"
                 }
             },
             "5": {
@@ -109,25 +109,26 @@
                     "1": "r=\\tfrac{3\\sqrt{55}}{11}"
                 },
                 "review_question": {
-                    "contents_id":"743394beff4b1282ba735e5e3723ed74",
-                    "page":"1",
-                    "no":""
+                    "contents_id": "2025summer_experiment",
+                    "page": "2",
+                    "no": "1"
                 }
             }
         },
         "school_id": ["C126210001533", "F126110107407"],
         "context_id": "prime",
         "user": "prime",
+        "expetimental_group": "A",
         "show": true
     },
     {
         "contents_id": "743394beff4b1282ba735e5e3723ed74",
         "page": "9",
         "no": "2",
-        "quiz_title": "(演習 課題9(2)) 三平方の定理の円と二等辺三角形への利用",
-        "quiz_text": "$$\\begin{array}{l}AB=AC=8,\\ BC=6\\text{の二等辺三角形}ABC\\text{の各辺に接する、半径}r=\\tfrac{3\\sqrt{55}}{11}\\text{の円}O\\text{がある。}\\\\\\text{辺}AB\\text{を}1:3\\text{に分ける点を}D\\text{、辺}BC\\text{と円}O\\text{の接点を}E\\text{、点}E\\text{を通り、辺}AB\\text{と平行な直線と直線}CD\\text{との交点を}F\\text{、}\\\\\\text{直線}AE\\text{と}CD\\text{の交点を}G\\text{とする。}\\\\(2)\\quad AD:EF\\text{を求めよ。}\\\\(3)\\quad \\text{線分}GE\\text{の長さを求めよ。}\\\\(4)\\quad \\text{線分}BF\\text{の長さを求めよ。}\\end{array}$$",
+        "quiz_title": "(演習09(2)) 三平方の定理の円と二等辺三角形への利用",
+        "quiz_text": "$$\\begin{array}{l}AB=AC=8,\\ BC=6\\text{の二等辺三角形}ABC\\text{の各辺に接する、半径}r=\\tfrac{3\\sqrt{55}}{11}\\text{の円}O\\text{がある。}\\\\\\text{辺}AB\\text{を}1:3\\text{に分ける点を}D\\text{、辺}BC\\text{と円}O\\text{の接点を}E\\text{、点}E\\text{を通り、辺}AB\\text{と平行な直線と直線}CD\\text{との交点を}F\\text{、}\\\\\\text{直線}AE\\text{と}CD\\text{の交点を}G\\text{とする。}\\\\(2)\\quad AD:EF\\text{を求めよ。}\\end{array}$$",
         "standard_answer": "[解答の過程] $$\\begin{array}{l}(2)\\ AB=8,\\;AD:DB=1:3\\text{より}\\\\\\quad AD=\\tfrac{1}{1+3}AB=\\tfrac{1}{4}\\times 8=2,\\quad BD=8-2=6\\text{．}\\\\\\quad \\triangle CBD\\text{について，}EF\\parallel BD\\text{より}\\\\\\quad EF:BD=CE:CB,\\quad EF:6=1:2\\text{，}\\\\\\quad ゆえに\\\\\\quad EF=3\\text{．}\\\\\\quad よって\\quad AD:EF=2:3\\text{．}\\end{array}$$[最終的な答え] $$AD:EF=2:3$$",
-        "figure_explanation": "",
+        "figure_explanation": "AB=AC=8,\\ BC=6\\text{の二等辺三角形}ABC\\text{の各辺に接する、半径}r=\\tfrac{3\\sqrt{55}}{11}\\text{の円}O\\text{がある。}\\\\\\text{辺}AB\\text{を}1:3\\text{に分ける点を}D\\text{、辺}BC\\text{と円}O\\text{の接点を}E\\text{、点}E\\text{を通り、辺}AB\\text{と平行な直線と直線}CD\\text{との交点を}F\\text{、}\\\\\\text{直線}AE\\text{と}CD\\text{の交点を}G\\text{とする。}",
         "rubric": {
             "1": {
                 "main": "線分ADの長さを、AD:DBの値とABの長さを用いて求めることができる。",
@@ -135,9 +136,9 @@
                     "1": "AB=8,\\;AD:DB=1:3\\text{より}\\\\\\quad AD=\\tfrac{1}{1+3}AB=\\tfrac{1}{4}\\times 8=2"
                 },
                 "review_question": {
-                    "contents_id":"743394beff4b1282ba735e5e3723ed74",
-                    "page":"1",
-                    "no":""
+                    "contents_id": "2025summer_experiment",
+                    "page": "1",
+                    "no": "1"
                 }
             },
             "2": {
@@ -146,9 +147,9 @@
                     "1": "BD=8-2=6\\text{．}\\\\\\quad \\triangle CBD\\text{について，}EF\\parallel BD\\text{より}\\\\\\quad EF:BD=CE:CB,\\quad EF:6=1:2\\\\\\quad ゆえに\\\\\\quad EF=3"
                 },
                 "review_question": {
-                    "contents_id":"743394beff4b1282ba735e5e3723ed74",
-                    "page":"1",
-                    "no":""
+                    "contents_id": "2025summer_experiment",
+                    "page": "1",
+                    "no": "1"
                 }
             },
             "3": {
@@ -157,25 +158,26 @@
                     "1": "AD:EF=2:3"
                 },
                 "review_question": {
-                    "contents_id":"743394beff4b1282ba735e5e3723ed74",
-                    "page":"1",
-                    "no":""
+                    "contents_id": "2025summer_experiment",
+                    "page": "1",
+                    "no": "1"
                 }
             }
         },
         "school_id": ["C126210001533", "F126110107407"],
         "context_id": "prime",
         "user": "prime",
+        "expetimental_group": "A",
         "show": true
     },
     {
         "contents_id": "743394beff4b1282ba735e5e3723ed74",
         "page": "9",
         "no": "3",
-        "quiz_title": "(演習 課題9(3)) 三平方の定理の円と二等辺三角形への利用",
+        "quiz_title": "(演習09(3)) 三平方の定理の円と二等辺三角形への利用",
         "quiz_text": "$$\\begin{array}{l}AB=AC=8,\\ BC=6\\text{の二等辺三角形}ABC\\text{の各辺に接する、半径}r=\\tfrac{3\\sqrt{55}}{11}\\text{の円}O\\text{がある。}\\\\\\text{辺}AB\\text{を}1:3\\text{に分ける点を}D\\text{、辺}BC\\text{と円}O\\text{の接点を}E\\text{、点}E\\text{を通り、辺}AB\\text{と平行な直線と直線}CD\\text{との交点を}F\\text{とすると、}\\\\AD:EF=2:3\\text{であった.}\\\\\\text{直線}AE\\text{と}CD\\text{の交点を}G\\text{とする.}\\\\(3)\\quad \\text{線分}GE\\text{の長さを求めよ。}\\end{array}$$",
         "standard_answer": "[解答の過程] $$\\begin{array}{l}(3)\\ AD\\parallel FE\\text{より}\\\\\\quad AG:GE=AD:EF=2:3\\text{．}\\\\\\quad よって\\\\\\quad GE=\\tfrac{3}{2+3}AE=\\tfrac{3}{5}\\times\\sqrt{55}=\\tfrac{3\\sqrt{55}}{5}\\text{．}\\end{array}$$[最終的な答え] $$GE=\\tfrac{3\\sqrt{55}}{5}$$",
-        "figure_explanation": "",
+        "figure_explanation": "AB=AC=8,\\ BC=6\\text{の二等辺三角形}ABC\\text{の各辺に接する、半径}r=\\tfrac{3\\sqrt{55}}{11}\\text{の円}O\\text{がある。}\\\\\\text{辺}AB\\text{を}1:3\\text{に分ける点を}D\\text{、辺}BC\\text{と円}O\\text{の接点を}E\\text{、点}E\\text{を通り、辺}AB\\text{と平行な直線と直線}CD\\text{との交点を}F\\text{とすると、}\\\\AD:EF=2:3\\text{であった.}",
         "rubric": {
             "1": {
                 "main": "ADとFEが平行であることを用いて、AD:EF=GA:GEの関係性を導くことができる",
@@ -183,9 +185,9 @@
                     "1": "\\ AD\\parallel FE\\text{より}\\\\\\quad AG:GE=AD:EF=2:3"
                 },
                 "review_question": {
-                    "contents_id":"743394beff4b1282ba735e5e3723ed74",
-                    "page":"1",
-                    "no":""
+                    "contents_id": "2025summer_experiment",
+                    "page": "1",
+                    "no": "1"
                 }
             },
             "2": {
@@ -194,25 +196,26 @@
                     "1": "GE=\\tfrac{3}{2+3}AE=\\tfrac{3}{5}\\times\\sqrt{55}=\\tfrac{3\\sqrt{55}}{5}"
                 },
                 "review_question": {
-                    "contents_id":"743394beff4b1282ba735e5e3723ed74",
-                    "page":"1",
-                    "no":""
+                    "contents_id": "2025summer_experiment",
+                    "page": "1",
+                    "no": "1"
                 }
             }
         },
         "school_id": ["C126210001533", "F126110107407"],
         "context_id": "prime",
         "user": "prime",
+        "expetimental_group": "A",
         "show": true
     },
     {
         "contents_id": "743394beff4b1282ba735e5e3723ed74",
         "page": "9",
         "no": "4",
-        "quiz_title": "(演習 課題9(4)) 三平方の定理の円と二等辺三角形への利用",
+        "quiz_title": "(演習09(4)) 三平方の定理の円と二等辺三角形への利用",
         "quiz_text": "$$\\begin{array}{l}AB=AC=8,\\ BC=6\\text{の二等辺三角形}ABC\\text{の各辺に接する、半径}r=\\tfrac{3\\sqrt{55}}{11}\\text{の円}O\\text{がある。}\\\\\\text{辺}AB\\text{を}1:3\\text{に分ける点を}D\\text{、辺}BC\\text{と円}O\\text{の接点を}E\\text{、点}E\\text{を通り、辺}AB\\text{と平行な直線と直線}CD\\text{との交点を}F\\text{とすると、}\\\\AD:EF=2:3\\text{であった.}\\\\\\text{直線}AE\\text{と}CD\\text{の交点を}G\\text{とすると、}GE=\\tfrac{3\\sqrt{55}}{5}\\text{であった.}\\\\(4)\\quad \\text{線分}BF\\text{の長さを求めよ。}\\end{array}$$",
-        "standard_answer": "[解答の過程] $$\\begin{array}{l}(4)\\ \\triangle BCD\\text{は，}BC=BD=6\\text{の二等辺三角形である．}\\\\\\quad \\text{ここで，点}D\\text{から辺}BC\\text{へ垂線}DH\\text{をひくと}DH\\parallel AE\\text{より}\\\\\\quad DH:AE=BD:BA=3:4,\\quad DH=\\tfrac{3}{4}AE=\\tfrac{3\\sqrt{55}}{4}\\text{．}\\\\\\quad また}\\\\\\quad BH:BE=BD:BA=6:8=3:4,\\quad BH=\\tfrac{3}{4}BE=\\tfrac{9}{4}\\text{．}\\\\\\quad したがって}\\\\\\quad HC=BC-BH=6-\\tfrac{9}{4}=\\tfrac{15}{4}\\text{．}\\\\\\quad \\triangle CDH\\text{について，三平方の定理により}\\\\\\quad CD^{2}=DH^{2}+HC^{2} =\\bigl(\\tfrac{3\\sqrt{55}{4}\\bigr)^{2}+\\bigl(\\tfrac{15}{4}\\bigr)^{2}=45,\\quad CD>0\\text{より }CD=3\\sqrt{5}\\text{．}\\\\\\quad EF\\parallel BD\\text{より }CF:FD=CE:EB=1:1\\text{ であるから，}\\\\\\quad F\\text{は線分}CD\\text{の中点であり}\\\\\\quad CF=\\tfrac{3\\sqrt{5}}{2}\\text{．さらに，}\\triangle BCD\\text{は二等辺三角形であるから}\\\\\\quad BF\\perp CD\\text{．}\\\\\\quad \\triangle BCF\\text{について，三平方の定理により}\\\\\\quad BF^{2}=BC^{2}-CF^{2} =6^{2}-\\bigl(\\tfrac{3\\sqrt{5}}{2}\\bigr)^{2}=\\tfrac{99}{4},\\quad BF>0\\text{より }BF=\\tfrac{3\\sqrt{11}}{2}\\text{．}\\end{array}$$[最終的な答え] $$BF=\\tfrac{3\\sqrt{11}}{2}$$",
-        "figure_explanation": "",
+        "standard_answer": "[解答の過程] $$\\begin{array}{l}(4)\\ \\triangle BCD\\text{は，}BC=BD=6\\text{の二等辺三角形である．}\\\\\\quad \\text{ここで，点}D\\text{から辺}BC\\text{へ垂線}DH\\text{をひくと}DH\\parallel AE\\text{より}\\\\\\quad DH:AE=BD:BA=3:4,\\quad DH=\\tfrac{3}{4}AE=\\tfrac{3\\sqrt{55}}{4}\\text{．}\\\\\\quad \\text{また}\\\\\\quad BH:BE=BD:BA=6:8=3:4,\\quad BH=\\tfrac{3}{4}BE=\\tfrac{9}{4}\\text{．}\\\\\\quad \\text{したがって}\\\\\\quad HC=BC-BH=6-\\tfrac{9}{4}=\\tfrac{15}{4}\\text{．}\\\\\\quad \\triangle CDH\\text{について，三平方の定理により}\\\\\\quad CD^{2}=DH^{2}+HC^{2} =\\bigl(\\tfrac{3\\sqrt{55}}{4}\\bigr)^{2}+\\bigl(\\tfrac{15}{4}\\bigr)^{2}=45,\\quad CD>0\\text{より }CD=3\\sqrt{5}\\text{．}\\\\\\quad EF\\parallel BD\\text{より }CF:FD=CE:EB=1:1\\text{ であるから，}\\\\\\quad F\\text{は線分}CD\\text{の中点であり}\\\\\\quad CF=\\tfrac{3\\sqrt{5}}{2}\\text{．さらに，}\\triangle BCD\\text{は二等辺三角形であるから}\\\\\\quad BF\\perp CD\\text{．}\\\\\\quad \\triangle BCF\\text{について，三平方の定理により}\\\\\\quad BF^{2}=BC^{2}-CF^{2} =6^{2}-\\bigl(\\tfrac{3\\sqrt{5}}{2}\\bigr)^{2}=\\tfrac{99}{4},\\quad BF>0\\text{より }BF=\\tfrac{3\\sqrt{11}}{2}\\text{．}\\end{array}$$[最終的な答え] $$BF=\\tfrac{3\\sqrt{11}}{2}$$",
+        "figure_explanation": "AB=AC=8,\\ BC=6\\text{の二等辺三角形}ABC\\text{の各辺に接する、半径}r=\\tfrac{3\\sqrt{55}}{11}\\text{の円}O\\text{がある。}\\\\\\text{辺}AB\\text{を}1:3\\text{に分ける点を}D\\text{、辺}BC\\text{と円}O\\text{の接点を}E\\text{、点}E\\text{を通り、辺}AB\\text{と平行な直線と直線}CD\\text{との交点を}F\\text{とすると、}\\\\AD:EF=2:3\\text{であった.}\\\\\\text{直線}AE\\text{と}CD\\text{の交点を}G\\text{とすると、}GE=\\tfrac{3\\sqrt{55}}{5}\\text{であった.}",
         "rubric": {
             "1": {
                 "main": "DからBCに下ろした垂線の足をHとし、線分DHの長さを求めることができる。",
@@ -220,9 +223,9 @@
                     "1": "\\text{ここで，点}D\\text{から辺}BC\\text{へ垂線}DH\\text{をひくと}DH\\parallel AE\\text{より}\\\\\\quad DH:AE=BD:BA=3:4,\\quad DH=\\tfrac{3}{4}AE=\\tfrac{3\\sqrt{55}}{4}"
                 },
                 "review_question": {
-                    "contents_id":"743394beff4b1282ba735e5e3723ed74",
-                    "page":"1",
-                    "no":""
+                    "contents_id": "2025summer_experiment",
+                    "page": "1",
+                    "no": "1"
                 }
             },
             "2": {
@@ -231,9 +234,9 @@
                     "1": "\\text{ここで，点}D\\text{から辺}BC\\text{へ垂線}DH\\text{をひくと}DH\\parallel AE\\text{より}\\\\\\quad DH:AE=BD:BA=3:4,\\quad DH=\\tfrac{3}{4}AE=\\tfrac{3\\sqrt{55}}{4}"
                 },
                 "review_question": {
-                    "contents_id":"743394beff4b1282ba735e5e3723ed74",
-                    "page":"1",
-                    "no":""
+                    "contents_id": "2025summer_experiment",
+                    "page": "1",
+                    "no": "1"
                 }
             },
             "3": {
@@ -242,9 +245,9 @@
                     "1": "EF\\parallel BD\\text{より }CF:FD=CE:EB=1:1\\text{ であるから，}\\\\\\quad F\\text{は線分}CD\\text{の中点であり}"
                 },
                 "review_question": {
-                    "contents_id":"743394beff4b1282ba735e5e3723ed74",
-                    "page":"1",
-                    "no":""
+                    "contents_id": "2025summer_experiment",
+                    "page": "1",
+                    "no": "1"
                 }
             },
             "4": {
@@ -253,9 +256,9 @@
                     "1": "CF=\\tfrac{3\\sqrt{5}}{2}"
                 },
                 "review_question": {
-                    "contents_id":"743394beff4b1282ba735e5e3723ed74",
-                    "page":"1",
-                    "no":""
+                    "contents_id": "2025summer_experiment",
+                    "page": "3",
+                    "no": "1"
                 }
             },
             "5": {
@@ -264,9 +267,9 @@
                     "1": "triangle BCD\\text{は二等辺三角形であるから}\\\\\\quad BF\\perp CD"
                 },
                 "review_question": {
-                    "contents_id":"743394beff4b1282ba735e5e3723ed74",
-                    "page":"1",
-                    "no":""
+                    "contents_id": "2025summer_experiment",
+                    "page": "1",
+                    "no": "1"
                 }
             },
             "6": {
@@ -275,25 +278,26 @@
                     "1": "\\triangle BCF\\text{について，三平方の定理により}\\\\\\quad BF^{2}=BC^{2}-CF^{2} =6^{2}-\\bigl(\\tfrac{3\\sqrt{5}}{2}\\bigr)^{2}=\\tfrac{99}{4},\\quad BF>0\\text{より }BF=\\tfrac{3\\sqrt{11}}{2}\\text{．}"
                 },
                 "review_question": {
-                    "contents_id":"743394beff4b1282ba735e5e3723ed74",
-                    "page":"1",
-                    "no":""
+                    "contents_id": "2025summer_experiment",
+                    "page": "3",
+                    "no": "1"
                 }
             }
         },
         "school_id": ["C126210001533", "F126110107407"],
         "context_id": "prime",
         "user": "prime",
+        "expetimental_group": "A",
         "show": true
     },
     {
         "contents_id": "743394beff4b1282ba735e5e3723ed74",
         "page": "12",
         "no": "1",
-        "quiz_title": "(演習 課題12(1)) 立方体から作られる四面体とそれに内接する球",
+        "quiz_title": "(演習12(1)) 立方体から作られる四面体とそれに内接する球",
         "quiz_text": "$$\\begin{array}{l}1辺の長さが1の立方体 ABCDEFGH がある。 3点 A、C、F を通る平面と直線 BH の交点を I とする。\\\\(1) 線分 BI の長さは □ である。\\end{array}$$",
         "standard_answer": "[解答の過程]$$\\begin{array}{l}(1)\\ 線分\\ BD\\ の中点を\\ M\\ とすると、線分\\ FM\\ は\\ 3\\ 点\\ A、C、F\\ を通る平面上にあるから\\ I\\ を通る。\\\\\\qquad ここで、平面\\ HDBF\\ について考える。\\\\\\qquad 線分\\ HF、BD\\ は、1辺の長さが1の正方形の対角線であるから\\ HF=BD=\\sqrt{2}.\\\\\\qquad M\\ は線分\\ BD\\ の中点より\\ BM=\\frac{\\sqrt{2}}{2}.\\\\\\qquad 2つの角がそれぞれ等しいから\\ \\triangle FIH\\equiv\\triangle MIB.\\\\\\qquad したがって\\ HI:BI=FH:MB=\\sqrt{2}:\\frac{\\sqrt{2}}{2}=2:1\\quad……①.\\\\\\qquad また、\\triangle HFB\\ において、三平方の定理により\\\\\\qquad\\qquad HB^{2}=HF^{2}+FB^{2}=(\\sqrt{2})^{2}+1^{2}=3.\\\\\\qquad HB>0\\ より\\ HB=\\sqrt{3}.\\\\\\qquad よって、①より\\ BI=\\frac{1}{2+1}\\times HB=\\frac{\\sqrt{3}}{3}.\\end{array}$$[最終的な答え]$$BI=\\frac{\\sqrt{3}}{3}$$",
-        "figure_explanation": "座標を以下のようにとる。  \\nA=(0,0,0), B=(1,0,0), C=(1,1,0), D=(0,1,0),  \\nE=(0,0,1), F=(1,0,1), G=(1,1,1), H=(0,1,1).  \\n\\n1) 辺 BD の中点を  \\n M=\\bigl(\\tfrac{1}{2},\\tfrac{1}{2},0\\bigr)  \\nとする。",
+        "figure_explanation": "1辺の長さが1の立方体 ABCDEFGH がある。 3点 A、C、F を通る平面と直線 BH の交点を I とする。",
         "rubric": {
             "1": {
                 "main": "直線FIが線分ACの中点を通ることに気付ける。",
@@ -301,9 +305,9 @@
                     "1": "平面\\ HDBF\\ について考える。"
                 },
                 "review_question": {
-                    "contents_id":"743394beff4b1282ba735e5e3723ed74",
-                    "page":"1",
-                    "no":""
+                    "contents_id": "2025summer_experiment",
+                    "page": "4",
+                    "no": "1"
                 }
             },
             "2": {
@@ -312,9 +316,9 @@
                     "1": "\\ 線分\\ BD\\ の中点を\\ M\\ とすると、線分\\ FM\\ は\\ 3\\ 点\\ A、C、F\\ を通る平面上にあるから\\ I\\ を通る。"
                 },
                 "review_question": {
-                    "contents_id":"743394beff4b1282ba735e5e3723ed74",
-                    "page":"1",
-                    "no":""
+                    "contents_id": "2025summer_experiment",
+                    "page": "4",
+                    "no": "1"
                 }
             },
             "3": {
@@ -323,9 +327,9 @@
                     "1": "線分\\ HF、BD\\ は、1辺の長さが1の正方形の対角線であるから\\ HF=BD=\\sqrt{2}."
                 },
                 "review_question": {
-                    "contents_id":"743394beff4b1282ba735e5e3723ed74",
-                    "page":"1",
-                    "no":""
+                    "contents_id": "2025summer_experiment",
+                    "page": "4",
+                    "no": "1"
                 }
             },
             "4": {
@@ -334,9 +338,9 @@
                     "1": "2つの角がそれぞれ等しいから\\ \\triangle FIH\\equiv\\triangle MIB.\\\\\\qquad したがって\\ HI:BI=FH:MB=\\sqrt{2}:\\frac{\\sqrt{2}}{2}=2:1"
                 },
                 "review_question": {
-                    "contents_id":"743394beff4b1282ba735e5e3723ed74",
-                    "page":"1",
-                    "no":""
+                    "contents_id": "2025summer_experiment",
+                    "page": "4",
+                    "no": "1"
                 }
             },
             "5": {
@@ -345,9 +349,9 @@
                     "1": "\\triangle HFB\\ において、三平方の定理により\\\\\\qquad\\qquad HB^{2}=HF^{2}+FB^{2}=(\\sqrt{2})^{2}+1^{2}=3.\\\\\\qquad HB>0\\ より\\ HB=\\sqrt{3}."
                 },
                 "review_question": {
-                    "contents_id":"743394beff4b1282ba735e5e3723ed74",
-                    "page":"1",
-                    "no":""
+                    "contents_id": "2025summer_experiment",
+                    "page": "4",
+                    "no": "1"
                 }
             },
             "6": {
@@ -356,25 +360,26 @@
                     "1": "\\ BI=\\frac{1}{2+1}\\times HB=\\frac{\\sqrt{3}}{3}."
                 },
                 "review_question": {
-                    "contents_id":"743394beff4b1282ba735e5e3723ed74",
-                    "page":"1",
-                    "no":""
+                    "contents_id": "2025summer_experiment",
+                    "page": "5",
+                    "no": "1"
                 }
             }
         },
         "school_id": ["C126210001533", "F126110107407"],
         "context_id": "prime",
         "user": "prime",
+        "expetimental_group": "B",
         "show": true
     },
     {
         "contents_id": "743394beff4b1282ba735e5e3723ed74",
         "page": "12",
-        "no": "1",
-        "quiz_title": "(演習 課題12(2)) 立方体から作られる四面体とそれに内接する球",
-        "quiz_text": "$$\\begin{array}{l}1辺の長さが1の立方体 ABCDEFGH がある。 3点 A、C、F を通る平面と直線 BH の交点を I とする。BI=\\frac{\\sqrt{3}}{3}である。\\\\(2) 四面体 ABCI の体積は □ である。\\end{array}$$",
-        "standard_answer": "[解答の過程]$$\\begin{array}{l}(2)\\ 線分\\ BD\\ の中点を\\ M\\ とすると、線分\\ FM\\ は\\ 3\\ 点\\ A、C、F\\ を通る平面上にあるから\\ I\\ を通る。\\\\\\qquad ここで、平面\\ HDBF\\ について考える。\\\\\\qquad 線分\\ HF、BD\\ は、1辺の長さが1の正方形の対角線であるから\\ HF=BD=\\sqrt{2}.\\\\\\qquad M\\ は線分\\ BD\\ の中点より\\ BM=\\frac{\\sqrt{2}{2}.\\\\\\qquad 2つの角がそれぞれ等しいから\\ \\triangle FIH\\equiv\\triangle MIB.\\\\\\qquad したがって\\ HI:BI=FH:MB=\\sqrt{2}:\\frac{\\sqrt{2}{2}=2:1\\quad……①.\\\\①より\\ IM:FM=1:(1+2)=1:3\\quad……②.\\\\\\qquad I\\ から線分\\ BD\\ に引いた垂線と線分\\ BD\\ の交点を\\ J\\ とすると、2つの角がそれぞれ等しいから\\\\\\qquad\\qquad \\triangle MIJ\\equiv\\triangle MFB.\\\\\\qquad よって\\ IJ:FB=1:3.\\\\\\qquad IJ、FB\\ は、四面体\\ ABCI、ABCF\\ の底面を\\ \\triangle ABC\\ としたときのそれぞれの高さである。\\\\\\qquad したがって、四面体\\ ABCI\\ の体積は、四面体\\ ABCF\\ の\\ \\frac{1}{3}\\ 倍である。\\\\\\qquad よって、求める体積は\\ \\{\\frac{1}{3}\\times(\\frac{1}{2}\\times1\\times1)\\times1\\}\\times\\frac{1}{3}=\\frac{1}{18}.\\end{array}$$[最終的な答え]$$\\frac{1}{18}$$",
-        "figure_explanation": "座標を以下のようにとる。  \\nA=(0,0,0), B=(1,0,0), C=(1,1,0), D=(0,1,0),  \\nE=(0,0,1), F=(1,0,1), G=(1,1,1), H=(0,1,1).  \\n\\n1) 辺 BD の中点を  \\n M=\\bigl(\\tfrac{1}{2},\\tfrac{1}{2},0\\bigr)  \\nとする。",
+        "no": "2",
+        "quiz_title": "(演習12(2)) 立方体から作られる四面体とそれに内接する球",
+        "quiz_text": "$$\\begin{array}{l}1辺の長さが1の立方体 ABCDEFGH がある。 3点 A、C、F を通る平面と直線 BH の交点を I、\\ 線分\\ BD\\ の中点を\\ M\\ とする。BI=\\frac{\\sqrt{3}}{3}である。\\\\(2) 四面体 ABCI の体積は □ である。\\end{array}$$",
+        "standard_answer": "[解答の過程]$$\\begin{array}{l}(2)\\ 線分\\ BD\\ の中点を\\ M\\ とすると、線分\\ FM\\ は\\ 3\\ 点\\ A、C、F\\ を通る平面上にあるから\\ I\\ を通る。\\\\\\qquad ここで、平面\\ HDBF\\ について考える。\\\\\\qquad 線分\\ HF、BD\\ は、1辺の長さが1の正方形の対角線であるから\\ HF=BD=\\sqrt{2}.\\\\\\qquad M\\ は線分\\ BD\\ の中点より\\ BM=\\frac{\\sqrt{2}}{2}.\\\\\\qquad 2つの角がそれぞれ等しいから\\ \\triangle FIH\\equiv\\triangle MIB.\\\\\\qquad したがって\\ HI:BI=FH:MB=\\sqrt{2}:\\frac{\\sqrt{2}}{2}=2:1\\quad……①.\\\\①より\\ IM:FM=1:(1+2)=1:3\\quad……②.\\\\\\qquad I\\ から線分\\ BD\\ に引いた垂線と線分\\ BD\\ の交点を\\ J\\ とすると、2つの角がそれぞれ等しいから\\\\\\qquad\\qquad \\triangle MIJ\\equiv\\triangle MFB.\\\\\\qquad よって\\ IJ:FB=1:3.\\\\\\qquad IJ、FB\\ は、四面体\\ ABCI、ABCF\\ の底面を\\ \\triangle ABC\\ としたときのそれぞれの高さである。\\\\\\qquad したがって、四面体\\ ABCI\\ の体積は、四面体\\ ABCF\\ の\\ \\frac{1}{3}\\ 倍である。\\\\\\qquad よって、求める体積は\\ \\{\\frac{1}{3}\\times(\\frac{1}{2}\\times1\\times1)\\times1\\}\\times\\frac{1}{3}=\\frac{1}{18}.\\end{array}$$[最終的な答え]$$\\frac{1}{18}$$",
+        "figure_explanation": "1辺の長さが1の立方体 ABCDEFGH がある。 3点 A、C、F を通る平面と直線 BH の交点を I、\\ 線分\\ BD\\ の中点を\\ M\\ とする。BI=\\frac{\\sqrt{3}}{3}である。",
         "rubric": {
             "1": {
                 "main": "BIの長さがわかっていることから、四面体ABCIについて、△ABCを底面、Iを頂点とした四面体として見ることができる。",
@@ -382,9 +387,9 @@
                     "1": "IJ、FB\\ は、四面体\\ ABCI、ABCF\\ の底面を\\ \\triangle ABC\\ としたときのそれぞれの高さである。"
                 },
                 "review_question": {
-                    "contents_id":"743394beff4b1282ba735e5e3723ed74",
-                    "page":"1",
-                    "no":""
+                    "contents_id": "2025summer_experiment",
+                    "page": "6",
+                    "no": "1"
                 }
             },
             "2": {
@@ -394,9 +399,9 @@
                     "2": "IJ:FB=1:3"
                 },
                 "review_question": {
-                    "contents_id":"743394beff4b1282ba735e5e3723ed74",
-                    "page":"1",
-                    "no":""
+                    "contents_id": "2025summer_experiment",
+                    "page": "6",
+                    "no": "1"
                 }
             },
             "3": {
@@ -406,9 +411,9 @@
                     "2": "\\{\\frac{1}{3}\\times(\\frac{1}{2}\\times1\\times1)\\times1\\}\\times\\frac{1}{3}"
                 },
                 "review_question": {
-                    "contents_id":"743394beff4b1282ba735e5e3723ed74",
-                    "page":"1",
-                    "no":""
+                    "contents_id": "2025summer_experiment",
+                    "page": "7",
+                    "no": "1"
                 }
             },
             "4": {
@@ -417,25 +422,26 @@
                     "1": "\\frac{1}{18}"
                 },
                 "review_question": {
-                    "contents_id":"743394beff4b1282ba735e5e3723ed74",
-                    "page":"1",
-                    "no":""
+                    "contents_id": "2025summer_experiment",
+                    "page": "7",
+                    "no": "1"
                 }
             }
         },
         "school_id": ["C126210001533", "F126110107407"],
         "context_id": "prime",
         "user": "prime",
+        "expetimental_group": "B",
         "show": true
     },
     {
         "contents_id": "743394beff4b1282ba735e5e3723ed74",
         "page": "12",
-        "no": "1",
-        "quiz_title": "(演習 課題12(3)) 立方体から作られる四面体とそれに内接する球",
-        "quiz_text": "$$\\begin{array}{l}1辺の長さが1の立方体 ABCDEFGH がある。 3点 A、C、F を通る平面と直線 BH の交点を I とする。\\\\BI=\\frac{\\sqrt{3}}{3}である。四面体 ABCI の体積は\\frac{1}{18}である。\\\\(3) 四面体 ABCI の4つの面すべてに接する球の半径を r とするとき、\\frac{1}{r} の値を求めよ。\\end{array}$$",
-        "standard_answer": "[解答の過程]$$\\begin{array}{l}(3)\\ 線分\\ BD\\ の中点を\\ M\\ とすると、線分\\ FM\\ は\\ 3\\ 点\\ A、C、F\\ を通る平面上にあるから\\ I\\ を通る。\\\\\\qquad ここで、平面\\ HDBF\\ について考える。\\\\\\qquad 線分\\ HF、BD\\ は、1辺の長さが1の正方形の対角線であるから\\ HF=BD=\\sqrt{2}.\\\\\\qquad M\\ は線分\\ BD\\ の中点より\\ BM=\\frac{\\sqrt{2}{2}.\\\\\\qquad 2つの角がそれぞれ等しいから\\ \\triangle FIH\\equiv\\triangle MIB.\\\\\\qquad したがって\\ HI:BI=FH:MB=\\sqrt{2}:\\frac{\\sqrt{2}{2}=2:1\\quad……①.\\\\①より\\ IM:FM=1:(1+2)=1:3\\quad……②.\\\\四面体\\ ABCI\\ の4つの面すべてに接する球の中心を\\ O\\ とする。\\\\\\qquad 四面体\\ ABCI\\ の体積は、四面体\\ OABC、OACI、OABI、OBCI\\ の体積の和であり、O\\ から4つの面に下した垂線は、すべて球の半径である。\\\\\\qquad それぞれの底面について\\\\\\qquad\\qquad \\triangle ABC=\\frac{1}{2}\\times1\\times1=\\frac{1}{2}.\\\\\\qquad\\qquad \\triangle ACF\\ は二等辺三角形であり、M\\ は\\ AC\\ の中点であることから\\\\\\qquad\\qquad\\qquad AC\\perp FM.\\\\\\qquad\\qquad したがって、②より\\ \\triangle ACI=\\frac{1}{3}\\times\\triangle ACF\\quad……③.\\\\\\qquad\\qquad \\triangle MFB\\ において、三平方の定理により\\\\\\qquad\\qquad\\qquad FM^{2}=\\bigl(\\frac{\\sqrt{2}{2}\\bigr)^{2}+1^{2}=\\frac{3}{2}.\\\\\\qquad\\qquad FM>0\\ より\\ FM=\\frac{\\sqrt{6}{2}.\\\\\\qquad\\qquad ゆえに\\ \\triangle ACF=\\frac{1}{2}\\times\\sqrt{2}\\times\\frac{\\sqrt{6}{2}=\\frac{\\sqrt{3}{2}.\\\\\\qquad ③より\\ \\triangle ACI=\\frac{1}{3}\\times\\frac{\\sqrt{3}{2}=\\frac{\\sqrt{3}{6}.\\\\\\qquad 線分\\ HA\\ は、1辺の長さが1の正方形の対角線であるから\\ HA=\\sqrt{2}.\\\\\\qquad よって、①より\\ \\triangle ABI=\\frac{1}{3}\\times\\triangle HAB=\\frac{1}{3}\\times\\bigl(\\frac{1}{2}\\times1\\times\\sqrt{2}\\bigr)=\\frac{\\sqrt{2}{6}.\\\\\\qquad さらに\\ \\triangle BCI=\\triangle ABI.\\\\\\qquad 以上より、四面体\\ ABCI\\ の体積について\\\\\\qquad\\qquad (\\frac{1}{3}\\times\\frac{1}{2}\\times r)+(\\frac{1}{3}\\times\\frac{\\sqrt{3}{6}\\times r)+(\\frac{1}{3}\\times\\frac{\\sqrt{2}{6}\\times r)\\times2=\\frac{1}{18}.\\\\\\qquad\\qquad 3r+\\sqrt{3}r+2\\sqrt{2}r=1.\\\\\\qquad したがって\\ \\frac{1}{r}=3+\\sqrt{3}+2\\sqrt{2}.\\end{array}$$[最終的な答え]$$\\frac{1}{r}=3+\\sqrt{3}+2\\sqrt{2}$$",
-        "figure_explanation": "座標を以下のようにとる。  \\nA=(0,0,0), B=(1,0,0), C=(1,1,0), D=(0,1,0),  \\nE=(0,0,1), F=(1,0,1), G=(1,1,1), H=(0,1,1).  \\n\\n1) 辺 BD の中点を  \\n M=\\bigl(\\tfrac{1}{2},\\tfrac{1}{2},0\\bigr)  \\nとする。",
+        "no": "3",
+        "quiz_title": "(演習12(3)) 立方体から作られる四面体とそれに内接する球",
+        "quiz_text": "$$\\begin{array}{l}1辺の長さが1の立方体 ABCDEFGH がある。 3点 A、C、F を通る平面と直線 BH の交点を I、\\ 線分\\ BD\\ の中点を\\ M\\ とする。\\\\BI=\\frac{\\sqrt{3}}{3}である。四面体 ABCI の体積は\\frac{1}{18}である。\\\\(3) 四面体 ABCI の4つの面すべてに接する球の半径を r とするとき、\\frac{1}{r} の値を求めよ。\\end{array}$$",
+        "standard_answer": "[解答の過程]$$\\begin{array}{l}(3)\\ 線分\\ BD\\ の中点を\\ M\\ とすると、線分\\ FM\\ は\\ 3\\ 点\\ A、C、F\\ を通る平面上にあるから\\ I\\ を通る。\\\\\\qquad ここで、平面\\ HDBF\\ について考える。\\\\\\qquad 線分\\ HF、BD\\ は、1辺の長さが1の正方形の対角線であるから\\ HF=BD=\\sqrt{2}.\\\\\\qquad M\\ は線分\\ BD\\ の中点より\\ BM=\\frac{\\sqrt{2}}{2}.\\\\\\qquad 2つの角がそれぞれ等しいから\\ \\triangle FIH\\equiv\\triangle MIB.\\\\\\qquad したがって\\ HI:BI=FH:MB=\\sqrt{2}:\\frac{\\sqrt{2}}{2}=2:1\\quad……①.\\\\①より\\ IM:FM=1:(1+2)=1:3\\quad……②.\\\\四面体\\ ABCI\\ の4つの面すべてに接する球の中心を\\ O\\ とする。\\\\\\qquad 四面体\\ ABCI\\ の体積は、四面体\\ OABC、OACI、OABI、OBCI\\ の体積の和であり、O\\ から4つの面に下した垂線は、すべて球の半径である。\\\\\\qquad それぞれの底面について\\\\\\qquad\\qquad \\triangle ABC=\\frac{1}{2}\\times1\\times1=\\frac{1}{2}.\\\\\\qquad\\qquad \\triangle ACF\\ は二等辺三角形であり、M\\ は\\ AC\\ の中点であることから\\\\\\qquad\\qquad\\qquad AC\\perp FM.\\\\\\qquad\\qquad したがって、②より\\ \\triangle ACI=\\frac{1}{3}\\times\\triangle ACF\\quad……③.\\\\\\qquad\\qquad \\triangle MFB\\ において、三平方の定理により\\\\\\qquad\\qquad\\qquad FM^{2}=\\bigl(\\frac{\\sqrt{2}}{2}\\bigr)^{2}+1^{2}=\\frac{3}{2}.\\\\\\qquad\\qquad FM>0\\ より\\ FM=\\frac{\\sqrt{6}}{2}.\\\\\\qquad\\qquad ゆえに\\ \\triangle ACF=\\frac{1}{2}\\times\\sqrt{2}\\times\\frac{\\sqrt{6}}{2}=\\frac{\\sqrt{3}}{2}.\\\\\\qquad ③より\\ \\triangle ACI=\\frac{1}{3}\\times\\frac{\\sqrt{3}}{2}=\\frac{\\sqrt{3}}{6}.\\\\\\qquad 線分\\ HA\\ は、1辺の長さが1の正方形の対角線であるから\\ HA=\\sqrt{2}.\\\\\\qquad よって、①より\\ \\triangle ABI=\\frac{1}{3}\\times\\triangle HAB=\\frac{1}{3}\\times\\bigl(\\frac{1}{2}\\times1\\times\\sqrt{2}\\bigr)=\\frac{\\sqrt{2}}{6}.\\\\\\qquad さらに\\ \\triangle BCI=\\triangle ABI.\\\\\\qquad 以上より、四面体\\ ABCI\\ の体積について\\\\\\qquad\\qquad (\\frac{1}{3}\\times\\frac{1}{2}\\times r)+(\\frac{1}{3}\\times\\frac{\\sqrt{3}}{6}\\times r)+(\\frac{1}{3}\\times\\frac{\\sqrt{2}}{6}\\times r)\\times2=\\frac{1}{18}.\\\\\\qquad\\qquad 3r+\\sqrt{3}r+2\\sqrt{2}r=1.\\\\\\qquad したがって\\ \\frac{1}{r}=3+\\sqrt{3}+2\\sqrt{2}.\\end{array}$$[最終的な答え]$$\\frac{1}{r}=3+\\sqrt{3}+2\\sqrt{2}$$",
+        "figure_explanation": "1辺の長さが1の立方体 ABCDEFGH がある。 3点 A、C、F を通る平面と直線 BH の交点を I、\\ 線分\\ BD\\ の中点を\\ M\\ とする。\\\\BI=\\frac{\\sqrt{3}}{3}である。四面体 ABCI の体積は\\frac{1}{18}である。",
         "rubric": {
             "1": {
                 "main": "四面体ABCIを、頂点を内接円の中心O、各面を底面とした4つの四面体として見ることができる。",
@@ -444,9 +450,9 @@
                     "2": "α+β=-a-2, αβ=2aという式"
                 },
                 "review_question": {
-                    "contents_id":"743394beff4b1282ba735e5e3723ed74",
-                    "page":"1",
-                    "no":""
+                    "contents_id": "2025summer_experiment",
+                    "page": "8",
+                    "no": "1"
                 }
             },
             "2": {
@@ -456,9 +462,9 @@
                     "2": "α+β=-a-2, αβ=2aという式"
                 },
                 "review_question": {
-                    "contents_id":"743394beff4b1282ba735e5e3723ed74",
-                    "page":"1",
-                    "no":""
+                    "contents_id": "2025summer_experiment",
+                    "page": "7",
+                    "no": "1"
                 }
             },
             "3": {
@@ -468,9 +474,9 @@
                     "2": "方程式を連立する"
                 },
                 "review_question": {
-                    "contents_id":"743394beff4b1282ba735e5e3723ed74",
-                    "page":"1",
-                    "no":""
+                    "contents_id": "2025summer_experiment",
+                    "page": "7",
+                    "no": "1"
                 }
             },
             "4": {
@@ -480,9 +486,9 @@
                     "2": "aの候補を求める"
                 },
                 "review_question": {
-                    "contents_id":"743394beff4b1282ba735e5e3723ed74",
-                    "page":"1",
-                    "no":""
+                    "contents_id": "2025summer_experiment",
+                    "page": "7",
+                    "no": "1"
                 }
             },
             "5": {
@@ -494,9 +500,9 @@
                     "4": "a=2のとき、方程式を解くとx=-2となるから、矛盾する。"
                 },
                 "review_question": {
-                    "contents_id":"743394beff4b1282ba735e5e3723ed74",
-                    "page":"1",
-                    "no":""
+                    "contents_id": "2025summer_experiment",
+                    "page": "7",
+                    "no": "1"
                 }
             },
             "6": {
@@ -505,9 +511,9 @@
                     "1": "a=-3"
                 },
                 "review_question": {
-                    "contents_id":"743394beff4b1282ba735e5e3723ed74",
-                    "page":"1",
-                    "no":""
+                    "contents_id": "2025summer_experiment",
+                    "page": "7",
+                    "no": "1"
                 }
             },
             "7": {
@@ -516,9 +522,9 @@
                     "1": "a=-3"
                 },
                 "review_question": {
-                    "contents_id":"743394beff4b1282ba735e5e3723ed74",
-                    "page":"1",
-                    "no":""
+                    "contents_id": "2025summer_experiment",
+                    "page": "7",
+                    "no": "1"
                 }
             },
             "8": {
@@ -527,9 +533,9 @@
                     "1": "a=-3"
                 },
                 "review_question": {
-                    "contents_id":"743394beff4b1282ba735e5e3723ed74",
-                    "page":"1",
-                    "no":""
+                    "contents_id": "2025summer_experiment",
+                    "page": "7",
+                    "no": "1"
                 }
             },
             "9": {
@@ -538,9 +544,9 @@
                     "1": "a=-3"
                 },
                 "review_question": {
-                    "contents_id":"743394beff4b1282ba735e5e3723ed74",
-                    "page":"1",
-                    "no":""
+                    "contents_id": "2025summer_experiment",
+                    "page": "7",
+                    "no": "1"
                 }
             },
             "10": {
@@ -549,22 +555,23 @@
                     "1": "a=-3"
                 },
                 "review_question": {
-                    "contents_id":"743394beff4b1282ba735e5e3723ed74",
-                    "page":"1",
-                    "no":""
+                    "contents_id": "2025summer_experiment",
+                    "page": "7",
+                    "no": "1"
                 }
             }
         },
         "school_id": ["C126210001533", "F126110107407"],
         "context_id": "prime",
         "user": "prime",
+        "expetimental_group": "B",
         "show": true
     },
     {
         "contents_id": "95f8d9901ca8878e291552f001f67692",
         "page": "9",
         "no": "2",
-        "quiz_title": "(演習 予習9(2)) ２次関数のグラフの軸と頂点",
+        "quiz_title": "(予習09(2)) ２次関数のグラフの軸と頂点",
         "quiz_text": "$$\\begin{array}{l}\\text{次の２次関数のグラフの軸と頂点を求めよ。}\\\\(2)\\quad y = -2x^{2} + 4x + 3\\end{array}$$",
         "standard_answer": "[解答の過程] $$\\begin{array}{l}\\quad y = -2x^{2} + 4x + 3 = -2\\bigl(x^{2} - 2x\\bigr) + 3 = -2\\bigl((x - 1)^{2} - 1\\bigr) + 3 = -2(x - 1)^{2} + 5\\end{array}$$[最終的な答え] $$\\begin{array}{l}\\text{軸}: x = 1,\\quad \\text{頂点}: (1,\\,5)\\end{array}$$",
         "figure_explanation": "",
@@ -575,9 +582,9 @@
                     "1": "y=-2(x^2-2x)+3 という変形"
                 },
                 "review_question": {
-                    "contents_id":"743394beff4b1282ba735e5e3723ed74",
-                    "page":"1",
-                    "no":""
+                    "contents_id": "2025summer_experiment",
+                    "page": "9",
+                    "no": "1"
                 }
             },
             "2": {
@@ -586,9 +593,9 @@
                     "1": "y=-2(x-1)^2+5 という変形"
                 },
                 "review_question": {
-                    "contents_id":"743394beff4b1282ba735e5e3723ed74",
-                    "page":"1",
-                    "no":""
+                    "contents_id": "2025summer_experiment",
+                    "page": "10",
+                    "no": "1"
                 }
             },
             "3": {
@@ -597,9 +604,9 @@
                     "1": "直線 x=1"
                 },
                 "review_question": {
-                    "contents_id":"743394beff4b1282ba735e5e3723ed74",
-                    "page":"1",
-                    "no":""
+                    "contents_id": "2025summer_experiment",
+                    "page": "9",
+                    "no": "1"
                 }
             },
             "4": {
@@ -608,22 +615,23 @@
                     "1": "(1, 5)"
                 },
                 "review_question": {
-                    "contents_id":"743394beff4b1282ba735e5e3723ed74",
-                    "page":"1",
-                    "no":""
+                    "contents_id": "2025summer_experiment",
+                    "page": "11",
+                    "no": "1"
                 }
             }
         },
         "school_id": ["C126210001533", "F126110107407"],
         "context_id": "prime",
         "user": "prime",
+        "expetimental_group": "B",
         "show": true
     },
     {
         "contents_id": "cd0f74b5955dc87fd0605745c4b49ee8",
         "page": "18",
         "no": "1",
-        "quiz_title": "(演習 基本18) 1次関数の変域",
+        "quiz_title": "(基本18) 1次関数の変域",
         "quiz_text": "$$\\begin{array}{l}一次関数\\ y = a x + 10\\ の\\ x\\ の変域が\\ 1 \\leqq x \\leqq 4\\ であるとき、\\\\y\\ の変域が\\ -2 \\leqq y \\leqq b\\ となる。\\ このとき、\\ a,\\ b\\ の値をそれぞれ求めなさい。\\end{array}$$",
         "standard_answer": "[解答の過程] $$\\begin{array}{l}\\text{一次関数 }y = a x + 10\\text{ の値は、}\\\\x = 1\\text{ のとき }y = a + 10\\\\x = 4\\text{ のとき }y = 4a + 10\\\\a > 0\\text{ のとき}\\\\a + 10 = -2\\\\a = -12\\\\\\text{これは問題に適さない。よって、}a < 0\\text{ で}\\\\a + 10 = b\\quad\\text{……①}\\\\4a + 10 = -2\\quad\\text{……②}\\\\②より\\ a = -3\\\\これを①に代入すると\\\\b = 7\\end{array}$$[最終的な答え] $$a = -3,\\quad b = 7$$",
         "figure_explanation": "",
@@ -634,9 +642,9 @@
                     "1": ""
                 },
                 "review_question": {
-                    "contents_id":"743394beff4b1282ba735e5e3723ed74",
-                    "page":"1",
-                    "no":""
+                    "contents_id": "2025summer_experiment",
+                    "page": "12",
+                    "no": "1"
                 }
             },
             "2": {
@@ -645,9 +653,9 @@
                     "1": ""
                 },
                 "review_question": {
-                    "contents_id":"743394beff4b1282ba735e5e3723ed74",
-                    "page":"1",
-                    "no":""
+                    "contents_id": "2025summer_experiment",
+                    "page": "13",
+                    "no": "1"
                 }
             },
             "3": {
@@ -656,9 +664,9 @@
                     "1": "(-2, -3)"
                 },
                 "review_question": {
-                    "contents_id":"743394beff4b1282ba735e5e3723ed74",
-                    "page":"1",
-                    "no":""
+                    "contents_id": "2025summer_experiment",
+                    "page": "13",
+                    "no": "1"
                 }
             },
             "4": {
@@ -667,9 +675,9 @@
                     "1": "直線 x=-2"
                 },
                 "review_question": {
-                    "contents_id":"743394beff4b1282ba735e5e3723ed74",
-                    "page":"1",
-                    "no":""
+                    "contents_id": "2025summer_experiment",
+                    "page": "13",
+                    "no": "1"
                 }
             },
             "5": {
@@ -678,15 +686,16 @@
                     "1": "(-2, -3)"
                 },
                 "review_question": {
-                    "contents_id":"743394beff4b1282ba735e5e3723ed74",
-                    "page":"1",
-                    "no":""
+                    "contents_id": "2025summer_experiment",
+                    "page": "13",
+                    "no": "1"
                 }
             }
         },
         "school_id": ["C126210001533", "F126110107407"],
         "context_id": "prime",
         "user": "prime",
+        "expetimental_group": "A",
         "show": true
     },
     {
@@ -723,7 +732,7 @@
         "no": "1",
         "quiz_title": "三角形と線分の比 (問題ID:78903)",
         "quiz_text": "[問題] $$ \\begin{array}{l} △ABCにおいて, AB上にD, AC上にEを、\\angle AED = \\angle ABCとなるようにとる。また、直線DEと直線BCの交点をFとする。\\\\ AD = 8\\,\\mathrm{cm},\\; DB = 12\\,\\mathrm{cm},\\; AE = 10\\,\\mathrm{cm},\\; DE = 9\\,\\mathrm{cm},\\; \\angle ABC = \\angle AED\\text{であるとき,}\\\\ 線分 FC の長さを求めなさい。 \\end{array}$$",
-        "standard_answer": "[解答の過程]$$\\begin{array}{l}\\triangle ABC = \\frac{1}{2}\\times 4 \\times 3 = 6 \\\\ また，三平方の定理により AC^{2} = 3^{2} + 4^{2} = 25 \\\\ AC > 0 であるから AC = 5 \\\\ 円 I の半径を r cm とする． \\\\ \\triangle ABC を \\triangle IAB，\\triangle IBC，\\triangle ICA に分けて面積を求めると \\\\ \\quad \\triangle ABC = \\frac{1}{2}\\times 3 \\times r + \\frac{1}{2}\\times 4 \\times r + \\frac{1}{2}\\times 5 \\times r = 6r \\\\ よって，6r = 6 より r = 1\\end{array}$$[最終的な答え]$$円 I の半径は １cm$$",
+        "standard_answer": "[解答の過程]$$\\begin{array}{l}△ABC と △AED において \\\\仮定より \\angle ABC = \\angle AED \\\\共通な角であるから \\angle BAC = \\angle EAD \\\\よって, 2組の角がそれぞれ等しいから △ABC \\sim △AED \\\\したがって AC : AD = AB : AE \\\\(10 + EC) : 8 = (8 + 12) : 10 \\\\10 + EC = 16 \\\\EC = 6 \\\\同様に AB : AE = BC : ED \\\\(8 + 12) : 10 = BC : 9 \\\\BC = 18 \\\\次に, 辺 EF 上に点 G を AB//GC となるようにとる。 \\\\AD//GC であるから AE : CE = AD : CG \\\\10 : 6 = 8 : CG \\\\よって CG = \\frac{24}{5} \\\\また, △FBD において, DB//GC であるから FC : FB = CG : BD = \\frac{24}{5} : 12 = 2 : 5 \\\\よって FC : CB = 2 : (5 - 2) = 2 : 3 \\\\したがって FC = \\frac{2}{3} CB = \\frac{2}{3} \\times 18 = 12\\,\\text{(cm)}\\end{array}$$[最終的な答え]$$FC = 12\\text{ (cm)}$$",
         "figure_explanation": "",
         "rubric": {},
         "school_id": "F126110107407",
@@ -751,7 +760,7 @@
         "no": "1",
         "quiz_title": "三角形と線分の比 (問題ID:34505)",
         "quiz_text": "[問題] $$ \\begin{array}{l} 平行四辺形 ABCD の辺 AB、AD 上にそれぞれ点 E、F があり、AE : EB = 2 : 1、AF : FD = 1 : 1 である。 \\\\ ２直線 BC、DE の交点を G とし、線分 DG と CF の交点を H とする。このとき、次の比を求めなさい。 \\\\ (1) FH : HC \\\\ (2) DH : HE \\end{array}$$",
-        "standard_answer": "[解答の過程]$$\\begin{array}{l}\\text{AD//BG であるから } AD:BG = AE:EB = 2:1 \\\\\\text{よって } AD = 2\\,BG \\\\\\text{BC = AD であるから } CG = 2\\,BG + BG = 3\\,BG \\\\\\text{また、} DF = \\frac{1}{2}AD \\text{ であるから } DF = BG \\\\\\text{したがって } DF:CG = BG:3\\,BG = 1:3 \\\\\\text{DF//CG であるから } FH:HC = DF:CG = 1:3 \\\\\\text{(2) } DH:GH = DF:CG = 1:3 \\text{ であるから } DH = \\frac{1}{1+3}DG = \\frac{1}{4}DG \\\\\\text{また、 } DE:GE = AE:EB = 2:1 \\text{ であるから } DE = \\frac{2}{2+1}DG = \\frac{2}{3}DG \\\\\\text{よって } HE = \\frac{2}{3}DG - \\frac{1}{4}DG = \\frac{5}{12}DG \\\\\\text{したがって } DH:HE = \\frac{1}{4}DG : \\frac{5}{12}DG = 3:5\\end{array}$$[最終的な答え]$$DF:CG = 1:3,\\ FH:HC = 1:3,\\ DH:HE = 3:5$$",
+        "standard_answer": "[解答の過程]$$\\begin{array}{l}(1)\\text{AD//BG であるから } AD:BG = AE:EB = 2:1 \\\\\\text{よって } AD = 2\\,BG \\\\\\text{BC = AD であるから } CG = 2\\,BG + BG = 3\\,BG \\\\\\text{また、} DF = \\frac{1}{2}AD \\text{ であるから } DF = BG \\\\\\text{したがって } DF:CG = BG:3\\,BG = 1:3 \\\\\\text{DF//CG であるから } FH:HC = DF:CG = 1:3 \\\\\\text{(2) } DH:GH = DF:CG = 1:3 \\text{ であるから } DH = \\frac{1}{1+3}DG = \\frac{1}{4}DG \\\\\\text{また、 } DE:GE = AE:EB = 2:1 \\text{ であるから } DE = \\frac{2}{2+1}DG = \\frac{2}{3}DG \\\\\\text{よって } HE = \\frac{2}{3}DG - \\frac{1}{4}DG = \\frac{5}{12}DG \\\\\\text{したがって } DH:HE = \\frac{1}{4}DG : \\frac{5}{12}DG = 3:5\\end{array}$$[最終的な答え]$$DF:CG = 1:3,\\ FH:HC = 1:3,\\ DH:HE = 3:5$$",
         "figure_explanation": "",
         "rubric": {},
         "school_id": "F126110107407",
@@ -764,8 +773,8 @@
         "page": "6",
         "no": "1",
         "quiz_title": "三角柱の表面上の最短距離 (問題ID:67806)",
-        "quiz_text": "[問題]$$\\begin{array}{l}AB=3\\mathrm{cm},\\ BC=4\\mathrm{cm},\\ \\angle ABC=90^\\circ\\ の直角三角形\\,ABC\\,を底面とし、AD=BE=CF=2\\mathrm{cm}\\ を高さとする三角柱ABC-DEFがある。\\\\辺\\,EF\\,の中点をGとする。このとき、次の問いに答えなさい。\\\\(1)\\ この三角柱の表面積を求めなさい。\\\\(2)\\ 3点\\,B,\\,D,\\,G\\,を結んでできる三角形の面積を求めなさい。\\\\(3)\\ この三角柱の表面上に、点\\,B\\,から点\\,C\\,まで、辺\\,EF、辺\\,DF\\,と交わるようにひもをかける。かけたひもの長さがもっとも短くなるときのひもの長さを求めなさい。ただし、ひもはゆるまないようにかけ、ひもの太さは考えないものとする。\\end{array}$$",
-        "standard_answer": "[解答の過程] $$\\begin{array}{l}(1)\\ \\triangle ABCにおいて、三平方の定理により\\\\\\quad AC^{2}=3^{2}+4^{2}=25,\\ AC>0であるからAC=5\\mathrm{cm}.\\\\\\quad 底面積は\\frac{1}{2}\\times3\\times4=6\\ (\\mathrm{cm}^{2})\\\\\\quad 側面積は2\\times(3+4+5)=24\\ (\\mathrm{cm}^{2})\\\\\\quad よって、求める表面積は6\\times2+24=36\\ (\\mathrm{cm}^{2}).\\\\\\\\(2)\\ \\triangle BEDにおいて\\\\\\quad BD^{2}=2^{2}+3^{2}=13,\\ BD>0であるからBD=\\sqrt{13}\\mathrm{cm}.\\\\\\quad 点Gは辺EFの中点であるからEG=2\\mathrm{cm}.\\\\\\quad よって、DG=BDであるからDG=\\sqrt{13}\\mathrm{cm}.\\\\\\quad \\triangle BEGは直角二等辺三角形であるからBG=\\sqrt{2}\\,BE=2\\sqrt{2}\\ (\\mathrm{cm}).\\\\\\quad 半周長をp=\\frac{BD+DG+BG}{2}=\\frac{\\sqrt{13}+\\sqrt{13}+2\\sqrt{2}{2}=\\sqrt{13}+\\sqrt{2},\\\\\\quad とすると、面積Sは\\\\\\quad S=\\sqrt{\\,p(p-BD)(p-DG)(p-BG)\\,}\\\\\\quad\\quad =\\sqrt{(\\sqrt{13}+\\sqrt{2})(\\sqrt{2})(\\sqrt{2})(\\sqrt{13}-\\sqrt{2})}\\\\\\quad\\quad =\\sqrt{22}\\ (\\mathrm{cm}^{2}).\\\\\\quad △BDGにおいて、辺BGの中点をMとするとBM=\\sqrt{2}\\,\\mathrm{cm},\\ \\angle DMB=90^{\\circ}.\\\\\\quad よって、△DBMにおいてDM^{2}=(\\sqrt{13})^{2}-(\\sqrt{2})^{2}=11,\\ DM>0であるからDM=\\sqrt{11}\\,\\mathrm{cm}.\\\\\\quad したがって△BDG=\\frac{1}{2}\\times2\\sqrt{2}\\times\\sqrt{11}=\\sqrt{22}\\ (\\mathrm{cm}^{2}).\\\\\\\\(3)\\ 点Bから点Cまで、辺EF、辺DFと交わるようにひもをかけたとき、辺EF、辺DFとの交わる点をそれぞれH, Iとする。\\\\\\quad 点Bから点Cまでかけたひもの長さがもっとも短くなるのは、展開図において4点B, H, I, Cが一直線上にあるときである。\\\\\\quad 展開図において、区別のために、四角形BEFCにおける点Cを点C'とかく。点Cから直線BC'に垂線をひき、直線BC'との交点をJとする。\\\\\\quad また、線分CJと直線FEとの交点をKとする。\\\\\\quad △CKF∽△FEDであり、相似比はCF:FD=2:5\\\\\\quad よってKF=\\frac{2}{5}\\,ED=\\frac{6}{5}\\ (\\mathrm{cm}),\\ KC=\\frac{2}{5}\\,EF=\\frac{8}{5}\\ (\\mathrm{cm}).\\\\\\quad 直角三角形BCJにおいて\\\\\\quad BC^{2}=\\Bigl(4+\\frac{6}{5}\\Bigr)^{2}+\\Bigl(2+\\frac{8}{5}\\Bigr)^{2}=40,\\ BC>0であるからBC=2\\sqrt{10}\\,\\mathrm{cm}.\\\\\\quad したがって、求める長さは2\\sqrt{10}\\,\\mathrm{cm}.\\end{array}$$[最終的な答え] $$(1)\\ 36\\ (\\mathrm{cm}^{2}),\\quad (2)\\ \\sqrt{22}\\ (\\mathrm{cm}^{2}),\\quad (3)\\ 2\\sqrt{10}\\ (\\mathrm{cm}).$$",
+        "quiz_text": "[問題]$$\\begin{array}{l}AB=3\\mathrm{cm},\\ BC=4\\mathrm{cm},\\ \\angle ABC=90^\\circ\\ の直角三角形\\,ABC\\,を底面とし、AD=BE=CF=2\\mathrm{cm}\\ を高さとする三角柱ABC-DEFがある。\\\\辺\\,EF\\,の中点をGとする。このとき、次の問いに答えなさい。\\\\(1)\\ この三角柱の表面積を求めなさい。\\\\(2)\\ 3点\\,B,\\,D,\\,G\\,を結んでできる三角形の面積を求めなさい。\\\\(3)\\ この三角柱の表面上に、点\\,B\\,から点\\,C\\,まで、辺\\,EF、辺\\,DF\\,と交わるようにひもをかける。かけたひもの長さがもっとも短くなるときのひもの長さを求めなさい。\\\\ただし、ひもはゆるまないようにかけ、ひもの太さは考えないものとする。\\end{array}$$",
+        "standard_answer": "[解答の過程] $$\\begin{array}{l}(1)\\ \\triangle ABCにおいて、三平方の定理により\\\\\\quad AC^{2}=3^{2}+4^{2}=25,\\ AC>0であるからAC=5\\mathrm{cm}.\\\\\\quad 底面積は\\frac{1}{2}\\times3\\times4=6\\ (\\mathrm{cm}^{2})\\\\\\quad 側面積は2\\times(3+4+5)=24\\ (\\mathrm{cm}^{2})\\\\\\quad よって、求める表面積は6\\times2+24=36\\ (\\mathrm{cm}^{2}).\\\\\\\\(2)\\ \\triangle BEDにおいて\\\\\\quad BD^{2}=2^{2}+3^{2}=13,\\ BD>0であるからBD=\\sqrt{13}\\mathrm{cm}.\\\\\\quad 点Gは辺EFの中点であるからEG=2\\mathrm{cm}.\\\\\\quad よって、DG=BDであるからDG=\\sqrt{13}\\mathrm{cm}.\\\\\\quad \\triangle BEGは直角二等辺三角形であるからBG=\\sqrt{2}\\,BE=2\\sqrt{2}\\ (\\mathrm{cm}).\\\\\\quad 半周長をp=\\frac{BD+DG+BG}{2}=\\frac{\\sqrt{13}+\\sqrt{13}+2\\sqrt{2}}{2}=\\sqrt{13}+\\sqrt{2},\\\\\\quad とすると、面積Sは\\\\\\quad S=\\sqrt{\\,p(p-BD)(p-DG)(p-BG)\\,}\\\\\\quad\\quad =\\sqrt{(\\sqrt{13}+\\sqrt{2})(\\sqrt{2})(\\sqrt{2})(\\sqrt{13}-\\sqrt{2})}\\\\\\quad\\quad =\\sqrt{22}\\ (\\mathrm{cm}^{2}).\\\\\\quad △BDGにおいて、辺BGの中点をMとするとBM=\\sqrt{2}\\,\\mathrm{cm},\\ \\angle DMB=90^{\\circ}.\\\\\\quad よって、△DBMにおいてDM^{2}=(\\sqrt{13})^{2}-(\\sqrt{2})^{2}=11,\\ DM>0であるからDM=\\sqrt{11}\\,\\mathrm{cm}.\\\\\\quad したがって△BDG=\\frac{1}{2}\\times2\\sqrt{2}\\times\\sqrt{11}=\\sqrt{22}\\ (\\mathrm{cm}^{2}).\\\\\\\\(3)\\ 点Bから点Cまで、辺EF、辺DFと交わるようにひもをかけたとき、辺EF、辺DFとの交わる点をそれぞれH, Iとする。\\\\\\quad 点Bから点Cまでかけたひもの長さがもっとも短くなるのは、展開図において4点B, H, I, Cが一直線上にあるときである。\\\\\\quad 展開図において、区別のために、四角形BEFCにおける点Cを点C'とかく。点Cから直線BC'に垂線をひき、直線BC'との交点をJとする。\\\\\\quad また、線分CJと直線FEとの交点をKとする。\\\\\\quad △CKF∽△FEDであり、相似比はCF:FD=2:5\\\\\\quad よってKF=\\frac{2}{5}\\,ED=\\frac{6}{5}\\ (\\mathrm{cm}),\\ KC=\\frac{2}{5}\\,EF=\\frac{8}{5}\\ (\\mathrm{cm}).\\\\\\quad 直角三角形BCJにおいて\\\\\\quad BC^{2}=\\Bigl(4+\\frac{6}{5}\\Bigr)^{2}+\\Bigl(2+\\frac{8}{5}\\Bigr)^{2}=40,\\ BC>0であるからBC=2\\sqrt{10}\\,\\mathrm{cm}.\\\\\\quad したがって、求める長さは2\\sqrt{10}\\,\\mathrm{cm}.\\end{array}$$[最終的な答え] $$(1)\\ 36\\ (\\mathrm{cm}^{2}),\\quad (2)\\ \\sqrt{22}\\ (\\mathrm{cm}^{2}),\\quad (3)\\ 2\\sqrt{10}\\ (\\mathrm{cm}).$$",
         "figure_explanation": "",
         "rubric": {},
         "school_id": "F126110107407",
@@ -778,8 +787,8 @@
         "page": "7",
         "no": "1",
         "quiz_title": "四面体の体積 (問題ID:90107)",
-        "quiz_text": "[問題]$$\\begin{array}{l}AB = AC = DB = DC,\\ AD = BC = 4\\text{ cm の四面体 }ABCD\\text{ がある。}\\\\頂点 }A\\text{ から辺 }BC\\text{ にひいた垂線と辺 }BC\\text{ との交点を }H\\text{ とすると、}AH = 5\\text{ cm となる。}\\\\(1)\\ \\triangle AHD\\text{ の面積を求めなさい。}\\\\(2)\\ 四面体 }ABCD\\text{ の体積を求めなさい。}\\end{array}$$",
-        "standard_answer": "[解答の過程]$$\\begin{array}{l}△ABC = △DBC\\ より、△ABH = △DBH\\ であるから\\ DH = AH = 5\\\\二等辺三角形\\ AHD\\ において、点\\ H\\ から辺\\ AD\\ にひいた垂線と辺\\ AD\\ との交点を\\ K\\ とすると、K\\ は辺\\ AD\\ の中点で\\ AK = 2\\\\よって、直角三角形\\ AHK\\ において\\\\\\quad HK^2 = 5^2 - 2^2 = 21\\\\\\quad HK > 0\\ であるから\\ HK = \\sqrt{21}\\\\したがって、△AHD\\ の面積は\\\\\\quad \\displaystyle \\frac{1}{2}\\times 4 \\times \\sqrt{21} = 2\\sqrt{21}\\ \\mathrm{(cm^2)}\\\\[1ex](2)\\quad AH \\perp BC、\\ DH \\perp BC\\ であるから、辺\\ BC\\ は面\\ AHD\\ に垂直である。\\\\よって、四面体\\ ABCD\\ の体積は\\\\\\quad \\displaystyle \\frac{1}{3}\\times △AHD \\times BH + \\frac{1}{3}\\times △AHD \\times CH = \\frac{1}{3}\\times △AHD \\times BC\\\\\\quad = \\frac{1}{3}\\times 2\\sqrt{21} \\times 4= \\displaystyle \\frac{8\\sqrt{21}{3}\\ \\mathrm{(cm^3)}\\end{array}$$[最終的な答え]$$△AHD\\ の面積 = 2\\sqrt{21}\\ \\mathrm{cm^2},\\quad四面体\\ ABCD\\ の体積 = \\frac{8\\sqrt{21}{3}\\ \\mathrm{cm^3}$$",
+        "quiz_text": "[問題]$$\\begin{array}{l}AB = AC = DB = DC,\\ AD = BC = 4\\text{ cm の四面体 }ABCD\\text{ がある。}\\\\\\text{頂点 }A\\text{ から辺 }BC\\text{ にひいた垂線と辺 }BC\\text{ との交点を }H\\text{ とすると、}AH = 5\\text{ cm となる。}\\\\(1)\\ \\triangle AHD\\text{ の面積を求めなさい。}\\\\(2)\\ \\text{四面体 }ABCD\\text{ の体積を求めなさい。}\\end{array}$$",
+        "standard_answer": "[解答の過程]$$\\begin{array}{l}△ABC = △DBC\\ より、△ABH = △DBH\\ であるから\\ DH = AH = 5\\\\二等辺三角形\\ AHD\\ において、点\\ H\\ から辺\\ AD\\ にひいた垂線と辺\\ AD\\ との交点を\\ K\\ とすると、K\\ は辺\\ AD\\ の中点で\\ AK = 2\\\\よって、直角三角形\\ AHK\\ において\\\\\\quad HK^2 = 5^2 - 2^2 = 21\\\\\\quad HK > 0\\ であるから\\ HK = \\sqrt{21}\\\\したがって、△AHD\\ の面積は\\\\\\quad \\displaystyle \\frac{1}{2}\\times 4 \\times \\sqrt{21} = 2\\sqrt{21}\\ \\mathrm{(cm^2)}\\\\[1ex](2)\\quad AH \\perp BC、\\ DH \\perp BC\\ であるから、辺\\ BC\\ は面\\ AHD\\ に垂直である。\\\\よって、四面体\\ ABCD\\ の体積は\\\\\\quad \\displaystyle \\frac{1}{3}\\times △AHD \\times BH + \\frac{1}{3}\\times △AHD \\times CH = \\frac{1}{3}\\times △AHD \\times BC\\\\\\quad = \\frac{1}{3}\\times 2\\sqrt{21} \\times 4= \\displaystyle \\frac{8\\sqrt{21}}{3}\\ \\mathrm{(cm^3)}\\end{array}$$[最終的な答え]$$△AHD\\ の面積 = 2\\sqrt{21}\\ \\mathrm{cm^2},\\quad四面体\\ ABCD\\ の体積 = \\frac{8\\sqrt{21}}{3}\\ \\mathrm{cm^3}$$",
         "figure_explanation": "",
         "rubric": {},
         "school_id": "F126110107407",
@@ -792,7 +801,7 @@
         "page": "8",
         "no": "1",
         "quiz_title": "立方体の内部にできる立体の体積 (問題ID:23408)",
-        "quiz_text": "[問題] $$\\begin{array}{l}1辺の長さが12\\text{ cm}の立方体$ABCDEFGH$がある。\\\\四角形$ABCD$の対角線の交点を$I$とし、辺$EF,\\,FG,\\,GH,\\,HE$の中点をそれぞれ$J,\\,K,\\,L,\\,M$とするとき、正四角錐$IJKLM$の体積を求めなさい。\\end{array}$$",
+        "quiz_text": "[問題] $$\\begin{array}{l}1辺の長さが12\\text{ cm}の立方体ABCDEFGHがある。\\\\四角形ABCDの対角線の交点をIとし、辺EF,\\,FG,\\,GH,\\,HEの中点をそれぞれJ,\\,K,\\,L,\\,Mとするとき、正四角錐IJKLMの体積を求めなさい。\\end{array}$$",
         "standard_answer": "[解答の過程]$$\\begin{array}{l}\\text{正方形 JKLMの面積は、1辺12 cmの正方形の面積の半分で} \\\\ 12 \\times 12 \\div 2 = 72\\;(cm^2) \\\\ \\text{正四角錐 IJKLMの高さは12 cmであるから、求める体積は} \\\\ \\frac{1}{3} \\times 72 \\times 12 = 288\\;(cm^3)\\end{array}$$[最終的な答え]$$288\\;(cm^3)$$",
         "figure_explanation": "",
         "rubric": {},
@@ -807,7 +816,7 @@
         "no": "1",
         "quiz_title": "平方根をふくむ連立方程式 (問題ID:56709)",
         "quiz_text": "[問題]$$\\begin{array}{l}\\text{次の方程式または連立方程式を解きなさい。 }\\\\[6pt](1)\\ \\sqrt{8}\\,x + 2 = \\sqrt{32}\\,x + 5 \\\\[6pt](2)\\ 3x + 2 = \\sqrt{6}\\,(x + 1) \\\\[6pt](3)\\ \\begin{cases}x + \\sqrt{2}\\,y = 2\\sqrt{6},\\\\\\sqrt{2}\\,x - y = \\sqrt{3}\\end{cases} \\\\[6pt](4)\\ \\begin{cases}\\sqrt{3}\\,x + \\sqrt{2}\\,y = 3,\\\\\\sqrt{2}\\,x - \\sqrt{3}\\,y = 1\\end{cases}\\end{array}$$",
-        "standard_answer": "[解答の過程]$$\\begin{array}{l}(1)\\quad \\sqrt{8}\\,x + 2 = \\sqrt{32}\\,x + 5 \\\\ \\quad \\sqrt{8}\\,x - \\sqrt{32}\\,x = 5 - 2 \\\\ \\quad 2\\sqrt{2}\\,x - 4\\sqrt{2}\\,x = 3 \\\\ \\quad -2\\sqrt{2}\\,x = 3 \\\\ \\quad x = -\\frac{3}{2\\sqrt{2} = -\\frac{3\\sqrt{2}{4},\\quad よって\\ x = -\\frac{3\\sqrt{2}{4}. \\\\[6pt](2)\\quad 3x + 2 = \\sqrt{6}\\,(x + 1) \\\\ \\quad 3x + 2 = \\sqrt{6}\\,x + \\sqrt{6} \\\\ \\quad (3 - \\sqrt{6})\\,x = \\sqrt{6} - 2 \\\\ \\quad x = \\frac{\\sqrt{6} - 2}{3 - \\sqrt{6}= \\frac{(\\sqrt{6} - 2)(3 + \\sqrt{6})}{(3 - \\sqrt{6})(3 + \\sqrt{6})}= \\frac{\\sqrt{6}{3},\\quad であるから\\ x = \\frac{\\sqrt{6}{3}. \\\\[6pt](3)\\quad \\begin{cases}x + \\sqrt{2}\\,y = 2\\sqrt{6},\\\\\\sqrt{2}\\,x - y = \\sqrt{3}\\end{cases} \\\\ \\quad ②×\\sqrt{2}:\\ 2x - \\sqrt{2}\\,y = \\sqrt{6} \\\\ \\quad ①＋③:\\ 3x = 3\\sqrt{6},\\ x = \\sqrt{6}. \\\\ \\quad ② に x=\\sqrt{6} を代入すると  y = \\sqrt{2}\\times\\sqrt{6} - \\sqrt{3} = 2\\sqrt{3} - \\sqrt{3} = \\sqrt{3},\\quad したがって\\ x=\\sqrt{6},\\ y=\\sqrt{3}. \\\\[6pt](4)\\quad \\begin{cases}\\sqrt{3}\\,x + \\sqrt{2}\\,y = 3,\\\\\\sqrt{2}\\,x - \\sqrt{3}\\,y = 1\\end{cases} \\\\ \\quad ①×\\sqrt{3}:\\ 3x + \\sqrt{6}\\,y = 3\\sqrt{3},\\\\\\quad ②×\\sqrt{2}:\\ 2x - \\sqrt{6}\\,y = \\sqrt{2},\\\\\\quad ③+④:\\ 5x = 3\\sqrt{3} + \\sqrt{2},\\ x = \\frac{3\\sqrt{3} + \\sqrt{2}{5} \\\\ \\quad ①×\\sqrt{2}:\\ \\sqrt{6}\\,x + 2y = 3\\sqrt{2},\\\\\\quad ②×\\sqrt{3}:\\ \\sqrt{6}\\,x - 3y = \\sqrt{3},\\\\\\quad ⑤−⑥:\\ 5y = 3\\sqrt{2} - \\sqrt{3},\\ y = \\frac{3\\sqrt{2} - \\sqrt{3}{5},\\quad したがって\\ x=\\frac{3\\sqrt{3}+\\sqrt{2}{5},\\ y=\\frac{3\\sqrt{2}-\\sqrt{3}{5}.\\end{array}$$[最終的な答え]$$(1)\\ x = -\\frac{3\\sqrt{2}{4},\\quad(2)\\ x = \\frac{\\sqrt{6}{3},\\quad(3)\\ x = \\sqrt{6},\\ y = \\sqrt{3},\\quad(4)\\ x = \\frac{3\\sqrt{3}+\\sqrt{2}{5},\\ y = \\frac{3\\sqrt{2}-\\sqrt{3}{5}$$",
+        "standard_answer": "[解答の過程]$$\\begin{array}{l}(1)\\quad \\sqrt{8}\\,x + 2 = \\sqrt{32}\\,x + 5 \\\\ \\quad \\sqrt{8}\\,x - \\sqrt{32}\\,x = 5 - 2 \\\\ \\quad 2\\sqrt{2}\\,x - 4\\sqrt{2}\\,x = 3 \\\\ \\quad -2\\sqrt{2}\\,x = 3 \\\\ \\quad x = -\\frac{3}{2\\sqrt{2}} = -\\frac{3\\sqrt{2}}{4},\\quad よって\\ x = -\\frac{3\\sqrt{2}}{4}. \\\\[6pt](2)\\quad 3x + 2 = \\sqrt{6}\\,(x + 1) \\\\ \\quad 3x + 2 = \\sqrt{6}\\,x + \\sqrt{6} \\\\ \\quad (3 - \\sqrt{6})\\,x = \\sqrt{6} - 2 \\\\ \\quad x = \\frac{\\sqrt{6} - 2}{3 - \\sqrt{6}}= \\frac{(\\sqrt{6} - 2)(3 + \\sqrt{6})}{(3 - \\sqrt{6})(3 + \\sqrt{6})}= \\frac{\\sqrt{6}}{3},\\quad であるから\\ x = \\frac{\\sqrt{6}}{3}. \\\\[6pt](3)\\quad \\begin{cases}x + \\sqrt{2}\\,y = 2\\sqrt{6},\\\\\\sqrt{2}\\,x - y = \\sqrt{3}\\end{cases} \\\\ \\quad ②×\\sqrt{2}:\\ 2x - \\sqrt{2}\\,y = \\sqrt{6} \\\\ \\quad ①＋③:\\ 3x = 3\\sqrt{6},\\ x = \\sqrt{6}. \\\\ \\quad ② に x=\\sqrt{6} を代入すると  y = \\sqrt{2}\\times\\sqrt{6} - \\sqrt{3} = 2\\sqrt{3} - \\sqrt{3} = \\sqrt{3},\\quad したがって\\ x=\\sqrt{6},\\ y=\\sqrt{3}. \\\\[6pt](4)\\quad \\begin{cases}\\sqrt{3}\\,x + \\sqrt{2}\\,y = 3,\\\\\\sqrt{2}\\,x - \\sqrt{3}\\,y = 1\\end{cases} \\\\ \\quad ①×\\sqrt{3}:\\ 3x + \\sqrt{6}\\,y = 3\\sqrt{3},\\\\\\quad ②×\\sqrt{2}:\\ 2x - \\sqrt{6}\\,y = \\sqrt{2},\\\\\\quad ③+④:\\ 5x = 3\\sqrt{3} + \\sqrt{2},\\ x = \\frac{3\\sqrt{3} + \\sqrt{2}}{5} \\\\ \\quad ①×\\sqrt{2}:\\ \\sqrt{6}\\,x + 2y = 3\\sqrt{2},\\\\\\quad ②×\\sqrt{3}:\\ \\sqrt{6}\\,x - 3y = \\sqrt{3},\\\\\\quad ⑤−⑥:\\ 5y = 3\\sqrt{2} - \\sqrt{3},\\ y = \\frac{3\\sqrt{2} - \\sqrt{3}}{5},\\quad したがって\\ x=\\frac{3\\sqrt{3}+\\sqrt{2}}{5},\\ y=\\frac{3\\sqrt{2}-\\sqrt{3}}{5}.\\end{array}$$[最終的な答え]$$(1)\\ x = -\\frac{3\\sqrt{2}}{4},\\quad(2)\\ x = \\frac{\\sqrt{6}}{3},\\quad(3)\\ x = \\sqrt{6},\\ y = \\sqrt{3},\\quad(4)\\ x = \\frac{3\\sqrt{3}+\\sqrt{2}}{5},\\ y = \\frac{3\\sqrt{2}-\\sqrt{3}}{5}$$",
         "figure_explanation": "",
         "rubric": {},
         "school_id": "F126110107407",
@@ -821,7 +830,7 @@
         "no": "1",
         "quiz_title": "平方根の考えを使った解き方 (問題ID:89010)",
         "quiz_text": "[問題]$$\\begin{array}{l}\\text{次の方程式を解きなさい。}\\\\(1)\\;x^2 = 225 \\\\(2)\\;9x^2 = 1 \\\\(3)\\;36x^2 - 13 = 0 \\\\(4)\\;(x - 1)^2 = 64 \\\\(5)\\;3(x - 2)^2 - 51 = 0 \\\\(6)\\;9(x + 5)^2 - 72 = 0 \\\\(7)\\;x^2 + 6x + 1 = 0 \\\\(8)\\;x^2 - 10x + 2 = 0 \\\\(9)\\;x^2 + 9x + 1 = 0\\end{array}$$",
-        "standard_answer": "[解答の過程]$$\\begin{array}{l}(1)\\ x^2 = 225\\quad xは2乗して225になる数であるから、225の平方根である。\\quad よって\\ x = \\pm15\\\\[6pt](2)\\ 9x^2 = 1\\quad 両辺を9でわると\\ x^2 = \\frac{1}{9}\\quad xは2乗して\\frac{1}{9}になる数であるから、\\frac{1}{9}の平方根である。\\quad よって\\ x = \\pm\\frac{1}{3}\\\\[6pt](3)\\ 36x^2 - 13 = 0\\quad -13を移項すると\\ 36x^2 = 13\\quad x^2 = \\frac{13}{36}\\quad よって\\ x = \\pm\\frac{\\sqrt{13}{6}\\\\[6pt](4)\\ (x - 1)^2 = 64\\quad x - 1 = \\pm8\\quad x = 1 \\pm 8\\quad よって\\ x = 9,\\ -7\\\\[6pt](5)\\ 3(x - 2)^2 - 51 = 0\\quad (x - 2)^2 = 17\\quad x - 2 = \\pm\\sqrt{17}\\quad よって\\ x = 2 \\pm \\sqrt{17}\\\\[6pt](6)\\ 9(x + 5)^2 - 72 = 0\\quad (x + 5)^2 = 8\\quad x + 5 = \\pm\\sqrt{8}\\ (= \\pm2\\sqrt{2})\\quad よって\\ x = -5 \\pm 2\\sqrt{2}\\\\[6pt](7)\\ x^{2} + 6x + 1 = 0\\quad 1を移項すると\\ x^{2} + 6x = -1\\\\\\quad 両辺にxの係数の半分の2乗を加えると\\ x^{2} + 6x + 3^{2} = -1 + 3^{2}\\quad (x + 3)^{2} = 8\\\\\\quad x + 3 = \\pm2\\sqrt{2}\\quad よって\\ x = -3 \\pm 2\\sqrt{2}\\\\[6pt](8)\\ x^{2} - 10x + 2 = 0\\quad 2を移項すると\\ x^{2} - 10x = -2\\\\\\quad 両辺にxの係数の半分の2乗を加えると\\ x^{2} - 10x + 5^{2} = -2 + 5^{2}\\quad (x - 5)^{2} = 23\\\\\\quad x - 5 = \\pm\\sqrt{23}\\quad よって\\ x = 5 \\pm \\sqrt{23}\\\\[6pt](9)\\ x^{2} + 9x + 1 = 0\\quad 1を移項すると\\ x^{2} + 9x = -1\\\\\\quad 両辺にxの係数の半分の2乗を加えると\\ x^{2} + 9x + \\bigl(\\frac{9}{2}\\bigr)^{2} = -1 + \\bigl(\\frac{9}{2}\\bigr)^{2}\\quad \\bigl(x + \\tfrac{9}{2}\\bigr)^{2} = \\frac{77}{4}\\\\\\quad x + \\tfrac{9}{2} = \\pm\\tfrac{\\sqrt{77}{2}\\quad よって\\ x = \\frac{-9 \\pm \\sqrt{77}{2}\\end{array}$$[最終的な答え]$$x = \\pm15,\\ \\pm\\frac{1}{3},\\ \\pm\\frac{\\sqrt{13}{6},\\ 9,\\ -7,\\ 2\\pm\\sqrt{17},\\ -5\\pm2\\sqrt{2},\\ -3\\pm2\\sqrt{2},\\ 5\\pm\\sqrt{23},\\ \\frac{-9\\pm\\sqrt{77}{2}$$",
+        "standard_answer": "[解答の過程]$$\\begin{array}{l}(1)\\ x^2 = 225\\quad xは2乗して225になる数であるから、225の平方根である。\\quad よって\\ x = \\pm15\\\\[6pt](2)\\ 9x^2 = 1\\quad 両辺を9でわると\\ x^2 = \\frac{1}{9}\\quad xは2乗して\\frac{1}{9}になる数であるから、\\frac{1}{9}の平方根である。\\quad よって\\ x = \\pm\\frac{1}{3}\\\\[6pt](3)\\ 36x^2 - 13 = 0\\quad -13を移項すると\\ 36x^2 = 13\\quad x^2 = \\frac{13}{36}\\quad よって\\ x = \\pm\\frac{\\sqrt{13}}{6}\\\\[6pt](4)\\ (x - 1)^2 = 64\\quad x - 1 = \\pm8\\quad x = 1 \\pm 8\\quad よって\\ x = 9,\\ -7\\\\[6pt](5)\\ 3(x - 2)^2 - 51 = 0\\quad (x - 2)^2 = 17\\quad x - 2 = \\pm\\sqrt{17}\\quad よって\\ x = 2 \\pm \\sqrt{17}\\\\[6pt](6)\\ 9(x + 5)^2 - 72 = 0\\quad (x + 5)^2 = 8\\quad x + 5 = \\pm\\sqrt{8}\\ (= \\pm2\\sqrt{2})\\quad よって\\ x = -5 \\pm 2\\sqrt{2}\\\\[6pt](7)\\ x^{2} + 6x + 1 = 0\\quad 1を移項すると\\ x^{2} + 6x = -1\\\\\\quad 両辺にxの係数の半分の2乗を加えると\\ x^{2} + 6x + 3^{2} = -1 + 3^{2}\\quad (x + 3)^{2} = 8\\\\\\quad x + 3 = \\pm2\\sqrt{2}\\quad よって\\ x = -3 \\pm 2\\sqrt{2}\\\\[6pt](8)\\ x^{2} - 10x + 2 = 0\\quad 2を移項すると\\ x^{2} - 10x = -2\\\\\\quad 両辺にxの係数の半分の2乗を加えると\\ x^{2} - 10x + 5^{2} = -2 + 5^{2}\\quad (x - 5)^{2} = 23\\\\\\quad x - 5 = \\pm\\sqrt{23}\\quad よって\\ x = 5 \\pm \\sqrt{23}\\\\[6pt](9)\\ x^{2} + 9x + 1 = 0\\quad 1を移項すると\\ x^{2} + 9x = -1\\\\\\quad 両辺にxの係数の半分の2乗を加えると\\ x^{2} + 9x + \\bigl(\\frac{9}{2}\\bigr)^{2} = -1 + \\bigl(\\frac{9}{2}\\bigr)^{2}\\quad \\bigl(x + \\tfrac{9}{2}\\bigr)^{2} = \\frac{77}{4}\\\\\\quad x + \\tfrac{9}{2} = \\pm\\tfrac{\\sqrt{77}}{2}\\quad よって\\ x = \\frac{-9 \\pm \\sqrt{77}}{2}\\end{array}$$[最終的な答え]$$(1)\\ x = \\pm15,\\\\ (2)\\  x = \\pm\\frac{1}{3},\\\\ (3)\\ x = \\pm\\frac{\\sqrt{13}}{6},\\\\(4) \\ x = 9,\\ -7,\\\\(5) \\ x = 2\\pm\\sqrt{17},\\\\(6) \\ x = -5\\pm2\\sqrt{2},\\\\ (7)\\ x = -3\\pm2\\sqrt{2},\\\\ (8)\\ x = 5\\pm\\sqrt{23},\\\\ (9)\\ x = \\frac{-9\\pm\\sqrt{77}}{2}$$",
         "figure_explanation": "",
         "rubric": {},
         "school_id": "F126110107407",
@@ -834,7 +843,7 @@
         "page": "11",
         "no": "1",
         "quiz_title": "正方形の面積を２等分する直線 (問題ID:12311)",
-        "quiz_text": "[問題]$$\\begin{array}{l}直線①を関数 \\(y=-x\\) のグラフ、直線②を関数 \\(y=\\frac{2}{3}x+3\\) のグラフとする。\\\\直線①上に点Ａを、直線②上に点Ｃをとり、辺ＡＢが x 軸に平行な正方形ＡＢＣＤを y 軸の右側につくる。\\\\点Ａの x 座標が１であるとき、次の問いに答えなさい。\\\\(1) 直線ＡＣの式を求めなさい。\\\\(2) 点Ｃの座標を求めなさい。\\\\(3) 原点Ｏを通り、正方形ＡＢＣＤの面積を２等分する直線の式を求めなさい。\\end{array}$$",
+        "quiz_text": "[問題]$$\\begin{array}{l}直線①を関数 y=-x のグラフ、直線②を関数 y=\\frac{2}{3}x+3 のグラフとする。\\\\直線①上に点Ａを、直線②上に点Ｃをとり、辺ＡＢが x 軸に平行な正方形ＡＢＣＤを y 軸の右側につくる。\\\\点Ａの x 座標が１であるとき、次の問いに答えなさい。\\\\(1) 直線ＡＣの式を求めなさい。\\\\(2) 点Ｃの座標を求めなさい。\\\\(3) 原点Ｏを通り、正方形ＡＢＣＤの面積を２等分する直線の式を求めなさい。\\end{array}$$",
         "standard_answer": "[解答の過程]$$\\begin{array}{l}(1)\\ \\text{点Ａの x 座標は１で、Ａは直線 }y=-x\\text{ 上の点であるから、Ａの y 座標は −１。}\\\\\\quad \\text{よって、点Ａの座標は }(1,\\,-1)\\text{。}\\\\\\quad \\text{四角形ＡＢＣＤは正方形であるから、 }AB=BC\\text{ より、直線ＡＣの傾きは }\\frac{BC}{AB}=1\\text{。}\\\\\\quad \\text{よって直線ＡＣの式は }y=x+b\\text{ とおける。}\\\\\\quad \\text{この直線が点Ａを通るから }-1=1+b\\text{ より }b=-2\\text{。}\\\\\\quad \\text{したがって直線ＡＣの式は }y=x-2\\text{。}\\\\(2)\\ \\text{点Ｃは２直線 }y=\\frac{2}{3}x+3,\\quad y=x-2\\text{ の交点である。}\\\\\\quad \\text{連立方程式 }\\begin{cases}y=\\frac{2}{3}x+3,\\\\y=x-2\\end{cases}\\text{ を解くと }x=15,\\ y=13\\text{。}\\\\\\quad \\text{よって点Ｃの座標は }(15,\\,13)\\text{。}\\\\(3)\\ \\text{正方形の面積を２等分する直線は、正方形の２本の対角線の交点を通る。}\\\\\\quad \\text{２本の対角線の交点は、対角線の中点と一致する。}\\\\\\quad \\text{線分ＡＣの中点の座標は }\\Bigl(\\frac{1+15}{2},\\;\\frac{-1+13}{2}\\Bigr)=(8,\\;6)\\text{。}\\\\\\quad \\text{よって求める直線は原点Ｏと点 }(8,6)\\text{ を通るので、その傾きは }\\frac{6}{8}=\\frac{3}{4}\\text{。}\\\\\\quad \\text{よって求める直線の式は }y=\\frac{3}{4}x\\text{。}\\end{array}$$[最終的な答え]$$y=\\frac{3}{4}x$$",
         "figure_explanation": "",
         "rubric": {},
@@ -849,7 +858,7 @@
         "no": "1",
         "quiz_title": "図形と関数 (問題ID:45612)",
         "quiz_text": "[問題]$$\\begin{array}{l}\\angle ABC = \\angle PQR = 90\\text{度、}BC = QR = a\\text{cm の合同な２つの直角二等辺三角形}\\triangle ABC\\text{と}\\triangle PQR\\text{があり、}QR,\\,BC\\text{は直線}l\\text{上にある。}\\\\\\text{はじめ、}\\triangle PQR\\text{は、}l\\text{上を}a\\text{cm右に平行移動させると}\\triangle ABC\\text{に重なる位置にある。}\\\\\\triangle PQR\\text{が直線}\\ell\\text{にそって，秒速 }2a\\text{cm で点}Q\\text{が点}C\\text{に重なるまで動くものとする。}\\\\\\text{動き始めてから }x\\text{秒後の }\\triangle PQR\\text{と}\\triangle ABC\\text{の重なった部分の面積を }y\\text{cm}^2\\text{とするとき，}\\\\\\text{次の（1），（2）のそれぞれの場合について，}y\\text{を }x\\text{の式で表しなさい。}\\\\\\text{また，そのときの }x\\text{の変域も示しなさい。}\\\\\\text{  (1) 点 R が辺 BC 上にあるとき。ただし，２点 B，C をふくむ。  (2) 点 R が点 C を越えたとき。}\\end{array}$$",
-        "standard_answer": "[解答の過程]$$\\begin{array}{l}(1)\\;\\text{点}R\\text{が辺}BC\\text{上にあるとき。ただし，2点}B,C\\text{を含む。}\\\\\\quad \\Delta PQR\\text{が}a\\text{cm動くのにかかる時間は}\\tfrac{1}{2}\\text{秒であるから，点}R\\text{が辺}BC\\text{上にあるのは}0\\leqq x\\leqq\\tfrac{1}{2}\\text{のときである。}\\\\\\quad \\text{動き始めてから}x\\text{秒後の線分}RB\\text{の長さは}2ax\\text{cmであるから}\\\\\\quad y=\\tfrac{1}{2}\\times2ax\\times2ax = 2a^{2}x^{2}\\\\\\quad x\\text{の変域は }0\\leqq x\\leqq\\tfrac{1}{2}.\\\\(2)\\;\\text{点}R\\text{が点}C\\text{を越えたとき。}\\\\\\quad \\text{点}R\\text{が辺}BC\\text{から点}B\\text{を除いた部分にあるのは}\\tfrac{1}{2}<x\\leqq1\\text{のときである。}\\\\\\quad \\text{動き始めてから}x\\text{秒後の線分}CQ\\text{の長さは }2a-2ax=2a(1-x)\\;(cm)\\text{であるから}\\\\\\quad y=\\tfrac{1}{2}\\times2a(1-x)\\times2a(1-x) = 2a^{2}(1-x)^{2}\\\\\\quad x\\text{の変域は }\\tfrac{1}{2}<x\\leqq1.\\end{array}$$[最終的な答え]$$\\begin{array}{l}y=2a^{2}x^{2},\\quad 0\\leqq x\\leqq\\tfrac{1}{2},\\\\y=2a^{2}(1-x)^{2},\\quad \\tfrac{1}{2}<x\\leqq1.\\end{array}$$",
+        "standard_answer": "[解答の過程]$$\\begin{array}{l}(1)\\Delta PQR\\text{が}a\\text{cm動くのにかかる時間は}\\tfrac{1}{2}\\text{秒であるから，点}R\\text{が辺}BC\\text{上にあるのは}0\\leqq x\\leqq\\tfrac{1}{2}\\text{のときである。}\\\\\\quad \\text{動き始めてから}x\\text{秒後の線分}RB\\text{の長さは}2ax\\text{cmであるから}\\\\\\quad y=\\tfrac{1}{2}\\times2ax\\times2ax = 2a^{2}x^{2}\\\\\\quad x\\text{の変域は }0\\leqq x\\leqq\\tfrac{1}{2}.\\\\(2)\\text{点}R\\text{が辺}BC\\text{から点}B\\text{を除いた部分にあるのは}\\tfrac{1}{2}<\\ x\\leqq1\\text{のときである。}\\\\\\quad \\text{動き始めてから}x\\text{秒後の線分}CQ\\text{の長さは }2a-2ax=2a(1-x)\\;(cm)\\text{であるから}\\\\\\quad y=\\tfrac{1}{2}\\times2a(1-x)\\times2a(1-x) = 2a^{2}(1-x)^{2}\\\\\\quad x\\text{の変域は }\\tfrac{1}{2}<\\ x\\leqq1.\\end{array}$$[最終的な答え]$$\\begin{array}{l}y=2a^{2}x^{2},\\quad 0\\leqq x\\leqq\\tfrac{1}{2},\\\\y=2a^{2}(1-x)^{2},\\quad \\tfrac{1}{2}<\\ x\\leqq1.\\end{array}$$",
         "figure_explanation": "",
         "rubric": {},
         "school_id": "F126110107407",

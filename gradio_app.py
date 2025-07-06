@@ -142,7 +142,8 @@ def reload_quiz_map_from_mongo(lti):
             "$or": [
                 {"user": lti["user_id"]},
                 {"user": "prime"}
-            ]
+            ],
+            "show": True
         })
     )
 
@@ -280,9 +281,12 @@ def check_if_solvable(question, knowledge, num, prev_exercise, prev_ans, model):
         この問題を解いて、最終的な答えを出しなさい。
         - 以下の知識を用いても良い。 \n {} \n
         - 以下のフォーマットのように**$$で囲み**mathjax形式で出力すること。
-        - ただし、mathjaxフォーマットの&は使わないこと。
         例：$$\\int_{}^{} f(x)\\\\,dx = F(b) - F(a)$$
         例：$$\\beta + \\gamma \\{} \\\\ \\alpha \\{}$$
+        - ただし、以下の点に注意すること。
+            - mathjaxフォーマットの&は使わないこと。
+            - \\text で括らないこと。
+            - <, >の２つの記号は、必ず"<\\," ">\\," という形で出力すること。
         - 解答の過程を出力すること。
         - 以下のフォーマットで、XXXXに解答の過程、YYYYに最終的な答えを挿入して答えること。
         [解答の過程] \n
@@ -305,20 +309,37 @@ def check_if_solvable(question, knowledge, num, prev_exercise, prev_ans, model):
     print(num + ":" + str(count))
     return ans
 
-def execute0006_ks(question, answer, knowledge, tags, model):
+def execute0006_ks(question, answer, knowledge, tags, model, quiz_base):
     stats_bit = ''.join(str(1 if tag == '_o_' else 0) for tag in tags)
     stats, bittype = classify_binary(stats_bit, knowledge)
-    prompt = '''
-    生徒がある問題を解きました。問題に必要な数学的思考・計算技術・注意すべき点は次の通りです。 \n {} \n
+    base1 = '''
+    生徒がある問題を解きました。
+    '''
+
+    base2 = '''
+    この問題の設定は次のとおりです。 \n {} \n
+    '''.format(quiz_base)
+    
+    prompt_main = '''
+    問題に必要な数学的思考・計算技術・注意すべき点は次の通りです。 \n {} \n
     {} \n
     新しい問題のみを結果として出力すること。
-    問題は以下のフォーマットのように**$$で囲み**mathjax形式で出力すること。ただし、mathjaxフォーマットの&は使わないこと。
+    問題は以下のフォーマットのように**$$で囲み**mathjax形式で出力すること。
     例：$$\\int_{}^{} f(x)\\\\,dx = F(b) - F(a)$$
     例：$$\\beta + \\gamma \\{} \\\\ \\alpha \\{}$$
+    ただし、以下の点に注意すること。
+    - mathjaxフォーマットの&は使わないこと。
+    - \\text で括らないこと。
+    - <, >の２つの記号は、必ず"<\\," ">\\," という形で出力すること。
     以下のフォーマットで、XXXXに問題を挿入して、左揃えで答えること。
     [問題] \n
     $$ \\begin{}{}{} XXXX \\end{}{} $$
     '''.format(knowledge, stats, r"{a}", r"{b}", r"text{の値から、}", r"text{を求める}", "{array", "}{l", "}", "{array", "}")
+
+    if quiz_base == "":
+        prompt = base1 + prompt_main
+    else:
+        prompt = base1 + base2 + prompt_main
 
     count = 0
     start_time_all = time.time()
@@ -807,12 +828,18 @@ with gr.Blocks() as demo:
             gr.update(value=updated_status)
         )
     
-    def update_genquizbtn_when_checkboxes(selected, lti, count_work, count_review):
+    def update_genquizbtn_when_checkboxes(selected, lti, count_work, count_review, all_items):
         if len(selected) == 0:
-            return (
-                gr.update(interactive=False, variant="stop", value="類題をつくる(できたポイントをチェックしてください)"),
-                gr.update(interactive=False, variant="stop", value="そのまま解く(できたポイントをチェックしてください)")
-            )
+            if all_items > 0:
+                return (
+                    gr.update(interactive=False, variant="stop", value="類題をつくる(できたポイントをチェックしてください)"),
+                    gr.update(interactive=False, variant="stop", value="そのまま解く(できたポイントをチェックしてください)")
+                )
+            else:
+                return (
+                    gr.update(interactive=False, variant="stop", value="(解答のポイントがない問題は類題をつくれません)"),
+                    gr.update(interactive=True, variant="stop", value="そのまま解く")
+                )
             
         if lti["school_id"]=="C126210001533":
             if count_review == 0:
@@ -832,7 +859,7 @@ with gr.Blocks() as demo:
         outputs=[checkbox_state, current_checkbox_state, checkboxes]
     ).then(
         fn=update_genquizbtn_when_checkboxes,
-        inputs=[checkboxes, lti_state, cnt_work_state, cnt_review_state],
+        inputs=[checkboxes, lti_state, cnt_work_state, cnt_review_state, checkbox_all_items_state],
         outputs=[gen_quiz_btn, rev_quiz_btn]
     ).then(
         fn=lambda: (
@@ -846,7 +873,7 @@ with gr.Blocks() as demo:
         outputs=None
     )
 
-    def update_when_gen_quiz_btn(quiz_title, selections, quiz_text_dict, model, lti):
+    def update_when_gen_quiz_btn(quiz_title, selections, quiz_text_dict, model, lti, num_review):
         rubrics = get_main_explanations(quiz_title, quiz_text_dict)
         rubrics = rubrics[:-1]
         selected = selections or []
@@ -859,10 +886,28 @@ with gr.Blocks() as demo:
         quiz_text, contents_id, page, no, school = quiz_text_dict[quiz_title]
         exercise_info = exercise_col.find_one({"school_id": school, "contents_id": contents_id, "page": page, "no": no})
         standard_answer = exercise_info.get("standard_answer", "")
+        additional_explanation = exercise_info.get("figure_ex", "")
 
-        reason, new_exercise, exercise_creation_time, new_answer, answer_creation_time, overall_creation_time = execute0006_ks(quiz_text, standard_answer, rubrics, tags, model)
+        reason, new_exercise, exercise_creation_time, new_answer, answer_creation_time, overall_creation_time = execute0006_ks(quiz_text, standard_answer, rubrics, tags, model, additional_explanation)
 
         tags_for_saving = [True if item in selected else False for item in rubrics]
+
+        #実験用
+        if num_review == 0:
+            group = exercise_info.get("expetimental_group", "Z")
+            first_x = 0
+            for i in range(len(tags)):
+                first_x += 1
+                if tags[i] == "_x_":
+                    break
+            rev_question = exercise_info["rubric"][str(first_x)]["review_question"]
+            exercise_info_2 = exercise_col.find_one({"contents_id": rev_question["contents_id"], "page": rev_question["page"], "no": rev_question["no"]})
+            group_dict = {"2488": "A", "2494": "B", "2544": "A", "2591": "B", "2562": "A", "2570": "B", "2492": "A", "2505": "B", "2495": "A", "2487": "B", "2558": "A", "2599": "B", "2532": "A", "2517": "B", "2578": "A", "2520": "B", "2593": "A", "2598": "B", "2519": "A", "2587": "B", "2596": "A", "2485": "B", "2486": "A", "2512": "B", "2513": "A", "2533": "B", "2559": "A", "2528": "B", "2560": "A", "2583": "B", "2516": "A", "2515": "B", "2543": "A", "2567": "B", "2537": "A", "2489": "B", "2548": "A", "2509": "B", "2510": "A", "2557": "B", "2592": "A", "2497": "B", "2541": "A", "2572": "B", "2586": "A", "2521": "B", "2511": "A", "2503": "B", "2569": "A", "2525": "B", "2574": "A", "2482": "B", "2585": "A", "2549": "B", "2501": "A", "2529": "B", "2595": "A", "2524": "B", "2542": "A", "2584": "B", "2554": "A", "2589": "B", "2523": "A", "2556": "B", "2536": "A", "2546": "B", "2539": "A", "2564": "B", "2530": "A", "2493": "B", "2484": "A", "2534": "B", "2594": "A", "2545": "B", "2597": "A", "2481": "B", "2531": "A", "2575": "B", "2565": "A", "2579": "B", "2508": "A", "2552": "B", "2555": "A", "2551": "B", "2527": "A", "2550": "B", "2577": "A", "2540": "B", "2553": "A", "2563": "B", "2499": "A", "2561": "B", "2507": "A", "2588": "B", "2590": "A", "2504": "B", "2535": "A", "2547": "B", "2500": "A", "2566": "B", "2506": "A", "2526": "B", "2483": "A", "2502": "B", "2582": "A", "2518": "B", "2571": "A", "2581": "B", "2490": "A", "2576": "B", "2568": "A", "2580": "B", "2491": "A", "2573": "B", "2496": "A", "2522": "B", "2480": "A", "2498": "B", "2514": "A", "2538": "B", "121": "A", "2453": "B"}
+
+            group_st = group_dict[lti["user_id"]] or "A"
+            if group == group_st:
+                new_exercise = exercise_info_2.get("quiz_text", "")
+                new_answer = exercise_info_2.get("standard_answer", "")
 
         return (
             new_exercise, 
@@ -893,7 +938,7 @@ with gr.Blocks() as demo:
         outputs=[vanish_btn, quiz_dropdown, checkboxes, gen_quiz_btn, rev_quiz_btn, exercise_output, operationname_state, gen_state]
     ).then(
         fn=update_when_gen_quiz_btn,
-        inputs=[quiz_dropdown, checkboxes, quiz_map_state, model_state, lti_state],
+        inputs=[quiz_dropdown, checkboxes, quiz_map_state, model_state, lti_state, cnt_review_state],
         outputs=[exercise_state, 
                  answer_state,
                  exercise_creation_time_state, 
