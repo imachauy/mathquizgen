@@ -816,7 +816,7 @@ with gr.Blocks() as demo:
     
     def update_genquizbtn_when_checkboxes(selected, lti, count_work, count_review, all_items):
         if len(selected) == 0:
-            if all_items > 0:
+            if len(all_items) > 0:
                 return (
                     gr.update(interactive=False, variant="stop", value="類題をつくる(できたポイントをチェックしてください)"),
                     gr.update(interactive=False, variant="stop", value="そのまま解く(できたポイントをチェックしてください)"),
