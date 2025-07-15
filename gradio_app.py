@@ -753,11 +753,17 @@ with gr.Blocks() as demo:
             )
 
     def open_when_no_rubrics(quiz_title, all_items):
-        if quiz_title and (len(all_items) == 0):
-            return (
-                gr.update(interactive=False, variant="stop", value="(解答のポイントがない問題は類題をつくれません)"),
-                gr.update(interactive=True, variant="stop", value="そのまま解く")
-            )
+        if quiz_title:
+            if (len(all_items) == 0):
+                return (
+                    gr.update(interactive=False, variant="stop", value="(解答のポイントがない問題は類題をつくれません)"),
+                    gr.update(interactive=True, variant="stop", value="そのまま解く")
+                )
+            else:
+                return (
+                    gr.update(interactive=False, variant="stop", value="類題をつくる(できたポイントをチェックしてください)"),
+                    gr.update(interactive=False, variant="stop", value="そのまま解く(できたポイントをチェックしてください)")
+                )
         else:
             return (
                 gr.update(),
@@ -894,7 +900,10 @@ with gr.Blocks() as demo:
             exercise_info_2 = exercise_col.find_one({"contents_id": rev_question["contents_id"], "page": rev_question["page"], "no": rev_question["no"]})
             group_dict = {"2488": "A", "2494": "B", "2544": "A", "2591": "B", "2562": "A", "2570": "B", "2492": "A", "2505": "B", "2495": "A", "2487": "B", "2558": "A", "2599": "B", "2532": "A", "2517": "B", "2578": "A", "2520": "B", "2593": "A", "2598": "B", "2519": "A", "2587": "B", "2596": "A", "2485": "B", "2486": "A", "2512": "B", "2513": "A", "2533": "B", "2559": "A", "2528": "B", "2560": "A", "2583": "B", "2516": "A", "2515": "B", "2543": "A", "2567": "B", "2537": "A", "2489": "B", "2548": "A", "2509": "B", "2510": "A", "2557": "B", "2592": "A", "2497": "B", "2541": "A", "2572": "B", "2586": "A", "2521": "B", "2511": "A", "2503": "B", "2569": "A", "2525": "B", "2574": "A", "2482": "B", "2585": "A", "2549": "B", "2501": "A", "2529": "B", "2595": "A", "2524": "B", "2542": "A", "2584": "B", "2554": "A", "2589": "B", "2523": "A", "2556": "B", "2536": "A", "2546": "B", "2539": "A", "2564": "B", "2530": "A", "2493": "B", "2484": "A", "2534": "B", "2594": "A", "2545": "B", "2597": "A", "2481": "B", "2531": "A", "2575": "B", "2565": "A", "2579": "B", "2508": "A", "2552": "B", "2555": "A", "2551": "B", "2527": "A", "2550": "B", "2577": "A", "2540": "B", "2553": "A", "2563": "B", "2499": "A", "2561": "B", "2507": "A", "2588": "B", "2590": "A", "2504": "B", "2535": "A", "2547": "B", "2500": "A", "2566": "B", "2506": "A", "2526": "B", "2483": "A", "2502": "B", "2582": "A", "2518": "B", "2571": "A", "2581": "B", "2490": "A", "2576": "B", "2568": "A", "2580": "B", "2491": "A", "2573": "B", "2496": "A", "2522": "B", "2480": "A", "2498": "B", "2514": "A", "2538": "B", "121": "A", "2453": "B"}
 
-            group_st = group_dict[lti["user_id"]] or "A"
+            if lti["user_id"] in group_dict:
+                group_st = group_dict[lti["user_id"]]
+            else:
+                group_st = "X"
             if group == group_st:
                 new_exercise = exercise_info_2.get("quiz_text", "")
                 new_answer = exercise_info_2.get("standard_answer", "")
@@ -1078,6 +1087,24 @@ with gr.Blocks() as demo:
                     "AnsweredExercise"
                 )
 
+    def get_next_no_for_user(user_name, save, contents_id, page, no):
+        if save:
+            # 該当ユーザのレコードを全件取得
+            records = list(exercise_col.find({
+                "contents_id": "ai_generated",
+                "page": user_name
+            }))
+
+            if len(records)==0:
+                return "ai_generated", user_name, "1"  # 該当がなければ1からスタート
+
+            # no を整数に変換して最大値を探す
+            max_no = max(int(record.get("no", 0)) for record in records)
+
+            return "ai_generated", user_name, str(max_no + 1)
+        else:
+            return contents_id, page, no
+
     answer_btn.click(
         fn=update_when_answer_btn,
         inputs=[answer_state, answer_creation_time_state, overall_creation_time_state],
@@ -1106,6 +1133,14 @@ with gr.Blocks() as demo:
                  rating_state,
                  check_state,
                  operationname_state]
+    ).then(
+        fn=get_next_no_for_user,
+        inputs=[user_state, exercise_saving_state, contentsid_state, page_state, no_state],
+        outputs=[new_contentsid_state, new_page_state, new_no_state]
+    ).then(
+        fn=handle_exercise,
+        inputs=[exercise_saving_state, new_no_state, exercise_state, answer_state, user_state, exercise_creation_time_state, answer_creation_time_state, model_state, session_state, lti_state],
+        outputs=None
     ).then(
         fn=handle_logs,
         inputs=[user_state, operationname_state, session_state, lti_state, student_answer],
@@ -1257,30 +1292,12 @@ with gr.Blocks() as demo:
         inputs=[user_state, operationname_state, session_state, lti_state, report_type],
         outputs=None
     )
-    
-    def get_next_no_for_user(user_name, save, contents_id, page, no):
-        if save:
-            # 該当ユーザのレコードを全件取得
-            records = list(exercise_col.find({
-                "contents_id": "ai_generated",
-                "page": user_name
-            }))
-
-            if len(records)==0:
-                return "ai_generated", user_name, "1"  # 該当がなければ1からスタート
-
-            # no を整数に変換して最大値を探す
-            max_no = max(int(record.get("no", 0)) for record in records)
-
-            return "ai_generated", user_name, str(max_no + 1)
-        else:
-            return contents_id, page, no
 
     # 送信ボタンクリックで「送信しました」と表示
     report_btn.click(
-        fn=get_next_no_for_user,
-        inputs=[user_state, exercise_saving_state, contentsid_state, page_state, no_state],
-        outputs=[new_contentsid_state, new_page_state, new_no_state]
+        fn=lambda: (gr.update(interactive=False)),
+        inputs=None,
+        outputs=[report_btn]
     ).then(
         fn=handle_exercise,
         inputs=[exercise_saving_state, new_no_state, exercise_state, answer_state, user_state, exercise_creation_time_state, answer_creation_time_state, model_state, session_state, lti_state],
@@ -1301,45 +1318,51 @@ with gr.Blocks() as demo:
         outputs=None
     ).then(
         fn=lambda: (
-            gr.update(interactive=True),
-            gr.update(visible=True),
-            gr.update(visible=True, interactive=True, value=None),
-            gr.update(visible=False),
-            gr.update(visible=False),
-            gr.update(visible=False, show_label=False),
-            gr.update(visible=False, show_label=False),
-            {},
-            [],
-            {},
-            [],
-            gr.update(visible=True, interactive=False, variant="stop", value="類題をつくる"),
-            gr.update(visible=True, interactive=False, variant="stop", value="そのまま解く"),
-            gr.update(value="復習問題はここに出てきます"),
-            gr.update(visible=True, interactive=False, placeholder="(まだ入力できません)", value="", lines=1),
-            gr.update(visible=False, interactive=False),
-            gr.update(visible=False, value=""),
-            gr.update(visible=False, interactive=False, value=None),
-            gr.update(visible=False, interactive=False, value=None),
-            gr.update(visible=False, interactive=False, value=None),
-            gr.update(visible=False, interactive=False, value=None),
-            gr.update(visible=False, interactive=False, value=None),
-            gr.update(visible=False),
-            gr.update(visible=False, interactive=False, value=None),
-            gr.update(visible=False, interactive=False, placeholder="(報告の種類を選ぶまでは書けません)", value="", lines=1),
-            gr.update(visible=False, interactive=False, value="結果を送信する(まずは問題を振り返ってください！)", variant="secondary"),
-            gr.update(value="## " + random.choice(phrases)),
-            gr.update(visible=False),
-            gr.update(value=None),
-            gr.update(value=None),
-            gr.update(value=None),
-            gr.update(value=None),
-            gr.update(value=None),
-            0,
-            0,
-            0,
-            0,
-            0,
-            True
+            gr.update(interactive=True), # vanish_btn
+            gr.update(visible=True), # report_result
+            gr.update(visible=True, interactive=True, value=None), # quiz_dropdown
+            gr.update(visible=False), # quiz_text_display
+            gr.update(visible=False), # status_msg
+            gr.update(visible=False, show_label=False), # checkboxes
+            gr.update(visible=False, show_label=False), # new_checkboxes
+            {}, # checkbox_state
+            [], # current_checkbox_state
+            {}, # new_checkbox_state
+            [], # new_current_checkbox_state
+            gr.update(visible=True, interactive=False, variant="stop", value="類題をつくる"), # gen_quiz_btn
+            gr.update(visible=True, interactive=False, variant="stop", value="そのまま解く"), # rev_quiz_btn
+            gr.update(value="復習問題はここに出てきます"), # exercise_output
+            gr.update(visible=True, interactive=False, placeholder="(まだ入力できません)", value="", lines=1), # student_answer
+            gr.update(visible=False, interactive=False), # answer_btn
+            gr.update(visible=False, value=""), # answer_output
+            gr.update(visible=False, interactive=False, value=None), # understanding
+            gr.update(visible=False, interactive=False, value=None), # difficulty
+            gr.update(visible=False, interactive=False, value=None), # fluency
+            gr.update(visible=False, interactive=False, value=None), # relevance
+            gr.update(visible=False, interactive=False, value=None), # rating
+            gr.update(visible=False), # report_markdown
+            gr.update(visible=False, interactive=False, value=None), # report_type
+            gr.update(visible=False, interactive=False, placeholder="(報告の種類を選ぶまでは書けません)", value="", lines=1), # report_text
+            gr.update(visible=False, interactive=False, value="結果を送信する(まずは問題を振り返ってください！)", variant="secondary"), # report_btn
+            gr.update(value="## " + random.choice(phrases)), # title
+            gr.update(visible=False), # note_mkdwn
+            gr.update(value=None), # exercise_creation_time_state
+            gr.update(value=None), # answer_creation_time_state
+            gr.update(value=None), # overall_creation_time_state
+            gr.update(value=None), # tags_state
+            gr.update(value=None), # school_state
+            0, # understanding_state
+            0, # difficulty_state
+            0, # fluency_state
+            0, # relevance_state
+            0, # rating_state
+            "", # new_contentsid_state, 
+            "", # new_page_state, 
+            "", # new_no_state,
+            "", # contentsid_state, 
+            "", # page_state, 
+            "", # no_state,
+            True # exercise_saving_state
         ),
         inputs=None,
         outputs=[
@@ -1381,6 +1404,12 @@ with gr.Blocks() as demo:
             fluency_state,
             relevance_state,
             rating_state,
+            new_contentsid_state, 
+            new_page_state, 
+            new_no_state,
+            contentsid_state, 
+            page_state, 
+            no_state,
             exercise_saving_state
         ]
     ).then(

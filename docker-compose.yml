@@ -13,6 +13,7 @@ services:
       - "27017:27017"
     networks:
       - backend
+    restart: on-failure
 
   fastapi-app:
     build:
@@ -26,6 +27,7 @@ services:
       - mongo
     networks:
       - backend
+    restart: on-failure
 
 volumes:
   mongo_data:
