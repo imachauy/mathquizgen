@@ -14,7 +14,8 @@ from dotenv import load_dotenv
 
 # gradio_app.pyのASGIアプリをインポート！
 from gradio import mount_gradio_app
-from gradio_app import demo  # ← gradio_app.pyで定義したBlocks
+from gradio_app import demo as demo1  # ← gradio_app.pyで定義したBlocks
+from gradio_evaluation_app import demo as demo2
 
 #general
 import os
@@ -269,7 +270,7 @@ async def go_to_gradio():
 app.include_router(router, prefix="/mathgen")
 
 # Gradio Mount（/ui以下はGradio専用にする！）
-mount_gradio_app(app, demo, path="/ui/", root_path="/ui")
+mount_gradio_app(app, demo2, path="/ui/", root_path="/ui")
 
 if __name__ == '__main__':
     uvicorn.run(app, root_path="/mathgen")

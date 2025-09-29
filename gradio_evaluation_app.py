@@ -214,10 +214,10 @@ with gr.Blocks() as demo:
     
     with gr.Row():  
         with gr.Column(scale=1):    
-            gen_quiz_btn = gr.Button("前の問題を見る", visible=True, interactive=True, variant="stop")
+            gen_quiz_btn = gr.Button("前の問題を見る", visible=False, interactive=True, variant="stop")
 
         with gr.Column(scale=1):
-            rev_quiz_btn = gr.Button("次の問題を見る", visible=True, interactive=True, variant="stop")
+            rev_quiz_btn = gr.Button("次の問題を見る", visible=False, interactive=True, variant="stop")
 
     with gr.Row():
         with gr.Column(scale=1):
@@ -248,39 +248,33 @@ with gr.Blocks() as demo:
         with gr.Column(scale=2):
             note_mkdwn = gr.Markdown("### 評価", visible=False)
 
-            grammar2 = gr.Radio(
-                choices=["3", "2", "1"],
-                label="日本語に誤りがある",
-                visible=False
-            )
-
             clarity2 = gr.Radio(
                 choices=["3", "2", "1"],
-                label="より簡単に記述できる",
-                visible=False
-            )
-
-            clarity1 = gr.Radio(
-                choices=["3", "2", "1"],
-                label="問われていることがはっきりしている",
+                label="問題文は、より簡単に記述できる",
                 visible=False
             )
 
             grammar1 = gr.Radio(
                 choices=["3", "2", "1"],
-                label="質問文は問いかけになっている",
+                label="問題文は問いかけになっている",
                 visible=False
             )
 
             answerability2 = gr.Radio(
                 choices=["3", "2", "1"],
-                label="質問文に矛盾がある",
+                label="問題文に矛盾がある",
+                visible=False
+            )
+
+            clarity1 = gr.Radio(
+                choices=["3", "2", "1"],
+                label="問題文で問われていることがはっきりしている",
                 visible=False
             )
 
             answerability1 = gr.Radio(
                 choices=["3", "2", "1"],
-                label="質問の答えが有限個に定まる",
+                label="問題の答えが有限個に定まる",
                 visible=False
             )
 
@@ -290,21 +284,27 @@ with gr.Blocks() as demo:
                 visible=False
             )
 
+            validity2 = gr.Radio(
+                choices=["3", "2", "1"],
+                label="解答は過不足がある",
+                visible=False
+            )
+
             explainability1 = gr.Radio(
                 choices=["3", "2", "1"],
-                label="中学生が理解できる内容である",
+                label="全体は、中学生が理解できる",
                 visible=False
             )
 
             explainability2 = gr.Radio(
                 choices=["3", "2", "1"],
-                label="中学で習わないような用語・表現が使われている",
+                label="全体で、中学で習わないような用語・表現が使われている",
                 visible=False
             )
 
-            validity2 = gr.Radio(
+            grammar2 = gr.Radio(
                 choices=["3", "2", "1"],
-                label="解答は過不足がある",
+                label="全文中に、日本語の誤りがある",
                 visible=False
             )
 
@@ -352,6 +352,7 @@ with gr.Blocks() as demo:
             msg = generate_status_msg(count_work)
         
             return (
+                    gr.update(visible=True, interactive=True),
                     gr.update(value=f'<div style="text-align: center;"><h1> あなたが選んだ問題 </h1></div><div style="border: 3px solid #2196f3;padding: 24px;border-radius: 8px;text-align: center;"> \n{quiz_text} </div>', visible=True),
                     gr.update(),
                     gr.update(visible=True, value=msg),
@@ -365,6 +366,7 @@ with gr.Blocks() as demo:
                 gr.update(),
                 gr.update(),
                 gr.update(),
+                gr.update(),
                 "",
                 0,
                 "",
@@ -375,6 +377,7 @@ with gr.Blocks() as demo:
         fn=update_when_dropdown,
         inputs=[quiz_dropdown, quiz_map_state, user_state],
         outputs=[
+            answer_btn,
             quiz_text_display, 
             checkboxes,
             status_msg,
@@ -387,11 +390,40 @@ with gr.Blocks() as demo:
 
     def update_when_answer_btn(solver):
         return solver
+    
+    def appear_questionnaire_box():
+        return (
+            gr.update(visible=True, interactive=True), gr.update(visible=True, interactive=True), #grammar1, grammar2
+            gr.update(visible=True, interactive=True), gr.update(visible=True, interactive=True), #clarity1, clarity2
+            gr.update(visible=True, interactive=True), gr.update(visible=True, interactive=True), #validity1, validity2
+            gr.update(visible=True, interactive=True), gr.update(visible=True, interactive=True), #answerability1, answerability2
+            gr.update(visible=True, interactive=True), gr.update(visible=True, interactive=True), #explainability1, explainability2
+            gr.update(visible=True, interactive=True), #report_text
+            gr.update(visible=True, interactive=False, value="評価を入力していない箇所があります", variant="secondary"), #report_btn
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0 #states
+        )
 
     answer_btn.click(
         fn=update_when_answer_btn,
         inputs=[answer_state],
         outputs=answer_output,
+    ).then(
+        fn=appear_questionnaire_box,
+        inputs=[],
+        outputs=[
+            grammar1, grammar2,
+            clarity1, clarity2,
+            validity1, validity2,
+            answerability1, answerability2,
+            explainability1, explainability2,
+            report_text,
+            report_btn,
+            grammar1_state, grammar2_state,
+            clarity1_state, clarity2_state,
+            validity1_state, validity2_state,
+            answerability1_state, answerability2_state,
+            explainability1_state, explainability2_state
+            ]
     )
 
     def enable_submit(g1, g2, c1, c2, v1, v2, a1, a2, e1, e2):
