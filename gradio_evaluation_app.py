@@ -116,7 +116,7 @@ def reload_quiz_map_from_mongo(lti):
 
         if title and text and answer and flag:
             quiz_text_dict[sessionid_text] = (text, answer, sessionid)
-    title_text = "## " + str(len(evaluation_browse)) + "/" + str(len(quiz_text_dict)) + "完了！"
+    title_text = "## 評価が完了した問題： " + str(len(evaluation_browse)) + " / " + str(len(quiz_text_dict))
     return quiz_text_dict, gr.update(choices=sorted(quiz_text_dict.keys()), value=None), gr.update(value=title_text)
 
 # userのこれまでのresultを入手する
@@ -346,25 +346,15 @@ with gr.Blocks() as demo:
                 visible=False
             )
 
-    def generate_status_msg(count_work):
-        html = ""
-        if count_work > 0:
-            html = "## 評価ずみの問題です"
-        else:
-            html = "## まだ評価していない問題です"
-        return html
-
     def update_when_dropdown(quiz_title, quiz_text_dict, user):
         if quiz_title:
             quiz_text, answer, sessionid = quiz_text_dict[quiz_title]
             count_work = get_result_from_db(sessionid, user)
-            msg = generate_status_msg(count_work)
         
             return (
                     gr.update(visible=True, interactive=True),
                     gr.update(value=f'<div style="text-align: center;"><h1> あなたが選んだ問題 </h1></div><div style="border: 3px solid #2196f3;padding: 24px;border-radius: 8px;text-align: center;"> \n{quiz_text} </div>', visible=True),
                     gr.update(),
-                    gr.update(visible=True, value=msg),
                     quiz_text,
                     count_work,
                     answer,
@@ -372,7 +362,6 @@ with gr.Blocks() as demo:
             )
         else:
             return (
-                gr.update(),
                 gr.update(),
                 gr.update(),
                 gr.update(),
@@ -389,7 +378,6 @@ with gr.Blocks() as demo:
             answer_btn,
             quiz_text_display, 
             checkboxes,
-            status_msg,
             dropdown_state,
             cnt_work_state,
             answer_state,
