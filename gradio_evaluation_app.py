@@ -108,7 +108,7 @@ def reload_quiz_map_from_mongo(lti):
                 break
 
         if title and text and answer and page and no and school and flag:
-            quiz_text_dict[sessionid] = (text, answer, page, no, school)
+            quiz_text_dict[sessionid] = (text, answer, sessionid)
     return quiz_text_dict, gr.update(choices=sorted(quiz_text_dict.keys()), value=None)
 
 # userのこれまでのresultを入手する
@@ -341,14 +341,15 @@ with gr.Blocks() as demo:
     def generate_status_msg(count_work):
         html = ""
         if count_work > 0:
-            html = "## 評価ずみです"
-        
+            html = "## 評価ずみの問題です"
+        else:
+            html = "## まだ評価していない問題です"
         return html
 
     def update_when_dropdown(quiz_title, quiz_text_dict, user):
         if quiz_title:
-            quiz_text, answer, page, no, school = quiz_text_dict[quiz_title]
-            count_work = get_result_from_db(quiz_title, user)
+            quiz_text, answer, sessionid = quiz_text_dict[quiz_title]
+            count_work = get_result_from_db(sessionid, user)
             msg = generate_status_msg(count_work)
         
             return (
@@ -389,10 +390,8 @@ with gr.Blocks() as demo:
     )
 
     def update_when_answer_btn(solver):
-        return solver
-    
-    def appear_questionnaire_box():
         return (
+            gr.update(visible=True, value=solver), #answer_output
             gr.update(visible=True, interactive=True), gr.update(visible=True, interactive=True), #grammar1, grammar2
             gr.update(visible=True, interactive=True), gr.update(visible=True, interactive=True), #clarity1, clarity2
             gr.update(visible=True, interactive=True), gr.update(visible=True, interactive=True), #validity1, validity2
@@ -400,17 +399,15 @@ with gr.Blocks() as demo:
             gr.update(visible=True, interactive=True), gr.update(visible=True, interactive=True), #explainability1, explainability2
             gr.update(visible=True, interactive=True), #report_text
             gr.update(visible=True, interactive=False, value="評価を入力していない箇所があります", variant="secondary"), #report_btn
-            0, 0, 0, 0, 0, 0, 0, 0, 0, 0 #states
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, #states
+            gr.update(interactive=False) #quiz_dropdown
         )
 
     answer_btn.click(
         fn=update_when_answer_btn,
         inputs=[answer_state],
-        outputs=answer_output,
-    ).then(
-        fn=appear_questionnaire_box,
-        inputs=[],
         outputs=[
+            answer_output,
             grammar1, grammar2,
             clarity1, clarity2,
             validity1, validity2,
@@ -422,7 +419,8 @@ with gr.Blocks() as demo:
             clarity1_state, clarity2_state,
             validity1_state, validity2_state,
             answerability1_state, answerability2_state,
-            explainability1_state, explainability2_state
+            explainability1_state, explainability2_state,
+            quiz_dropdown
             ]
     )
 
