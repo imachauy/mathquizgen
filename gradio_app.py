@@ -613,16 +613,28 @@ with gr.Blocks() as demo:
         # 2025夏実証用
         if school=="C126210001533":
             if count_work==0: #BookRollで問題を解かせる
-                html = f"""
-                <div style="text-align: center;">
-                    <span style="font-size: 22px; font-weight: bold;">
-                    あなたが解いたデータが見つかりませんでした。<br>
-                    </span>
-                    <span style="font-weight: bold; color: #2196f3;"> <h2>まずはBookRollで、該当の問題を解きましょう！</h2></span><br>
-                    <span style="font-weight: bold; color: #2196f3;"> <h3>BookRollで解かないと、下のボタンが有効になりません。<br>BookRollで解いてから、システムに入り直してください。</h3></span><br>
-                </div>
-                """
-                return html
+                if num_rubrics > 0:
+                    html = f"""
+                    <div style="text-align: center;">
+                        <span style="font-size: 22px; font-weight: bold;">
+                        あなたが解いたデータが見つかりませんでした。<br>
+                        </span>
+                        <span style="font-weight: bold; color: #2196f3;"> <h2>まずはBookRollで、該当の問題を解きましょう！</h2></span><br>
+                        <span style="font-weight: bold; color: #2196f3;"> <h3>BookRollで解かないと、下のボタンが有効になりません。<br>BookRollで解いてから、システムに入り直してください。</h3></span><br>
+                    </div>
+                    """
+                    return html
+                else:
+                    html = f"""
+                    <div style="text-align: center;">
+                        <span style="font-size: 22px; font-weight: bold;">
+                        あなたが解いたデータが見つかりませんでした。<br>
+                        </span>
+                        <span style="font-weight: bold; color: #2196f3;"> <h2>次は、きちんと振り返りを行ってください。</h2></span><br>
+                        <span style="font-weight: bold; color: #2196f3;"> <h3>問題を復習しましょう！</h3></span><br>
+                    </div>
+                    """
+                    return html
         if count_work + count_review > 0:
             if num_rubrics > 0:
                 html = f"""
@@ -1298,10 +1310,6 @@ with gr.Blocks() as demo:
         fn=lambda: (gr.update(interactive=False)),
         inputs=None,
         outputs=[report_btn]
-    ).then(
-        fn=handle_exercise,
-        inputs=[exercise_saving_state, new_no_state, exercise_state, answer_state, user_state, exercise_creation_time_state, answer_creation_time_state, model_state, session_state, lti_state],
-        outputs=None
     ).then(
         fn=handle_answer,
         inputs=[exercise_saving_state, user_state, session_state, contentsid_state, page_state, no_state, checkbox_state, school_state, new_contentsid_state, new_page_state, new_no_state, student_answer, understanding, rating, difficulty, fluency, relevance, new_checkbox_state, lti_state, report_type, report_text],
