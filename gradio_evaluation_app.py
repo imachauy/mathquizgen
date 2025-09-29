@@ -86,6 +86,12 @@ def reload_quiz_map_from_mongo(lti):
         })
     )
 
+    evaluation_browse = list(
+        exercise_col.find({
+            "user": lti["user_id"]
+        })
+    )
+
     if not documents:
         return {}, {}, gr.update(choices=[], value=None)
     
@@ -95,21 +101,23 @@ def reload_quiz_map_from_mongo(lti):
     for doc in documents:
         text = doc.get("quiz_text")
         answer = doc.get("standard_answer")
-        contents_id = doc.get("contents_id")
-        page = str(doc.get("page"))
-        no = str(doc.get("no"))
         title = doc.get("quiz_title")
-        school = doc.get("school_id")
         sessionid = doc.get("session_id")
         flag = True
         for quiztext in documents_browse:
             if text == quiztext.get("quiz_text"):
                 flag = False
                 break
+        session_ids = [doc["session_id"] for doc in evaluation_browse]
+        if sessionid in session_ids:
+            sessionid_text = "✅" + sessionid
+        else:
+            sessionid_text = sessionid
 
-        if title and text and answer and page and no and school and flag:
-            quiz_text_dict[sessionid] = (text, answer, sessionid)
-    return quiz_text_dict, gr.update(choices=sorted(quiz_text_dict.keys()), value=None)
+        if title and text and answer and flag:
+            quiz_text_dict[sessionid_text] = (text, answer, sessionid)
+    title_text = "## " + str(len(evaluation_browse)) + "/" + str(len(quiz_text_dict)) + "完了！"
+    return quiz_text_dict, gr.update(choices=sorted(quiz_text_dict.keys()), value=None), gr.update(value=title_text)
 
 # userのこれまでのresultを入手する
 def get_result_from_db(quiz_title, user):
@@ -210,7 +218,7 @@ with gr.Blocks() as demo:
     new_checkbox_state = gr.State()
     new_current_checkbox_state = gr.State([])
     cnt_work_state = gr.State()
-    cnt_review_state = gr.State()
+    cnt_state = gr.State()
     
     with gr.Row():  
         with gr.Column(scale=1):    
@@ -360,7 +368,7 @@ with gr.Blocks() as demo:
                     quiz_text,
                     count_work,
                     answer,
-                    quiz_title
+                    sessionid
             )
         else:
             return (
@@ -588,7 +596,7 @@ with gr.Blocks() as demo:
     ).then(
         fn=lambda: (
             gr.update(visible=True, interactive=True, value=None), # quiz_dropdown
-            gr.update(""), # quiz_text_display
+            gr.update(value=""), # quiz_text_display
             gr.update(""), # status_msg
             gr.update(visible=False, interactive=False), # answer_btn
             gr.update(visible=False, value=""), # answer_output
@@ -599,7 +607,6 @@ with gr.Blocks() as demo:
             gr.update(visible=False, interactive=False, value=None), gr.update(visible=False, interactive=False, value=None), # explainability1, explainability2
             gr.update(visible=False, interactive=False, placeholder="", value="", lines=1), # report_text
             gr.update(visible=False, interactive=False, value="送信", variant="secondary"), # report_btn
-            "", # title
             0, 0, # grammar1_state, grammar2_state
             0, 0, # clarity1_state, clarity2_state
             0, 0, # validity1_state, validity2_state
@@ -622,7 +629,6 @@ with gr.Blocks() as demo:
             explainability1, explainability2,
             report_text,
             report_btn,
-            title,
             grammar1_state, grammar2_state,
             clarity1_state, clarity2_state,
             validity1_state, validity2_state,
@@ -634,7 +640,7 @@ with gr.Blocks() as demo:
     ).then(
         fn=reload_quiz_map_from_mongo,
         inputs=[lti_state],
-        outputs=[quiz_map_state, quiz_dropdown]
+        outputs=[quiz_map_state, quiz_dropdown, title]
     )
 
     # ✅ 初回自動読み込み（表示直後に1回実行）
@@ -645,7 +651,7 @@ with gr.Blocks() as demo:
     ).then(
         fn=reload_quiz_map_from_mongo,
         inputs=[lti_state],
-        outputs=[quiz_map_state, quiz_dropdown]
+        outputs=[quiz_map_state, quiz_dropdown, title]
     )
 
 demo.queue()
