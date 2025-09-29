@@ -110,7 +110,7 @@ def reload_quiz_map_from_mongo(lti):
                 break
         session_ids = [doc["session_id"] for doc in evaluation_browse]
         if sessionid in session_ids:
-            sessionid_text = "✅" + sessionid
+            sessionid_text = "✅ " + sessionid
         else:
             sessionid_text = sessionid
 
