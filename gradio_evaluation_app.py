@@ -87,7 +87,7 @@ def reload_quiz_map_from_mongo(lti):
     )
 
     evaluation_browse = list(
-        exercise_col.find({
+        evaluation_col.find({
             "user": lti["user_id"]
         })
     )
