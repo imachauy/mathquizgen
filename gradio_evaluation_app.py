@@ -583,7 +583,7 @@ with gr.Blocks() as demo:
         outputs=[report_btn]
     ).then(
         fn=handle_evaluation,
-        inputs=[user_state, session_state, grammar1, grammar2, clarity1, clarity2, validity1, validity2, answerability1, answerability2, explainability1, explainability2, lti_state, report_text],
+        inputs=[user_state, session_state, grammar1, grammar2, clarity1, clarity2, validity1, validity2, answerability1, answerability2, explainability1, explainability2, report_text],
         outputs=None
     ).then(
         fn=lambda: (
