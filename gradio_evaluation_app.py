@@ -396,7 +396,7 @@ with gr.Blocks() as demo:
             gr.update(visible=True, interactive=True), #report_text
             gr.update(visible=True, interactive=False, value="評価を入力していない箇所があります", variant="secondary"), #report_btn
             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, #states
-            gr.update(interactive=False) #quiz_dropdown
+            gr.update(interactive=False), gr.update(interactive=False) #quiz_dropdown, answer_btn
         )
 
     answer_btn.click(
@@ -416,7 +416,7 @@ with gr.Blocks() as demo:
             validity1_state, validity2_state,
             answerability1_state, answerability2_state,
             explainability1_state, explainability2_state,
-            quiz_dropdown
+            quiz_dropdown, answer_btn
             ]
     )
 
