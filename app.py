@@ -270,7 +270,7 @@ async def go_to_gradio():
 app.include_router(router, prefix="/mathgen")
 
 # Gradio Mount（/ui以下はGradio専用にする！）
-mount_gradio_app(app, demo2, path="/ui/", root_path="/ui")
+mount_gradio_app(app, demo, path="/ui/", root_path="/ui")
 
 if __name__ == '__main__':
     uvicorn.run(app, root_path="/mathgen")
