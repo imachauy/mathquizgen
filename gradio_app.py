@@ -111,6 +111,7 @@ def handle_exercise(save, no, quiz_text, standard_answer, user, exercise_creatio
             "course_id": lti["context_id"],
             "user": user,
             "session_id": session,
+            "timestamp": datetime.now(JST),
             "show": True
         }
         exercise_col.insert_one(new_entry)
@@ -899,26 +900,6 @@ with gr.Blocks() as demo:
         reason, new_exercise, exercise_creation_time, new_answer, answer_creation_time, overall_creation_time = execute0006_ks(quiz_text, standard_answer, rubrics, tags, model, additional_explanation)
 
         tags_for_saving = [True if item in selected else False for item in rubrics]
-
-        #実験用
-        if num_review == 0:
-            group = exercise_info.get("expetimental_group", "Z")
-            first_x = 0
-            for i in range(len(tags)):
-                first_x += 1
-                if tags[i] == "_x_":
-                    break
-            rev_question = exercise_info["rubric"][str(first_x)]["review_question"]
-            exercise_info_2 = exercise_col.find_one({"contents_id": rev_question["contents_id"], "page": rev_question["page"], "no": rev_question["no"]})
-            group_dict = {"2488": "A", "2494": "B", "2544": "A", "2591": "B", "2562": "A", "2570": "B", "2492": "A", "2505": "B", "2495": "A", "2487": "B", "2558": "A", "2599": "B", "2532": "A", "2517": "B", "2578": "A", "2520": "B", "2593": "A", "2598": "B", "2519": "A", "2587": "B", "2596": "A", "2485": "B", "2486": "A", "2512": "B", "2513": "A", "2533": "B", "2559": "A", "2528": "B", "2560": "A", "2583": "B", "2516": "A", "2515": "B", "2543": "A", "2567": "B", "2537": "A", "2489": "B", "2548": "A", "2509": "B", "2510": "A", "2557": "B", "2592": "A", "2497": "B", "2541": "A", "2572": "B", "2586": "A", "2521": "B", "2511": "A", "2503": "B", "2569": "A", "2525": "B", "2574": "A", "2482": "B", "2585": "A", "2549": "B", "2501": "A", "2529": "B", "2595": "A", "2524": "B", "2542": "A", "2584": "B", "2554": "A", "2589": "B", "2523": "A", "2556": "B", "2536": "A", "2546": "B", "2539": "A", "2564": "B", "2530": "A", "2493": "B", "2484": "A", "2534": "B", "2594": "A", "2545": "B", "2597": "A", "2481": "B", "2531": "A", "2575": "B", "2565": "A", "2579": "B", "2508": "A", "2552": "B", "2555": "A", "2551": "B", "2527": "A", "2550": "B", "2577": "A", "2540": "B", "2553": "A", "2563": "B", "2499": "A", "2561": "B", "2507": "A", "2588": "B", "2590": "A", "2504": "B", "2535": "A", "2547": "B", "2500": "A", "2566": "B", "2506": "A", "2526": "B", "2483": "A", "2502": "B", "2582": "A", "2518": "B", "2571": "A", "2581": "B", "2490": "A", "2576": "B", "2568": "A", "2580": "B", "2491": "A", "2573": "B", "2496": "A", "2522": "B", "2480": "A", "2498": "B", "2514": "A", "2538": "B", "121": "A", "2453": "B"}
-
-            if lti["user_id"] in group_dict:
-                group_st = group_dict[lti["user_id"]]
-            else:
-                group_st = "X"
-            if group == group_st:
-                new_exercise = exercise_info_2.get("quiz_text", "")
-                new_answer = exercise_info_2.get("standard_answer", "")
 
         return (
             new_exercise, 
