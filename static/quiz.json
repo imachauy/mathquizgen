@@ -988,7 +988,7 @@
         "no": "1",
         "quiz_title": "10/31_投影図1 (1)",
         "quiz_text": "$$\\begin{array}{l}立体がある。この立体の立面図は縦10cm、横が平面の円の直径と同じ長さの長方形、\\\\ 平面図は半径 3cmの円である。 \\\\ この立体の表面積を求めなさい。\\end{array}$$",
-        "standard_answer": "$$\\begin{array}{l}底面は半径3 cmの円である。\\(\\pi \\times 3^2=9\\pi \\)(cm^2) \\\\ 側面は縦10 cm、横\\(2\\pi \\times 3=6\\pi \\)(cm)の長方形である。 \\\\ 側面積は  \\(10\\times 6\\pi =60\\pi \\)(cm^2) \\\\ 表面積は  \\(9\\pi \\times 2+60\\pi =78\\pi \\)  (cm^2)\\end{array}$$[最終的な答え]$$78\\pi \\ cm^2$$",
+        "standard_answer": "$$\\begin{array}{l}底面は半径3 cmの円である。\\pi \\times 3^2=9\\pi (cm^2) \\\\ 側面は縦10 cm、横 2\\pi \\times 3=6\\pi  (cm)の長方形である。 \\\\ 側面積は  10\\times 6\\pi =60\\pi (cm^2) \\\\ 表面積は  9\\pi \\times 2+60\\pi =78\\pi (cm^2)\\end{array}$$[最終的な答え]$$78\\pi \\ cm^2$$",
         "figure_explanation": "",
         "rubric": {
             "1": {
@@ -1039,7 +1039,7 @@
         "no": "2",
         "quiz_title": "10/31_投影図1 (2)",
         "quiz_text": "$$\\begin{array}{l}立体がある。この立体の立面図は縦10cm、横が平面の円の直径と同じ長さの長方形、\\\\ 平面図は半径 3cmの円である。 \\\\ この立体の体積を求めなさい。\\end{array}$$",
-        "standard_answer": "[解答の過程]$$\\begin{array}{l}底面は半径3 cmの円である。\\(\\pi\\times 3^2=9\\pi\\)(cm^2) \\\\ また、高さは10 cm。よって、\\\\ \\(9\\pi\\times 10=90\\pi\\)(cm^2)\\end{array}$$[最終的な答え]$$90\\pi\\ cm^2$$",
+        "standard_answer": "[解答の過程]$$\\begin{array}{l}底面は半径3 cmの円である。\\pi\\times 3^2=9\\pi (cm^2) \\\\ また、高さは10 cm。よって、\\\\ 9\\pi\\times 10=90\\pi (cm^2)\\end{array}$$[最終的な答え]$$90\\pi\\ cm^2$$",
         "figure_explanation": "",
         "rubric": {
             "1": {
