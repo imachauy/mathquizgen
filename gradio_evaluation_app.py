@@ -82,7 +82,8 @@ def reload_quiz_map_from_mongo(lti):
         exercise_col.find({
             "school_id": "C126210001533",
             "show": True,
-            "user": {"$ne": "prime"}
+            "user": {"$ne": "prime"},
+            "timestamp": {"$exists": False}
         })
     )
 
