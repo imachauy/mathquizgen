@@ -987,8 +987,8 @@
         "page": "1",
         "no": "1",
         "quiz_title": "10/31_投影図1 (1)",
-        "quiz_text": "$$\\begin{array}{l}立体がある。この立体の立面図は縦10cm、横が平面の円の直径と同じ長さの長方形、\\\\ 平面図は半径 3cmの円である。 \\\\ この立体の表面積を求めなさい。\\end{array}$$",
-        "standard_answer": "$$\\begin{array}{l}底面は半径3 cmの円である。\\pi \\times 3^2=9\\pi (cm^2) \\\\ 側面は縦10 cm、横 2\\pi \\times 3=6\\pi  (cm)の長方形である。 \\\\ 側面積は  10\\times 6\\pi =60\\pi (cm^2) \\\\ 表面積は  9\\pi \\times 2+60\\pi =78\\pi (cm^2)\\end{array}$$[最終的な答え]$$78\\pi \\ cm^2$$",
+        "quiz_text": "$$\\begin{array}{l}立体がある。この立体の立面図は縦10\\mathrm{cm}、横が平面の円の直径と同じ長さの長方形、\\\\ 平面図は半径 3\\mathrm{cm}の円である。 \\\\ この立体の表面積を求めなさい。\\end{array}$$",
+        "standard_answer": "$$\\begin{array}{l}底面は半径3 \\mathrm{cm}の円である。\\pi \\times 3^2=9\\pi (\\mathrm{cm}^2) \\\\ 側面は縦10 \\mathrm{cm}、横 2\\pi \\times 3=6\\pi  (\\mathrm{cm})の長方形である。 \\\\ 側面積は  10\\times 6\\pi =60\\pi (\\mathrm{cm}^2) \\\\ 表面積は  9\\pi \\times 2+60\\pi =78\\pi (\\mathrm{cm}^2)\\end{array}$$[最終的な答え]$$78\\pi \\ \\mathrm{cm}^2$$",
         "figure_explanation": "",
         "rubric": {
             "1": {
@@ -1038,8 +1038,8 @@
         "page": "1",
         "no": "2",
         "quiz_title": "10/31_投影図1 (2)",
-        "quiz_text": "$$\\begin{array}{l}立体がある。この立体の立面図は縦10cm、横が平面の円の直径と同じ長さの長方形、\\\\ 平面図は半径 3cmの円である。 \\\\ この立体の体積を求めなさい。\\end{array}$$",
-        "standard_answer": "[解答の過程]$$\\begin{array}{l}底面は半径3 cmの円である。\\pi\\times 3^2=9\\pi (cm^2) \\\\ また、高さは10 cm。よって、\\\\ 9\\pi\\times 10=90\\pi (cm^2)\\end{array}$$[最終的な答え]$$90\\pi\\ cm^2$$",
+        "quiz_text": "$$\\begin{array}{l}立体がある。この立体の立面図は縦10\\mathrm{cm}、横が平面の円の直径と同じ長さの長方形、\\\\ 平面図は半径 3\\mathrm{cm}の円である。 \\\\ この立体の体積を求めなさい。\\end{array}$$",
+        "standard_answer": "[解答の過程]$$\\begin{array}{l}底面は半径3 \\mathrm{cm}の円である。\\pi\\times 3^2=9\\pi (\\mathrm{cm}^2) \\\\ また、高さは10 \\mathrm{cm}。よって、\\\\ 9\\pi\\times 10=90\\pi (\\mathrm{cm}^3)\\end{array}$$[最終的な答え]$$90\\pi \\mathrm{cm}^3$$",
         "figure_explanation": "",
         "rubric": {
             "1": {
@@ -1071,8 +1071,8 @@
         "page": "2",
         "no": "1",
         "quiz_title": "10/31_投影図2",
-        "quiz_text": "$$\\begin{array}{l}三角柱の投影図がある。平面図は底辺と高さが共に5cmの直角三角形、立面図は縦6cm, 横が底面の斜辺と同じ長さである。\\\\ この三角柱の体積を求めなさい。\\end{array}$$",
-        "standard_answer": "[解答の過程]$$\\begin{array}{l}この三角柱の底面積は \\frac{1}{2} \\times 5 \\times 5=\\frac{25}{2}\\ (cm^2) \\\\ 三角柱の高さは6 cmであるから、求める立体の体積は \\frac{25}{2} \\times 6=75\\ (cm^3)\\end{array}$$[最終的な答え]$$75\\ (cm^3)$$",
+        "quiz_text": "$$\\begin{array}{l}三角柱の投影図がある。平面図は底辺と高さが共に5\\mathrm{cm}の直角三角形、立面図は縦6\\mathrm{cm}, 横が底面の斜辺と同じ長さである。\\\\ この三角柱の体積を求めなさい。\\end{array}$$",
+        "standard_answer": "[解答の過程]$$\\begin{array}{l}この三角柱の底面積は \\frac{1}{2} \\times 5 \\times 5=\\frac{25}{2}\\ (\\mathrm{cm}^2) \\\\ 三角柱の高さは6 \\mathrm{cm}であるから、求める立体の体積は \\frac{25}{2} \\times 6=75\\ (\\mathrm{cm}^3)\\end{array}$$[最終的な答え]$$75\\ (\\mathrm{cm}^3)$$",
         "figure_explanation": "",
         "rubric": {
             "1": {
@@ -1110,7 +1110,7 @@
         "page": "3",
         "no": "1",
         "quiz_title": "10/31_投影図3",
-        "quiz_text": "$$\\begin{array}{l}円錐の投影図がある。平面図は直径8cmの円、立面図は底辺8cm, 他2辺が10 cmの二等辺三角形である。 \\\\ この円錐の表面積を求めなさい。\\end{array}$$",
+        "quiz_text": "$$\\begin{array}{l}円錐の投影図がある。平面図は直径8\\mathrm{cm}の円、立面図は底辺8\\mathrm{cm}, 他2辺が10 \\mathrm{cm}の二等辺三角形である。 \\\\ この円錐の表面積を求めなさい。\\end{array}$$",
         "standard_answer": "[解答の過程]$$\\begin{array}{l}底面の半径は \\\\ 8\\div 2=4\\ (\\mathrm{cm}) \\\\ 円錐の展開図において、おうぎ形の中心角を a^\\circ とすると \\\\ 2\\pi\\times 10\\times\\frac{a}{360}=2\\pi\\times 4 \\\\ よって \\frac{a}{360}=\\frac{2}{5} \\\\ したがって、側面積は\\pi\\times 10^2\\times\\frac{2}{5}=40\\pi\\ (\\mathrm{cm}^2) \\\\ 底面積は \\pi\\times 4^2=16\\pi\\ (\\mathrm{cm}^2) \\\\ よって、求める表面積は \\\\ 40\\pi+16\\pi=56\\pi\\ (\\mathrm{cm}^2)\\end{array}$$[最終的な答え]$$56\\pi\\ (\\mathrm{cm}^2)$$",
         "figure_explanation": "",
         "rubric": {
@@ -1155,8 +1155,8 @@
         "page": "4",
         "no": "1",
         "quiz_title": "10/31_投影図4",
-        "quiz_text": "$$\\begin{array}{l}高さの等しい3つの立体の投影図がある。 \\\\ 投影図アは立面図が長方形、平面図が底辺6 cm, 高さ6 cmの三角形である。 \\\\ 投影図イは立面図が長方形、平面図が直径6 cmの円である。 \\\\ 投影図ウは立面図が三角形、平面図が一辺6 cmの正方形である。\\\\ このとき、ア〜ウの立体を、体積の小さいものから順に並べなさい。\\end{array}$$",
-        "standard_answer": "[解答の過程]$$\\begin{array}{l}ア～ウの立体の高さを h cm として体積を求める。 \\\\ ア \\frac{1}{2} \\times 6 \\times 6 \\times h = 18h (cm^3) \\\\ イ \\pi \\times 3^2 \\times h = 9\\pi h (cm^3) \\\\ ウ \\frac{1}{3} \\times 6 \\times 6 \\times h = 12h (cm^3) \\\\ 9\\piは27より大きく、12 <\\, 18 <\\, 9\\pi \\\\ よって、体積の小さいものから順に並べると ウ, ア, イ。\\end{array}$$[最終的な答え]$$ウ, ア, イ$$",
+        "quiz_text": "$$\\begin{array}{l}高さの等しい3つの立体の投影図がある。 \\\\ 投影図アは立面図が長方形、平面図が底辺6 \\mathrm{cm}, 高さ6 \\mathrm{cm}の三角形である。 \\\\ 投影図イは立面図が長方形、平面図が直径6 \\mathrm{cm}の円である。 \\\\ 投影図ウは立面図が三角形、平面図が一辺6 \\mathrm{cm}の正方形である。\\\\ このとき、ア〜ウの立体を、体積の小さいものから順に並べなさい。\\end{array}$$",
+        "standard_answer": "[解答の過程]$$\\begin{array}{l}ア～ウの立体の高さを h \\mathrm{cm} として体積を求める。 \\\\ ア \\frac{1}{2} \\times 6 \\times 6 \\times h = 18h (\\mathrm{cm}^3) \\\\ イ \\pi \\times 3^2 \\times h = 9\\pi h (\\mathrm{cm}^3) \\\\ ウ \\frac{1}{3} \\times 6 \\times 6 \\times h = 12h (\\mathrm{cm}^3) \\\\ 9\\piは27より大きく、12 <\\, 18 <\\, 9\\pi \\\\ よって、体積の小さいものから順に並べると ウ, ア, イ。\\end{array}$$[最終的な答え]$$ウ, ア, イ$$",
         "figure_explanation": "",
         "rubric": {
             "1": {
@@ -1190,7 +1190,7 @@
                 }
             },
             "6": {
-                "main": "四角錐の体積を（底面）×（高さ）÷3 で求められることがわかる",
+                "main": "錐の体積は（底面）×（高さ）÷3 で求められることを知っている",
                 "example": {
                     "1": ""
                 }
