@@ -1031,7 +1031,7 @@
         "school_id": ["C126210001533", "F126110107407"],
         "context_id": "prime",
         "user": "prime",
-        "show": true
+        "show": false
     },
     {
         "contents_id": "687fd5c7e0142dfb2da70e5083b3c6a7",
@@ -1064,7 +1064,7 @@
         "school_id": ["C126210001533", "F126110107407"],
         "context_id": "prime",
         "user": "prime",
-        "show": true
+        "show": false
     },
     {
         "contents_id": "687fd5c7e0142dfb2da70e5083b3c6a7",
@@ -1103,7 +1103,7 @@
         "school_id": ["C126210001533", "F126110107407"],
         "context_id": "prime",
         "user": "prime",
-        "show": true
+        "show": false
     },
     {
         "contents_id": "687fd5c7e0142dfb2da70e5083b3c6a7",
@@ -1148,7 +1148,7 @@
         "school_id": ["C126210001533", "F126110107407"],
         "context_id": "prime",
         "user": "prime",
-        "show": true
+        "show": false
     },
     {
         "contents_id": "687fd5c7e0142dfb2da70e5083b3c6a7",
@@ -1203,6 +1203,177 @@
             },
             "8": {
                 "main": "18、9π、12の大小比較ができる",
+                "example": {
+                    "1": ""
+                }
+            }
+        },
+        "school_id": ["C126210001533", "F126110107407"],
+        "context_id": "prime",
+        "user": "prime",
+        "show": false
+    },
+    {
+        "contents_id": "7f16109f1619fd7a733daf5a84c708c1",
+        "page": "64",
+        "no": "1",
+        "quiz_title": "(STEP演習 - 1年5章 演習問題9) 線分が通過した部分の面積",
+        "quiz_text": "$$\\begin{array}{l}AB=7 \\mathrm{cm}, BC=4 \\mathrm{cm}, \\angle C = 90^\\circ の △ABC がある。 \\\\ 点Bを回転の中心として△ABCを 360^\\circ 回転するとき、線分ACが通過した部分の面積を求めなさい。\\end{array}$$",
+        "standard_answer": "[解答の過程]$$\\begin{array}{l}線分ACが通過した部分は、点Bを中心とする半径ABの円から、 \\\\ 点Bを中心とする半径BCの円を除いたものである。 \\\\ よって、求める面積は、 \\pi \\times 7^2 - \\pi \\times 4^2 = 33 \\pi \\end{array}$$[最終的な答え]$$ 33 \\pi (\\mathrm{cm}^2)$$",
+        "figure_explanation": "",
+        "rubric": {
+            "1": {
+                "main": "",
+                "example": {
+                    "1": ""
+                }
+            },
+            "2": {
+                "main": "",
+                "example": {
+                    "1": ""
+                }
+            },
+            "3": {
+                "main": "",
+                "example": {
+                    "1": ""
+                }
+            },
+            "4": {
+                "main": "",
+                "example": {
+                    "1": ""
+                }
+            },
+            "5": {
+                "main": "",
+                "example": {
+                    "1": ""
+                }
+            }
+        },
+        "school_id": ["C126210001533", "F126110107407"],
+        "context_id": "prime",
+        "user": "prime",
+        "show": true
+    },
+    {
+        "contents_id": "c215b446bcdf956d848a8419c1b5a920",
+        "page": "92",
+        "no": "1",
+        "quiz_title": "(STEP演習 - 1年6章 演習問題1) 容器に入った水の体積",
+        "quiz_text": "$$\\begin{array}{l}底面の半径が 5 \\mathrm{cm}, 高さが 4 \\mathrm{cm} の円柱形の容器Aと、 底面の半径が4 \\mathrm{cm}, 高さが6 \\mathrm{cm} の円錐形の容器Bがある。 \\\\ 容器Aを水でいっぱいに満たしたあと、容器Aから容器Bに水を注いで、容器Bをいっぱいに満たしたとき、容器Aに残った水の深さを求めなさい。\\end{array}$$",
+        "standard_answer": "[解答の過程]$$\\begin{array}{l}容器 B を水でいっぱいに満たしたときの水の体積は \\\\ \\frac{1}{3} \\times \\pi \\times 4^2 \\times 6 = 32\\pi (\\mathrm{cm}^3) \\\\ よって， 容器 A に残った水の体積は 100\\pi - 32\\pi = 68\\pi (\\mathrm{cm}^3) \\\\ 容器 A の底面積は \\pi \\times 5^2 = 25\\pi (\\mathrm{cm}^2) であるから，求める水の深さは \\\\ 68\\pi \\div 25\\pi = \\frac{68}{25} \\end{array}$$[最終的な答え]$$ \\frac{68}{25} \\mathrm{cm} $$",
+        "figure_explanation": "",
+        "rubric": {
+            "1": {
+                "main": "テスト",
+                "example": {
+                    "1": ""
+                }
+            }
+        },
+        "school_id": ["C126210001533", "F126110107407"],
+        "context_id": "prime",
+        "user": "prime",
+        "show": true
+    },
+    {
+        "contents_id": "c215b446bcdf956d848a8419c1b5a920",
+        "page": "94",
+        "no": "1",
+        "quiz_title": "(STEP演習 - 1年6章 演習問題3) 線分が通過した部分の面積",
+        "quiz_text": "$$\\begin{array}{l}AB=5 \\mathrm{cm}, AC=8 \\mathrm{cm}, \\angle B=90^{\\circ} の △ABC がある。 \\\\ 右の図で, △APQ は, △ABC を A を回転の中心として, 時計の針の回転と反対の向きに 90° 回転移動したものである。 \\\\ 線分 BC が通過してできる図形の面積を求めなさい。\\end{array}$$",
+        "standard_answer": "[解答の過程]$$\\begin{array}{l} 求める面積は,(△ABC の面積)+(おうぎ形 ACQ の面積)-((△APQ の面積)+(おうぎ形 ABP の面積)) \\\\ すなわち,(おうぎ形 ACQ の面積)-(おうぎ形 ABP の面積) \\\\ よって, 求める面積は \\\\ \\pi \\times 8^2 \\times \\frac{90}{360} - \\pi \\times 5^2 \\times \\frac{90}{360} = \\frac{39}{4} \\pi \\end{array}$$[最終的な答え]$$ \\frac{39}{4} \\pi \\mathrm{cm}^2 $$",
+        "figure_explanation": "",
+        "rubric": {
+            "1": {
+                "main": "テスト",
+                "example": {
+                    "1": ""
+                }
+            }
+        },
+        "school_id": ["C126210001533", "F126110107407"],
+        "context_id": "prime",
+        "user": "prime",
+        "show": true
+    },
+    {
+        "contents_id": "c215b446bcdf956d848a8419c1b5a920",
+        "page": "95",
+        "no": "1",
+        "quiz_title": "(STEP演習 - 1年6章 演習問題4) 円の中心が動いてできる線の長さ",
+        "quiz_text": "$$\\begin{array}{l}半径 1 \\mathrm{cm} の 2 つの円 A, B が 接している。 \\\\ これら 2 つの円の周りを，半径 1 \\mathrm{cm} の円 O が転がって，もとの位置まで 1 周する。 \\\\ 円 O の中心が動いてできる線の長さを求めなさい。\\end{array}$$",
+        "standard_answer": "[解答の過程]$$\\begin{array}{l}円 O の中心が動いてできる線は, 2つのおうぎ形の周を組み合わせたものである。 \\\\ 2つのおうぎ形の共有点をP, Qとすると、△ABP と △ABQ は正三角形であるから, \\\\ おうぎ形 APQ とおうぎ形 BPQ の中心角の大きさはともに 360^{\\circ} - 60^{\\circ} \\times 2 = 240^{\\circ} \\\\ 弧PQは半径 2 \\mathrm{cm}, 中心角 240^{\\circ}のおうぎ形の弧であるから、求める線の長さは \\\\ 2 \\pi \\times 2 \\times \\frac{240}{360} \\times 2 = \\frac{16}{3} \\pi \\end{array}$$[最終的な答え]$$ \\frac{16}{3} \\pi \\mathrm{cm} $$",
+        "figure_explanation": "",
+        "rubric": {
+            "1": {
+                "main": "テスト",
+                "example": {
+                    "1": ""
+                }
+            }
+        },
+        "school_id": ["C126210001533", "F126110107407"],
+        "context_id": "prime",
+        "user": "prime",
+        "show": true
+    },
+    {
+        "contents_id": "c215b446bcdf956d848a8419c1b5a920",
+        "page": "96",
+        "no": "1",
+        "quiz_title": "(STEP演習 - 1年6章 演習問題5(1)) 立方体の切断",
+        "quiz_text": "$$\\begin{array}{l}右の図のように，1辺の長さが 4 \\mathrm{cm} の立方体 ABCDEFGH がある。 \\\\ 直線 AE，辺 AB，辺 AD 上に，それ ぞれ点 P, Q, R を AP=2 \\mathrm{cm}，AQ=1 \\mathrm{cm}，AR=2 \\mathrm{cm} となるようにとる。 \\\\ また，直線 PQ と辺 EF の交点を S，直 線 PR と辺 DH の交点を T とする。 \\\\ 四面体 RPQE の体積を求めなさい。\\end{array}$$",
+        "standard_answer": "[解答の過程]$$\\begin{array}{l}四面体 RPQE は，△PRE を底面，AQ を高さとする三角錐である。 \\\\ PE=6 \\mathrm{cm}，AR=2 \\mathrm{cm}，AQ=1 \\mathrm{cm} であるから，その体積は \\\\ \\frac{1}{3} \\times \\frac{1}{2} \\times 6 \\times 2 \\times 1 = 2 \\end{array}$$[最終的な答え]$$ 2 \\mathrm{cm}^3 $$",
+        "figure_explanation": "",
+        "rubric": {
+            "1": {
+                "main": "テスト",
+                "example": {
+                    "1": ""
+                }
+            }
+        },
+        "school_id": ["C126210001533", "F126110107407"],
+        "context_id": "prime",
+        "user": "prime",
+        "show": true
+    },
+    {
+        "contents_id": "c215b446bcdf956d848a8419c1b5a920",
+        "page": "97",
+        "no": "1",
+        "quiz_title": "(STEP演習 - 1年6章 演習問題6) 立方体の内部で球が動き回ることのできる部分の体積",
+        "quiz_text": "$$\\begin{array}{l}1辺の長さが 5 \\mathrm{cm} の立方体の内部を, 半径 1 \\mathrm{cm} の球が動き回る。 \\\\ このとき, 立方体の内部で球が動き回ることのできる部分の体積を求めなさい。\\end{array}$$",
+        "standard_answer": "[解答の過程]$$\\begin{array}{l}立方体の内部で球が動き回ることができる部分は, 次の 4 種類の立体に分割できる。 \\\\ ① 半径 1 \\mathrm{cm} の球を 8 分割したもの \\\\ ② 半径 1 \\mathrm{cm}, 中心角 90° のおうぎ形を底面とする, 高さ 3 \\mathrm{cm} の柱体 \\\\ ③ 1辺が 3 \\mathrm{cm} の正方形を底面とする, 高さ 1 \\mathrm{cm} の直方体 \\\\ ④ 1辺が 3 \\mathrm{cm} の立方体 \\\\ ① が 8 個, ② が 12 個, ③ が 6 個, ④ が 1 個あるから, 求める体積は \\\\ \\frac{4}{3} \\pi \\times 1^2 \\times \\frac{1}{8} \\times 8 + \\pi \\times 1^2 \\times \\frac{90}{360} \\times 3 \\times 12 + 3 \\times 3 \\times 1 \\times 6 + 3 \\times 3 \\times 3 = \\frac{31}{3} \\pi + 81 \\end{array}$$[最終的な答え]$$ \\frac{31}{3} \\pi + 81 (\\mathrm{cm}^3) $$",
+        "figure_explanation": "",
+        "rubric": {
+            "1": {
+                "main": "テスト",
+                "example": {
+                    "1": ""
+                }
+            }
+        },
+        "school_id": ["C126210001533", "F126110107407"],
+        "context_id": "prime",
+        "user": "prime",
+        "show": true
+    },
+    {
+        "contents_id": "c215b446bcdf956d848a8419c1b5a920",
+        "page": "99",
+        "no": "1",
+        "quiz_title": "(STEP演習 - 1年6章 演習問題8) 立体の切断と切り口",
+        "quiz_text": "$$\\begin{array}{l}異なる立体 A, B, C, D, E, F は, 円錐、三角錐、四角錐、円柱、立方体、正八面体のいずれかである。 \\\\ 立体 A, B, C, D, E, F の切り口に関する次の5つのことがらから, 立体 A, B, C, D, E, F が 円錐、三角錐、四角錐、円柱、立方体、正八面体 のどの立体であるか答えなさい。 \\\\ 【切り口に関することから】 \\\\  [1] 立体 A をある平面で切断すると, その切り口は円になった。 \\\\  [2] 立体 B をある平面で切断すると, その切り口は四角形になった。 \\\\ [3] 立体 B, C, D をある平面で切断すると, その切り口は三角形になった。 \\\\ [4] 立体 F をどの平面で切断しても, その切り口は六角形にはならなかった。 \\\\ [5] 立体 D, F をある平面で切断すると, その切り口は五角形になった。\\end{array}$$",
+        "standard_answer": "[解答の過程]$$\\begin{array}{l} 5つのことがらそれぞれに当てはまる立体は, 次の通りである。 \\\\ [1] 切り口が円になる可能性のある立体 (A) 円錐、円柱 \\\\ [2] 切り口が四角形になる可能性のある立体 (B) 三角錐、四角錐、円柱、立方体、正八面体 \\\\ [3] 切り口が三角形になる可能性のある立体 (B, C, D) 円錐、三角錐、四角錐、立方体 \\\\ [4] 切り口が六角形にはならない立体 (F) 円錐、三角錐、四角錐、円柱 \\\\ [5] 切り口が五角形になる可能性のある立体 (D, F) 四角錐、円柱、立方体、正八面体 \\\\ F は [4], [5] に当てはまるから Fは 四角錐 \\\\ D は [3], [5] に当てはまる。また, D は 四角錐 ではないから Dは 立方体 \\\\ B は [2], [3] に当てはまる。また, B は 四角錐, 立方体 ではないから Bは 三角錐 \\\\ C は [3] に当てはまる。また, C は 四角錐, 立方体, 三角錐 ではないから Cは 円錐 \\\\ A は [1] に当てはまる。また, A は 円錐 ではないから Aは 円柱 \\\\ 残った E は 正八面体 \\end{array}$$[最終的な答え]$$ A: 円柱, B: 三角錐, C: 円錐, D: 立方体, E: 正八面体, F: 四角錐 $$",
+        "figure_explanation": "",
+        "rubric": {
+            "1": {
+                "main": "テスト",
                 "example": {
                     "1": ""
                 }
