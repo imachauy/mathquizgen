@@ -138,7 +138,7 @@ def find_grade(context):
     for grade in grades_list:
         if grade in context:
             return grade
-    return ""
+    return "中学3年"
 
 # ✅ MongoDBから再読み込みして State と Dropdown を更新する関数
 def reload_quiz_map_from_mongo(lti):
