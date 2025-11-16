@@ -146,13 +146,19 @@ def reload_quiz_map_from_mongo(lti):
     documents = list(
         exercise_col.find({
             "school_id": lti["school_id"],
-            "$or": [
-                {"context_id": lti["context_id"]},
-                {"context_id": "prime"}
-            ],
-            "$or": [
-                {"user": lti["user_id"]},
-                {"user": "prime"}
+            "$and": [  # <-- 2つの条件を $and で囲む
+                {
+                    "$or": [
+                        {"course_id": lti["context_id"]},
+                        {"course_id": "prime"}
+                    ]
+                },
+                {
+                    "$or": [
+                        {"user": lti["user_id"]},
+                        {"user": "prime"}
+                    ]
+                }
             ],
             "show": True
         })
