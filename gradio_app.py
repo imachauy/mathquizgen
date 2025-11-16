@@ -291,7 +291,7 @@ def classify_binary(binary_string, knowledge):
         text = "生徒はところどころ理解していない部分があるので、「{}」を確認する問題を作成してください。".format(knowledge[binary_string.index('0') + 1])
         return text, 3
 
-def check_if_solvable(question, knowledge, num, prev_exercise, prev_ans, model, grade):
+def check_if_solvable(question, knowledge, num, model, grade):
     if num == "type1":
         prompt = '''
         以下はある数学の問題です。 \n {} \n
@@ -312,20 +312,11 @@ def check_if_solvable(question, knowledge, num, prev_exercise, prev_ans, model, 
         [最終的な答え] \n
         $$YYYY$$
         '''.format(question, knowledge, grade, r"{a}", r"{b}", r"text{の値から、}", r"text{を求める}", "{array", "}{l", "}", "{array", "}")
-    count = 0
-    start_time_solve1 = time.time()
-    while True:
-        count += 1
-        ans = gpt_exection(model, prompt)
-        end_time_solve1 = time.time()
-        elapsed_time = end_time_solve1 - start_time_solve1
-        if ("[解答の過程]" in ans) and ("[最終的な答え]" in ans):
-            break
-        elif count == 2:
-            print("error_check_if_solvable")
-            return "error_check_if_solvable"
-    print(num + ":" + str(count))
-    return ans, prompt
+    start_time = time.time()
+    ans = gpt_exection(model, prompt)
+    end_time = time.time()
+    elapsed_time_solve = end_time - start_time
+    return ans, prompt, elapsed_time_solve
 
 def execute0006_ks(question, answer, knowledge, tags, model, quiz_base, grade):
     stats_bit = ''.join(str(1 if tag == '_o_' else 0) for tag in tags)
@@ -374,26 +365,11 @@ def execute0006_ks(question, answer, knowledge, tags, model, quiz_base, grade):
     else:
         prompt = base1 + base2 + prompt_main + condition
 
-    count = 0
-    start_time_all = time.time()
-    while True:
-        count += 1
-        if count == 5:
-            return "error", "error"
-        start_time = time.time()
-        ans = gpt_exection(model, prompt)
-        end_time = time.time()
-        elapsed_time_creation = end_time - start_time
-        start_time = time.time()
-        if "[問題]" in ans:
-            new_exercise_answer1, prompt_answer = check_if_solvable(ans, knowledge, "type1", question, answer, model, grade)
-            solver = new_exercise_answer1
-            end_time = time.time()
-            elapsed_time_solve = end_time - start_time
-            break
-    end_time_all = time.time()
-    elapsed_time_all = end_time_all - start_time_all
-    return reason[bittype], ans, f"{elapsed_time_creation:.2f}", solver, f"{elapsed_time_solve:.2f}", f"{elapsed_time_all:.2f}", prompt, prompt_answer
+    start_time = time.time()
+    ans = gpt_exection(model, prompt)
+    end_time = time.time()
+    elapsed_time_creation = end_time - start_time
+    return reason[bittype], ans, f"{elapsed_time_creation:.2f}", prompt
 
 # rubricの説明を抽出する関数
 def get_main_explanations(quiz_title, quiz_text_dict):
@@ -932,23 +908,34 @@ with gr.Blocks() as demo:
         standard_answer = exercise_info.get("standard_answer", "")
         additional_explanation = exercise_info.get("figure_explanation", "")
 
-        reason, new_exercise, exercise_creation_time, new_answer, answer_creation_time, overall_creation_time, prompt_exercise, prompt_answer = execute0006_ks(quiz_text, standard_answer, rubrics, tags, model, additional_explanation, find_grade(lti["context_title"]))
+        # reason[bittype], ans, f"{elapsed_time_creation:.2f}", prompt
+        reason, new_exercise, exercise_creation_time, prompt_exercise = execute0006_ks(quiz_text, standard_answer, rubrics, tags, model, additional_explanation, find_grade(lti["context_title"]))
 
         tags_for_saving = [True if item in selected else False for item in rubrics]
 
         return (
-            new_exercise, 
-            new_answer,
+            new_exercise,
             exercise_creation_time,
-            answer_creation_time,
-            overall_creation_time, 
             gr.update(value=reason + "\n" + new_exercise + f"\n問題生成時間:" + exercise_creation_time + "秒" + "\n #### 右側の入力欄に解答の過程を入力するか、紙に解いて答えを出した後、模範解答を見て確認しましょう。\n### 注意：AIの生成問題には誤りを含むことがあります。"), 
-            gr.update(visible=True, variant="primary", interactive=True),
+            gr.update(visible=True, variant="secondary", interactive=False, value="(問題の解答を作成中...)"),
             gr.update(placeholder="ここに記述してください", visible=True, interactive=True, lines=10),
             tags_for_saving,
             school,
             gr.update(label=review_point),
-            prompt_exercise,
+            prompt_exercise
+        )
+    
+    def update_when_gen_quiz_btn_2(quiz_title, selections, quiz_text_dict, model, lti, num_review, new_exercise):
+        rubrics = get_main_explanations(quiz_title, quiz_text_dict)
+        rubrics = rubrics[:-1]
+
+        # check_if_solvable(question, knowledge, num, model, grade)
+        new_answer, prompt_answer, elapsed_time_solve = check_if_solvable(new_exercise, rubrics, "type1", model, find_grade(lti["context_title"]))
+
+        return (
+            new_answer,
+            elapsed_time_solve, 
+            gr.update(visible=True, variant="primary", interactive=True, value="模範解答を表示"),
             prompt_answer
         )
 
@@ -959,27 +946,30 @@ with gr.Blocks() as demo:
         gr.update(interactive=False),
         gr.update(interactive=False),
         gr.update(interactive=False),
-        gr.update(value="## 復習に最適な問題と解答を作成中..."),
+        gr.update(visible=True, variant="secondary", interactive=False, value="(あなたの理解に最適な問題を作成中...)"),
         "SubmittedCheck",
         1
         ),
         inputs=None,
-        outputs=[vanish_btn, quiz_dropdown, checkboxes, gen_quiz_btn, rev_quiz_btn, exercise_output, operationname_state, gen_state]
+        outputs=[vanish_btn, quiz_dropdown, checkboxes, gen_quiz_btn, rev_quiz_btn, answer_btn, operationname_state, gen_state]
     ).then(
         fn=update_when_gen_quiz_btn,
         inputs=[quiz_dropdown, checkboxes, quiz_map_state, model_state, lti_state, cnt_review_state],
         outputs=[exercise_state, 
-                 answer_state,
-                 exercise_creation_time_state, 
-                 answer_creation_time_state,
-                 overall_creation_time_state,
+                 exercise_creation_time_state,
                  exercise_output, 
                  answer_btn, 
                  student_answer,
                  tags_state,
                  school_state,
                  rating,
-                 prompt_exercise_state,
+                 prompt_exercise_state]
+    ).then(
+        fn=update_when_gen_quiz_btn_2,
+        inputs=[quiz_dropdown, checkboxes, quiz_map_state, model_state, lti_state, cnt_review_state, exercise_state],
+        outputs=[answer_state,
+                 answer_creation_time_state,
+                 answer_btn, 
                  prompt_answer_state]
     ).then(
         fn=handle_logs,
@@ -999,7 +989,7 @@ with gr.Blocks() as demo:
             quiz_text,
             standard_answer,
             gr.update(value=quiz_text + "\n #### 右側の入力欄に解答の過程を入力するか、紙に解いて答えを出した後、模範解答を見て確認しましょう。\n### 注意：AIの生成問題には誤りを含むことがあります。"), 
-            gr.update(visible=True, variant="primary", interactive=True),
+            gr.update(visible=True, variant="primary", interactive=True, value="模範解答を表示"),
             gr.update(placeholder="ここに記述してください", visible=True, interactive=True, lines=10),
             [],
             school,
@@ -1038,9 +1028,9 @@ with gr.Blocks() as demo:
         outputs=None
     )
 
-    def update_when_answer_btn(solver, answer_time, overall_time):
+    def update_when_answer_btn(solver, answer_time):
         if answer_time:
-            return solver + f"\n解答生成時間: {answer_time}秒" + f"\n(全体実行時間: {overall_time}秒)" + "\n### 注意：AIの生成した解答には誤りを含むことがあります。"
+            return solver + f"\n解答生成時間: {answer_time}秒" + "\n### 注意：AIの生成した解答には誤りを含むことがあります。"
         else:
             return solver + "\n### 注意：AIの生成した解答には誤りを含むことがあります。"
     
@@ -1139,7 +1129,7 @@ with gr.Blocks() as demo:
 
     answer_btn.click(
         fn=update_when_answer_btn,
-        inputs=[answer_state, answer_creation_time_state, overall_creation_time_state],
+        inputs=[answer_state, answer_creation_time_state],
         outputs=answer_output,
     ).then(
         fn=appear_questionnaire_box,
