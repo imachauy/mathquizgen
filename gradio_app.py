@@ -88,7 +88,7 @@ def handle_answer(save, user_id, session, contents_id, page, no, tags, school, n
     history_col.insert_one(history_doc)
     return
 
-def handle_exercise(save, no, quiz_text, standard_answer, user, exercise_creation_time, answer_creation_time, model, session, lti, rubric=None, figure_explanation=""):
+def handle_exercise(save, no, quiz_text, standard_answer, user, exercise_creation_time, answer_creation_time, model, session, lti, prompt_exercise, prompt_answer, rubric=None, figure_explanation=""):
     if save:
         title = gpt_exection("gpt-4.1-nano", "以下の問題に短いタイトルをつけてください。タイトルのみを出力してください。\n{}".format(quiz_text))
         # rubricがNoneなら空にする
@@ -107,6 +107,8 @@ def handle_exercise(save, no, quiz_text, standard_answer, user, exercise_creatio
             "exercise_creation_time": exercise_creation_time,
             "answer_creation_time": answer_creation_time,
             "creation_model": model,
+            "prompt_exercise": prompt_exercise,
+            "prompt_answer": prompt_answer,
             "school_id": lti["school_id"],
             "course_id": lti["context_id"],
             "user": user,
@@ -129,6 +131,14 @@ def handle_logs(user_id, operationname, session, lti, value=None):
         "value": value
     })
     return
+
+#学年を特定する
+def find_grade(context):
+    grades_list = ["中学1年", "中学2年", "中学3年", "高校1年", "高校2年", "高校3年"]
+    for grade in grades_list:
+        if grade in context:
+            return grade
+    return ""
 
 # ✅ MongoDBから再読み込みして State と Dropdown を更新する関数
 def reload_quiz_map_from_mongo(lti):
@@ -275,13 +285,13 @@ def classify_binary(binary_string, knowledge):
         text = "生徒はところどころ理解していない部分があるので、「{}」を確認する問題を作成してください。".format(knowledge[binary_string.index('0') + 1])
         return text, 3
 
-def check_if_solvable(question, knowledge, num, prev_exercise, prev_ans, model):
+def check_if_solvable(question, knowledge, num, prev_exercise, prev_ans, model, grade):
     if num == "type1":
         prompt = '''
         以下はある数学の問題です。 \n {} \n
         この問題を解いて、最終的な答えを出しなさい。
         - 以下の知識を用いても良い。 \n {} \n
-        - 日本の中学生が理解できる回答を出力すること。三角関数や、微分、積分、極限は習っていないので使わないこと。
+        - 日本の{}の生徒が理解できる回答を出力すること。
         - 以下のフォーマットのように**$$で囲み**mathjax形式で出力すること。
         例：$$\\int_{}^{} f(x)\\\\,dx = F(b) - F(a)$$
         例：$$\\beta + \\gamma \\{} \\\\ \\alpha \\{}$$
@@ -295,7 +305,7 @@ def check_if_solvable(question, knowledge, num, prev_exercise, prev_ans, model):
         $$ \\begin{}{}{} XXXX \\end{}{} $$
         [最終的な答え] \n
         $$YYYY$$
-        '''.format(question, knowledge, r"{a}", r"{b}", r"text{の値から、}", r"text{を求める}", "{array", "}{l", "}", "{array", "}")
+        '''.format(question, knowledge, grade, r"{a}", r"{b}", r"text{の値から、}", r"text{を求める}", "{array", "}{l", "}", "{array", "}")
     count = 0
     start_time_solve1 = time.time()
     while True:
@@ -309,9 +319,9 @@ def check_if_solvable(question, knowledge, num, prev_exercise, prev_ans, model):
             print("error_check_if_solvable")
             return "error_check_if_solvable"
     print(num + ":" + str(count))
-    return ans
+    return ans, prompt
 
-def execute0006_ks(question, answer, knowledge, tags, model, quiz_base):
+def execute0006_ks(question, answer, knowledge, tags, model, quiz_base, grade):
     stats_bit = ''.join(str(1 if tag == '_o_' else 0) for tag in tags)
     stats, bittype = classify_binary(stats_bit, knowledge)
     base1 = '''
@@ -322,11 +332,25 @@ def execute0006_ks(question, answer, knowledge, tags, model, quiz_base):
     この問題の設定は次のとおりです。 \n {} \n
     '''.format(quiz_base)
     
-    prompt_main = '''
-    問題に必要な数学的思考・計算技術・注意すべき点は次の通りです。 \n {} \n
-    {} \n
+    prompt_type = 1
+
+    if stats == "生徒がこの問題で分からなかった部分はないので、この問題に使われている知識に別の知識を組み合わせた新しい問題を作ってください。":
+        prompt_type = random.choice([1, 2])
+    
+    if prompt_type == 1:
+        prompt_main = '''
+        問題に必要な数学的思考・計算技術・注意すべき点は次の通りです。 \n {} \n
+        {} \n
+        '''.format(knowledge, stats)
+    else:
+        prompt_main = '''
+        もとの問題の問題文は次の通りです。 \n {} \n
+        この問題の数値や条件を変えて、新たな問題を作成してください。 \n
+        '''.format(question)
+
+    condition = '''
     - 新しい問題のみを結果として出力すること。
-    - 日本の中学生が理解できる問題を出題すること。三角関数や、微分、積分、極限は習っていないので使わないこと。
+    - 日本の{}の生徒が理解できる問題を出題すること。
     - 問題は以下のフォーマットのように**$$で囲み**mathjax形式で出力すること。
     例：$$\\int_{}^{} f(x)\\\\,dx = F(b) - F(a)$$
     例：$$\\beta + \\gamma \\{} \\\\ \\alpha \\{}$$
@@ -337,12 +361,12 @@ def execute0006_ks(question, answer, knowledge, tags, model, quiz_base):
     以下のフォーマットで、XXXXに問題を挿入して、左揃えで答えること。
     [問題] \n
     $$ \\begin{}{}{} XXXX \\end{}{} $$
-    '''.format(knowledge, stats, r"{a}", r"{b}", r"text{の値から、}", r"text{を求める}", "{array", "}{l", "}", "{array", "}")
+    '''.format(grade, r"{a}", r"{b}", r"text{の値から、}", r"text{を求める}", "{array", "}{l", "}", "{array", "}")
 
     if quiz_base == "":
-        prompt = base1 + prompt_main
+        prompt = base1 + prompt_main + condition
     else:
-        prompt = base1 + base2 + prompt_main
+        prompt = base1 + base2 + prompt_main + condition
 
     count = 0
     start_time_all = time.time()
@@ -356,14 +380,14 @@ def execute0006_ks(question, answer, knowledge, tags, model, quiz_base):
         elapsed_time_creation = end_time - start_time
         start_time = time.time()
         if "[問題]" in ans:
-            new_exercise_answer1 = check_if_solvable(ans, knowledge, "type1", question, answer, model)
+            new_exercise_answer1, prompt_answer = check_if_solvable(ans, knowledge, "type1", question, answer, model, grade)
             solver = new_exercise_answer1
             end_time = time.time()
             elapsed_time_solve = end_time - start_time
             break
     end_time_all = time.time()
     elapsed_time_all = end_time_all - start_time_all
-    return reason[bittype], ans, f"{elapsed_time_creation:.2f}", solver, f"{elapsed_time_solve:.2f}", f"{elapsed_time_all:.2f}"
+    return reason[bittype], ans, f"{elapsed_time_creation:.2f}", solver, f"{elapsed_time_solve:.2f}", f"{elapsed_time_all:.2f}", prompt, prompt_answer
 
 # rubricの説明を抽出する関数
 def get_main_explanations(quiz_title, quiz_text_dict):
@@ -408,10 +432,13 @@ with gr.Blocks() as demo:
     exercise_creation_time_state = gr.State()
     answer_creation_time_state = gr.State()
     overall_creation_time_state = gr.State()
+    prompt_exercise_state = gr.State("")
+    prompt_answer_state = gr.State("")
     new_contentsid_state = gr.State()
     new_page_state = gr.State()
     new_no_state = gr.State()
     tags_state = gr.State()
+    grade_state = gr.State()
     school_state = gr.State()
     model_state = gr.State("o4-mini")
     gen_state = gr.State()
@@ -897,9 +924,9 @@ with gr.Blocks() as demo:
         quiz_text, contents_id, page, no, school = quiz_text_dict[quiz_title]
         exercise_info = exercise_col.find_one({"school_id": school, "contents_id": contents_id, "page": page, "no": no})
         standard_answer = exercise_info.get("standard_answer", "")
-        additional_explanation = exercise_info.get("figure_ex", "")
+        additional_explanation = exercise_info.get("figure_explanation", "")
 
-        reason, new_exercise, exercise_creation_time, new_answer, answer_creation_time, overall_creation_time = execute0006_ks(quiz_text, standard_answer, rubrics, tags, model, additional_explanation)
+        reason, new_exercise, exercise_creation_time, new_answer, answer_creation_time, overall_creation_time, prompt_exercise, prompt_answer = execute0006_ks(quiz_text, standard_answer, rubrics, tags, model, additional_explanation, find_grade(lti["context_title"]))
 
         tags_for_saving = [True if item in selected else False for item in rubrics]
 
@@ -914,7 +941,9 @@ with gr.Blocks() as demo:
             gr.update(placeholder="ここに記述してください", visible=True, interactive=True, lines=10),
             tags_for_saving,
             school,
-            gr.update(label=review_point)
+            gr.update(label=review_point),
+            prompt_exercise,
+            prompt_answer
         )
 
     gen_quiz_btn.click(
@@ -943,7 +972,9 @@ with gr.Blocks() as demo:
                  student_answer,
                  tags_state,
                  school_state,
-                 rating]
+                 rating,
+                 prompt_exercise_state,
+                 prompt_answer_state]
     ).then(
         fn=handle_logs,
         inputs=[user_state, operationname_state, session_state, lti_state, checkbox_state],
@@ -1134,7 +1165,7 @@ with gr.Blocks() as demo:
         outputs=[new_contentsid_state, new_page_state, new_no_state]
     ).then(
         fn=handle_exercise,
-        inputs=[exercise_saving_state, new_no_state, exercise_state, answer_state, user_state, exercise_creation_time_state, answer_creation_time_state, model_state, session_state, lti_state],
+        inputs=[exercise_saving_state, new_no_state, exercise_state, answer_state, user_state, exercise_creation_time_state, answer_creation_time_state, model_state, session_state, lti_state, prompt_exercise_state, prompt_answer_state],
         outputs=None
     ).then(
         fn=handle_logs,
@@ -1353,6 +1384,7 @@ with gr.Blocks() as demo:
             "", # contentsid_state, 
             "", # page_state, 
             "", # no_state,
+            "", "", # prompt_exercise_state, prompt_answer_state
             True # exercise_saving_state
         ),
         inputs=None,
@@ -1401,6 +1433,7 @@ with gr.Blocks() as demo:
             contentsid_state, 
             page_state, 
             no_state,
+            prompt_exercise_state, prompt_answer_state, 
             exercise_saving_state
         ]
     ).then(

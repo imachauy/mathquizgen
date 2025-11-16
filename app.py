@@ -236,6 +236,7 @@ async def lti_launch(request: Request):
     roles = form_data.get('roles', 'unknown')
     oauth_consumer_key = form_data.get('oauth_consumer_key', 'unknown')
     context_id = form_data.get('context_id', 'unknown')
+    context_title = form_data.get('context_title', 'unknown')
     if user_id:
 
         print(f"[250] LTI launch successful for user {user_id}")
@@ -252,6 +253,7 @@ async def lti_launch(request: Request):
             'browser_language': browser_language,
             'oauth_consumer_key': oauth_consumer_key,
             'context_id': context_id,
+            'context_title': context_title,
             'school_id': school
         }
         print(f"[286] Successful LTI login: {user_info}")
