@@ -147,8 +147,8 @@ def reload_quiz_map_from_mongo(lti):
         exercise_col.find({
             "school_id": lti["school_id"],
             "$or": [
-                {"course_id": lti["context_id"]},
-                {"course_id": "prime"}
+                {"context_id": lti["context_id"]},
+                {"context_id": "prime"}
             ],
             "$or": [
                 {"user": lti["user_id"]},
