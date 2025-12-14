@@ -1035,7 +1035,7 @@
         "contents_id": "7f16109f1619fd7a733daf5a84c708c1",
         "page": "64",
         "no": "1",
-        "quiz_title": "(STEP演習 - 1年5章 演習問題9) 線分が通過した部分の面積",
+        "quiz_title": "251117_(STEP演習 - 1年5章 演習問題9) 線分が通過した部分の面積",
         "quiz_text": "$$\\begin{array}{l}AB=7 \\mathrm{cm}, BC=4 \\mathrm{cm}, \\angle C = 90^\\circ の △ABC がある。 \\\\ 点Bを回転の中心として△ABCを 360^\\circ 回転するとき、線分ACが通過した部分の面積を求めなさい。\\end{array}$$",
         "standard_answer": "[解答の過程]$$\\begin{array}{l}線分ACが通過した部分は、点Bを中心とする半径ABの円から、 \\\\ 点Bを中心とする半径BCの円を除いたものである。 \\\\ よって、求める面積は、 \\pi \\times 7^2 - \\pi \\times 4^2 = 33 \\pi \\end{array}$$[最終的な答え]$$ 33 \\pi (\\mathrm{cm}^2)$$",
         "figure_explanation": "",
@@ -1074,7 +1074,7 @@
         "contents_id": "c215b446bcdf956d848a8419c1b5a920",
         "page": "92",
         "no": "1",
-        "quiz_title": "(STEP演習 - 1年6章 演習問題1) 容器に入った水の体積",
+        "quiz_title": "251117_STEP演習 - 1年6章 演習問題1 容器に入った水の体積",
         "quiz_text": "$$\\begin{array}{l}底面の半径が 5 \\mathrm{cm}, 高さが 4 \\mathrm{cm} の円柱形の容器Aと、 底面の半径が4 \\mathrm{cm}, 高さが6 \\mathrm{cm} の円錐形の容器Bがある。 \\\\ 容器Aを水でいっぱいに満たしたあと、容器Aから容器Bに水を注いで、容器Bをいっぱいに満たしたとき、容器Aに残った水の深さを求めなさい。\\end{array}$$",
         "standard_answer": "[解答の過程]$$\\begin{array}{l}容器 A を水でいっぱいに満たしたときの水の体積は \\\\ \\pi \\times 5^2 \\times 4 = 100\\pi (\\mathrm{cm}^3) \\\\容器 B を水でいっぱいに満たしたときの水の体積は \\\\ \\frac{1}{3} \\times \\pi \\times 4^2 \\times 6 = 32\\pi (\\mathrm{cm}^3) \\\\ よって， 容器 A に残った水の体積は 100\\pi - 32\\pi = 68\\pi (\\mathrm{cm}^3) \\\\ 容器 A の底面積は \\pi \\times 5^2 = 25\\pi (\\mathrm{cm}^2) であるから，求める水の深さは \\\\ 68\\pi \\div 25\\pi = \\frac{68}{25} \\end{array}$$[最終的な答え]$$ \\frac{68}{25} \\mathrm{cm} $$",
         "figure_explanation": "",
@@ -1113,7 +1113,7 @@
         "contents_id": "c215b446bcdf956d848a8419c1b5a920",
         "page": "94",
         "no": "1",
-        "quiz_title": "(STEP演習 - 1年6章 演習問題3) 線分が通過した部分の面積",
+        "quiz_title": "251117_STEP演習 - 1年6章 演習問題3 線分が通過した部分の面積",
         "quiz_text": "$$\\begin{array}{l}AB=5 \\mathrm{cm}, AC=8 \\mathrm{cm}, \\angle B=90^{\\circ} の △ABC がある。 \\\\ △APQ は, △ABC を A を回転の中心として, 時計の針の回転と反対の向きに 90° 回転移動したものである。 \\\\ この移動のあいだに、線分 BC が通過してできる図形の面積を求めなさい。\\end{array}$$",
         "standard_answer": "[解答の過程]$$\\begin{array}{l} 求める面積は, \\\\ (△ABC の面積)+(おうぎ形 ACQ の面積)-((△APQ の面積)+(おうぎ形 ABP の面積)) \\\\ すなわち,(おうぎ形 ACQ の面積)-(おうぎ形 ABP の面積) \\\\ よって, 求める面積は \\\\ \\pi \\times 8^2 \\times \\frac{90}{360} - \\pi \\times 5^2 \\times \\frac{90}{360} = \\frac{39}{4} \\pi \\end{array}$$[最終的な答え]$$ \\frac{39}{4} \\pi \\mathrm{cm}^2 $$",
         "figure_explanation": "",
@@ -1146,7 +1146,7 @@
         "contents_id": "c215b446bcdf956d848a8419c1b5a920",
         "page": "95",
         "no": "1",
-        "quiz_title": "(STEP演習 - 1年6章 演習問題4) 円の中心が動いてできる線の長さ",
+        "quiz_title": "251117_STEP演習 - 1年6章 演習問題4 円の中心が動いてできる線の長さ",
         "quiz_text": "$$\\begin{array}{l}半径 1 \\mathrm{cm} の 2 つの円 A, B が 接している。 \\\\ これら 2 つの円の周りを，半径 1 \\mathrm{cm} の円 O が転がって，もとの位置まで 1 周する。 \\\\ 円 O の中心が動いてできる線の長さを求めなさい。\\end{array}$$",
         "standard_answer": "[解答の過程]$$\\begin{array}{l}円 O の中心が動いてできる線は, 2つのおうぎ形の周を組み合わせたものである。 \\\\ 2つのおうぎ形の共有点をP, Qとすると、△ABP と △ABQ は正三角形であるから, \\\\ おうぎ形 APQ とおうぎ形 BPQ の中心角の大きさはともに 360^{\\circ} - 60^{\\circ} \\times 2 = 240^{\\circ} \\\\ 弧PQは半径 2 \\mathrm{cm}, 中心角 240^{\\circ}のおうぎ形の弧であるから、求める線の長さは \\\\ 2 \\pi \\times 2 \\times \\frac{240}{360} \\times 2 = \\frac{16}{3} \\pi \\end{array}$$[最終的な答え]$$ \\frac{16}{3} \\pi \\mathrm{cm} $$",
         "figure_explanation": "",
@@ -1185,7 +1185,7 @@
         "contents_id": "c215b446bcdf956d848a8419c1b5a920",
         "page": "96",
         "no": "1",
-        "quiz_title": "(STEP演習 - 1年6章 演習問題5(1)) 立方体の切断",
+        "quiz_title": "251117_STEP演習 - 1年6章 演習問題5(1) 立方体の切断",
         "quiz_text": "$$\\begin{array}{l}1辺の長さが 4 \\mathrm{cm} の立方体 ABCDEFGH がある。 \\\\ 直線 AE，辺 AB，辺 AD 上に，それ ぞれ点 P, Q, R を AP=2 \\mathrm{cm}，AQ=1 \\mathrm{cm}，AR=2 \\mathrm{cm} となるようにとる。 \\\\ また，直線 PQ と辺 EF の交点を S，直 線 PR と辺 DH の交点を T とする。 \\\\ 四面体 RPQE の体積を求めなさい。\\end{array}$$",
         "standard_answer": "[解答の過程]$$\\begin{array}{l}四面体 RPQE は，△PRE を底面，AQ を高さとする三角錐である。 \\\\ PE=6 \\mathrm{cm}，AR=2 \\mathrm{cm}，AQ=1 \\mathrm{cm} であるから，その体積は \\\\ \\frac{1}{3} \\times \\frac{1}{2} \\times 6 \\times 2 \\times 1 = 2 \\end{array}$$[最終的な答え]$$ 2 \\mathrm{cm}^3 $$",
         "figure_explanation": "",
@@ -1218,7 +1218,7 @@
         "contents_id": "c215b446bcdf956d848a8419c1b5a920",
         "page": "97",
         "no": "1",
-        "quiz_title": "(STEP演習 - 1年6章 演習問題6) 立方体の内部で球が動き回ることのできる部分の体積",
+        "quiz_title": "251117_STEP演習 - 1年6章 演習問題6 立方体の内部で球が動き回ることのできる部分の体積",
         "quiz_text": "$$\\begin{array}{l}1辺の長さが 5 \\mathrm{cm} の立方体の内部を, 半径 1 \\mathrm{cm} の球が動き回る。 \\\\ このとき, 立方体の内部で球が動き回ることのできる部分の体積を求めなさい。\\end{array}$$",
         "standard_answer": "[解答の過程]$$\\begin{array}{l}立方体の内部で球が動き回ることができる部分は, 次の 4 種類の立体に分割できる。 \\\\ ① 半径 1 \\mathrm{cm} の球を 8 分割したもの \\\\ ② 半径 1 \\mathrm{cm}, 中心角 90° のおうぎ形を底面とする, 高さ 3 \\mathrm{cm} の柱体 \\\\ ③ 1辺が 3 \\mathrm{cm} の正方形を底面とする, 高さ 1 \\mathrm{cm} の直方体 \\\\ ④ 1辺が 3 \\mathrm{cm} の立方体 \\\\ ① が 8 個, ② が 12 個, ③ が 6 個, ④ が 1 個あるから, 求める体積は \\\\ \\frac{4}{3} \\pi \\times 1^2 \\times \\frac{1}{8} \\times 8 + \\pi \\times 1^2 \\times \\frac{90}{360} \\times 3 \\times 12 + 3 \\times 3 \\times 1 \\times 6 + 3 \\times 3 \\times 3 = \\frac{31}{3} \\pi + 81 \\end{array}$$[最終的な答え]$$ \\frac{31}{3} \\pi + 81 (\\mathrm{cm}^3) $$",
         "figure_explanation": "",
@@ -1269,7 +1269,7 @@
         "contents_id": "c215b446bcdf956d848a8419c1b5a920",
         "page": "99",
         "no": "1",
-        "quiz_title": "(STEP演習 - 1年6章 演習問題8) 立体の切断と切り口",
+        "quiz_title": "251117_STEP演習 - 1年6章 演習問題8 立体の切断と切り口",
         "quiz_text": "$$\\begin{array}{l}異なる立体 A, B, C, D, E, F は, 円錐、三角錐、四角錐、円柱、立方体、正八面体のいずれかである。 \\\\ 立体 A, B, C, D, E, F の切り口に関する次の5つのことがらから,  \\\\ 立体 A, B, C, D, E, F が 円錐、三角錐、四角錐、円柱、立方体、正八面体 のどの立体であるか答えなさい。 \\\\ 【切り口に関することがら】 \\\\  [1] 立体 A をある平面で切断すると, その切り口は円になった。 \\\\  [2] 立体 B をある平面で切断すると, その切り口は四角形になった。 \\\\ [3] 立体 B, C, D をある平面で切断すると, その切り口は三角形になった。 \\\\ [4] 立体 F をどの平面で切断しても, その切り口は六角形にはならなかった。 \\\\ [5] 立体 D, F をある平面で切断すると, その切り口は五角形になった。\\end{array}$$",
         "standard_answer": "[解答の過程]$$\\begin{array}{l} 5つのことがらそれぞれに当てはまる立体は, 次の通りである。 \\\\ [1] 切り口が円になる可能性のある立体 (A)： 円錐、円柱 \\\\ [2] 切り口が四角形になる可能性のある立体 (B)： 三角錐、四角錐、円柱、立方体、正八面体 \\\\ [3] 切り口が三角形になる可能性のある立体 (B, C, D)： 円錐、三角錐、四角錐、立方体 \\\\ [4] 切り口が六角形にはならない立体 (F)： 円錐、三角錐、四角錐、円柱 \\\\ [5] 切り口が五角形になる可能性のある立体 (D, F)： 四角錐、円柱、立方体、正八面体 \\\\ F は [4], [5] に当てはまるから Fは 四角錐 \\\\ D は [3], [5] に当てはまる。また, D は 四角錐 ではないから Dは 立方体 \\\\ B は [2], [3] に当てはまる。また, B は 四角錐, 立方体 ではないから Bは 三角錐 \\\\ C は [3] に当てはまる。また, C は 四角錐, 立方体, 三角錐 ではないから Cは 円錐 \\\\ A は [1] に当てはまる。また, A は 円錐 ではないから Aは 円柱 \\\\ 残った E は 正八面体 \\end{array}$$[最終的な答え]$$ A: 円柱, B: 三角錐, C: 円錐, D: 立方体, E: 正八面体, F: 四角錐 $$",
         "figure_explanation": "",
@@ -1300,6 +1300,315 @@
             },
             "5": {
                 "main": "切り口が五角形になる立体がわかる",
+                "example": {
+                    "1": ""
+                }
+            }
+        },
+        "school_id": ["C126210001533", "F126110107407"],
+        "course_id": ["13", "687", "688", "689"],
+        "user": "prime",
+        "show": true
+    },
+    {
+        "contents_id": "95192c98732387165bf8e396c0f2dad2",
+        "page": "57",
+        "no": "1",
+        "quiz_title": "(STEP演習 - 2年1章 演習問題2(1) 多項式の加法と減法)",
+        "quiz_text": "$$\\begin{array}{l}次の2つの式をたしなさい。また, 左の式から右の式をひきなさい。\\\\ 5a-7b+13, \\quad 4a+11b-3 \\end{array}$$",
+        "standard_answer": "[解答の過程]$$\\begin{array}{l} (5a-7b+13) + (4a+11b-3) = 5a-7b+13+4a+11b-3 \\\\ = 5a+4a-7b+11b+13-3 \\\\ = 9a+4b+10 \\\\ (5a-7b+13) - (4a+11b-3) = 5a-7b+13-4a-11b+3 \\\\ = 5a-4a-7b-11b+13+3 \\\\ = a-18b+16 \\end{array}$$[最終的な答え]$$ 順に 9a+4b+10, \\quad a-18b+16 $$",
+        "figure_explanation": "",
+        "rubric": {
+            "1": {
+                "main": "かっこをはずすことができる（分配法則）",
+                "example": {
+                    "1": ""
+                }
+            },
+            "2": {
+                "main": "項を並べ替えることができる",
+                "example": {
+                    "1": ""
+                }
+            },
+            "3": {
+                "main": "同類項をまとめる（計算する）ことができる",
+                "example": {
+                    "1": ""
+                }
+            }
+        },
+        "school_id": ["C126210001533", "F126110107407"],
+        "course_id": ["13", "687", "688", "689"],
+        "user": "prime",
+        "show": true
+    },
+    {
+        "contents_id": "95192c98732387165bf8e396c0f2dad2",
+        "page": "57",
+        "no": "2",
+        "quiz_title": "(STEP演習 - 2年1章 演習問題2(2) 多項式の加法と減法)",
+        "quiz_text": "$$\\begin{array}{l}次の2つの式をたしなさい。また, 左の式から右の式をひきなさい。\\\\ -3x^2-2x-1, \\quad 2x^2+7x+3 \\end{array}$$",
+        "standard_answer": "[解答の過程]$$\\begin{array}{l} (-3x^2-2x-1) + (2x^2+7x+3) = -3x^2-2x-1+2x^2+7x+3 \\\\ = -3x^2+2x^2-2x+7x-1+3 \\\\ = -x^2+5x+2 \\\\ (-3x^2-2x-1) - (2x^2+7x+3) = -3x^2-2x-1-2x^2-7x-3 \\\\ = -3x^2-2x^2-2x-7x-1-3 \\\\ = -5x^2-9x-4 \\end{array}$$[最終的な答え]$$ 順に -x^2+5x+2, \\quad -5x^2-9x-4 $$",
+        "figure_explanation": "",
+        "rubric": {
+            "1": {
+                "main": "かっこをはずすことができる（分配法則）",
+                "example": {
+                    "1": ""
+                }
+            },
+            "2": {
+                "main": "項を並べ替えることができる",
+                "example": {
+                    "1": ""
+                }
+            },
+            "3": {
+                "main": "同類項をまとめる（計算する）ことができる",
+                "example": {
+                    "1": ""
+                }
+            }
+        },
+        "school_id": ["C126210001533", "F126110107407"],
+        "course_id": ["13", "687", "688", "689"],
+        "user": "prime",
+        "show": true
+    },
+    {
+        "contents_id": "95192c98732387165bf8e396c0f2dad2",
+        "page": "58",
+        "no": "1",
+        "quiz_title": "(STEP演習 - 2年1章 演習問題3(1) 多項式の計算)",
+        "quiz_text": "$$\\begin{array}{l} A=5x-3y, B=-2x+7y のとき, 2A-5B を x, y を使って表しなさい。 \\end{array}$$",
+        "standard_answer": "[解答の過程]$$\\begin{array}{l} 2A-5B = 2(5x-3y) - 5(-2x+7y) = 10x-6y+10x-35y \\\\ = 20x-41y \\end{array}$$[最終的な答え]$$ 20x-41y $$",
+        "figure_explanation": "",
+        "rubric": {
+            "1": {
+                "main": "A, Bを置き換える（A, Bに代入する）ことができる",
+                "example": {
+                    "1": ""
+                }
+            },
+            "2": {
+                "main": "かっこをはずす（分配法則）ことができる",
+                "example": {
+                    "1": ""
+                }
+            },
+            "3": {
+                "main": "同類項をまとめる（計算する）ことができる",
+                "example": {
+                    "1": ""
+                }
+            }
+        },
+        "school_id": ["C126210001533", "F126110107407"],
+        "course_id": ["13", "687", "688", "689"],
+        "user": "prime",
+        "show": true
+    },
+    {
+        "contents_id": "95192c98732387165bf8e396c0f2dad2",
+        "page": "58",
+        "no": "2",
+        "quiz_title": "(STEP演習 - 2年1章 演習問題3(2) 多項式の計算)",
+        "quiz_text": "$$\\begin{array}{l} A=5x-3y, B=-2x+7y のとき, 2(2A+B)-3(A-4B) を x, y を使って表しなさい。 \\end{array}$$",
+        "standard_answer": "[解答の過程]$$\\begin{array}{l} 2(2A+B)-3(A-4B) = 4A+2B-3A+12B = A+14B \\\\ A=5x-3y, B=-2x+7y を A+14B に代入すると \\\\ (5x-3y) + 14(-2x+7y) = 5x-3y-28x+98y = -23x+95y \\end{array}$$[最終的な答え]$$ -23x+95y $$",
+        "figure_explanation": "",
+        "rubric": {
+            "1": {
+                "main": "与えられた式を簡単にすることができる",
+                "example": {
+                    "1": ""
+                }
+            },
+            "2": {
+                "main": "A, Bを置き換える（A, Bに代入する）ことができる",
+                "example": {
+                    "1": ""
+                }
+            },
+            "3": {
+                "main": "かっこをはずす（分配法則）ことができる",
+                "example": {
+                    "1": ""
+                }
+            },
+            "4": {
+                "main": "同類項をまとめる（計算する）ことができる",
+                "example": {
+                    "1": ""
+                }
+            }
+        },
+        "school_id": ["C126210001533", "F126110107407"],
+        "course_id": ["13", "687", "688", "689"],
+        "user": "prime",
+        "show": true
+    },
+    {
+        "contents_id": "95192c98732387165bf8e396c0f2dad2",
+        "page": "59",
+        "no": "1",
+        "quiz_title": "(STEP演習 - 2年1章 演習問題4 多項式の計算)",
+        "quiz_text": "$$\\begin{array}{l} 3つの多項式 A, B, C がある。 A=2x^2-3x+4, B=3x^2+2x で, C に A を加えると B になるとき, C を x の式で表しなさい。 \\end{array}$$",
+        "standard_answer": "[解答の過程]$$\\begin{array}{l} C+A=B であるから C=B-A \\\\ よって C = (3x^2+2x) - (2x^2-3x+4) = 3x^2+2x-2x^2+3x-4 \\\\ = 3x^2-2x^2+2x+3x-4 = (3-2)x^2+(2+3)x-4 \\\\ = x^2+5x-4 \\end{array}$$[最終的な答え]$$ x^2+5x-4 $$",
+        "figure_explanation": "",
+        "rubric": {
+            "1": {
+                "main": "関係をA・B・Cの式に表すことができる（C=B-A）",
+                "example": {
+                    "1": ""
+                }
+            },
+            "2": {
+                "main": "A, Bを置き換える（A, Bに代入する）ことができる",
+                "example": {
+                    "1": ""
+                }
+            },
+            "3": {
+                "main": "かっこをはずす（分配法則）ことができる",
+                "example": {
+                    "1": ""
+                }
+            },
+            "4": {
+                "main": "同類項をまとめる（計算する）ことができる",
+                "example": {
+                    "1": ""
+                }
+            }
+        },
+        "school_id": ["C126210001533", "F126110107407"],
+        "course_id": ["13", "687", "688", "689"],
+        "user": "prime",
+        "show": true
+    },
+    {
+        "contents_id": "95192c98732387165bf8e396c0f2dad2",
+        "page": "60",
+        "no": "1",
+        "quiz_title": "(STEP演習 - 2年1章 演習問題5 乗法と除法の混じった計算)",
+        "quiz_text": "$$\\begin{array}{l} 次の \\square にあてはまる式を求めなさい。 (-2x^2y)^3 \\times 4xy \\div \\square = 16x^2y \\end{array}$$",
+        "standard_answer": "[解答の過程]$$\\begin{array}{l} (-2x^2y)^3 \\times 4xy \\div \\square = 16x^2y \\\\ 両辺に \\square をかけると \\\\ (-2x^2y)^3 \\times 4xy = 16x^2y \\times \\square \\\\ 両辺を入れかえると \\\\ 16x^2y \\times \\square = (-2x^2y)^3 \\times 4xy \\\\ 両辺を 16x^2y でわると\\\\ \\square = \\frac{(-2x^2y)^3 \\times 4xy}{16x^2y} \\\\ ここで \\\\ (-2x^2y)^3 = (-2x^2y) \\times (-2x^2y) \\times (-2x^2y)= -8x^6y^3 \\\\ よって \\\\ \\square = \\frac{-8x^6y^3 \\times 4xy}{16x^2y} = -2x^5y^3 \\end{array}$$[最終的な答え]$$ -2x^5y^3 $$",
+        "figure_explanation": "",
+        "rubric": {
+            "1": {
+                "main": "□＝～～の式に表すことができる",
+                "example": {
+                    "1": ""
+                }
+            },
+            "2": {
+                "main": "指数の計算ができる",
+                "example": {
+                    "1": ""
+                }
+            },
+            "3": {
+                "main": "分数の形の単項式の割り算ができる",
+                "example": {
+                    "1": ""
+                }
+            }
+        },
+        "school_id": ["C126210001533", "F126110107407"],
+        "course_id": ["13", "687", "688", "689"],
+        "user": "prime",
+        "show": true
+    },
+    {
+        "contents_id": "95192c98732387165bf8e396c0f2dad2",
+        "page": "61",
+        "no": "1",
+        "quiz_title": "(STEP演習 - 2年1章 演習問題6(1) 式の計算)",
+        "quiz_text": "$$\\begin{array}{l} 次の計算をしなさい。 \\frac{a^2+ab-2b^2}{6} - \\frac{2a^2-7ab-4b^2}{3} + \\frac{5a^2+3ab+4b^2}{2} \\end{array}$$",
+        "standard_answer": "[解答の過程]$$\\begin{array}{l} 分母を6にする通分を行うと, この式の分子は \\\\ (a^2+ab-2b^2) - 2(2a^2-7ab-4b^2) + 3(5a^2+3ab+4b^2) \\\\ = a^2+ab-2b^2-4a^2+14ab+8b^2+15a^2+9ab+12b^2 \\\\ = 12a^2+24ab+18b^2 \\\\ よって, もとの式は \\\\ \\frac{12a^2+24ab+18b^2}{6} = 2a^2+4ab+3b^2 \\end{array}$$[最終的な答え]$$ 2a^2+4ab+3b^2 $$",
+        "figure_explanation": "",
+        "rubric": {
+            "1": {
+                "main": "文字式の通分ができる",
+                "example": {
+                    "1": ""
+                }
+            },
+            "2": {
+                "main": "分子の多項式の計算ができる",
+                "example": {
+                    "1": ""
+                }
+            },
+            "3": {
+                "main": "多項式÷数の計算ができる",
+                "example": {
+                    "1": ""
+                }
+            }
+        },
+        "school_id": ["C126210001533", "F126110107407"],
+        "course_id": ["13", "687", "688", "689"],
+        "user": "prime",
+        "show": true
+    },
+    {
+        "contents_id": "95192c98732387165bf8e396c0f2dad2",
+        "page": "61",
+        "no": "2",
+        "quiz_title": "(STEP演習 - 2年1章 演習問題6(2) 式の計算)",
+        "quiz_text": "$$\\begin{array}{l} 次の計算をしなさい。 (-2x^3yz^2)^2 \\times (-\\frac{3}{8}xy^2) \\div (\\frac{9}{4}xyz^2)^2 \\end{array}$$",
+        "standard_answer": "[解答の過程]$$\\begin{array}{l} (-2x^3yz^2)^2 \\times (-\\frac{3}{8}xy^2) \\div (\\frac{9}{4}xyz^2)^2 \\\\ = (-2x^3yz^2) \\times (-2x^3yz^2) \\times (-\\frac{3}{8}xy^2) \\div (\\frac{9}{4}xyz^2 \\times \\frac{9}{4}xyz^2) \\\\ = 4x^6y^2z^4 \\times (-\\frac{3}{8}xy^2) \\div \\frac{81}{16}x^2y^2z^4 \\\\ = 4x^6y^2z^4 \\times (-\\frac{3xy^2}{8}) \\div \\frac{81x^2y^2z^4}{16} \\\\ = 4x^6y^2z^4 \\times (-\\frac{3xy^2}{8}) \\times \\frac{16}{81x^2y^2z^4} \\\\ = -\\frac{4x^6y^2z^4 \\times 3xy^2 \\times 16}{8 \\times 81x^2y^2z^4} \\\\ = - \\frac{8}{27}x^5y^2 \\end{array}$$[最終的な答え]$$ -\\frac{8}{27}x^5y^2 $$",
+        "figure_explanation": "",
+        "rubric": {
+            "1": {
+                "main": "指数の計算ができる",
+                "example": {
+                    "1": ""
+                }
+            },
+            "2": {
+                "main": "単項式の乗除の計算ができる",
+                "example": {
+                    "1": ""
+                }
+            },
+            "3": {
+                "main": "係数と文字をそれぞれ計算できる",
+                "example": {
+                    "1": ""
+                }
+            }
+        },
+        "school_id": ["C126210001533", "F126110107407"],
+        "course_id": ["13", "687", "688", "689"],
+        "user": "prime",
+        "show": true
+    },
+    {
+        "contents_id": "95192c98732387165bf8e396c0f2dad2",
+        "page": "61",
+        "no": "3",
+        "quiz_title": "(STEP演習 - 2年1章 演習問題6(3) 式の計算)",
+        "quiz_text": "$$\\begin{array}{l} 次の計算をしなさい。 \\frac{2}{9}x^2y \\div (-\\frac{2}{9}xy^2)^2 \\times (-2xy^3) \\div (-\\frac{3}{5}x^3y)^2 \\end{array}$$",
+        "standard_answer": "[解答の過程]$$\\begin{array}{l} \\frac{2}{9}x^2y \\div (-\\frac{2}{9}xy^2)^2 \\times (-2xy^3) \\div (-\\frac{3}{5}x^3y)^2 \\\\ = \\frac{2}{9}x^2y \\div \\{ (-\\frac{2}{9}xy^2) \\times (-\\frac{2}{9}xy^2) \\} \\times (-2xy^3) \\div \\{ (-\\frac{3}{5}x^3y) \\times (-\\frac{3}{5}x^3y) \\} \\\\ = \\frac{2}{9}x^2y \\div \\frac{4}{81}x^2y^4 \\times (-2xy^3) \\div \\frac{9}{25}x^6y^2 \\\\ = \\frac{2x^2y}{9} \\div \\frac{4x^2y^4}{81} \\times (-2xy^3) \\div \\frac{9x^6y^2}{25} \\\\ = \\frac{2x^2y}{9} \\times \\frac{81}{4x^2y^4} \\times (-2xy^3) \\times \\frac{25}{9x^6y^2} \\\\ = - \\frac{2x^2y \\times 81 \\times 2xy^3 \\times 25}{9 \\times 4x^2y^4 \\times 9x^6y^2} \\\\ = - \\frac{25}{x^5y^2} \\end{array}$$[最終的な答え]$$ -\\frac{25}{x^5y^2} $$",
+        "figure_explanation": "",
+        "rubric": {
+            "1": {
+                "main": "指数の計算ができる",
+                "example": {
+                    "1": ""
+                }
+            },
+            "2": {
+                "main": "単項式の乗除の計算ができる",
+                "example": {
+                    "1": ""
+                }
+            },
+            "3": {
+                "main": "係数と文字をそれぞれ計算できる",
                 "example": {
                     "1": ""
                 }
