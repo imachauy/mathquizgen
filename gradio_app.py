@@ -433,7 +433,7 @@ with gr.Blocks() as demo:
     gr.Markdown(
         """
         <div style="background-color: #2196f3; padding: 24px; border-radius: 8px; text-align: center; color: black;">
-        <h1> $$\\Huge \\mathfrak{PRIME} - \\textsf{AI数学塾へようこそ！}$$ </h1>
+        <h1> $$\\Huge \\mathfrak{PRIME} - \\textsf{AI数学復習エンジン}$$ </h1>
         </div>
         """
     )
