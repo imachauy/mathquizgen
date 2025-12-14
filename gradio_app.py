@@ -567,7 +567,7 @@ with gr.Blocks() as demo:
             )
 
             report_markdown = gr.Markdown(
-                "この問題について、感想や意見を自由に書いてみよう（任意）。",
+                "この問題について、感想や意見を自由に書いてみよう（任意）。(模範解答が間違ってるかも？, こうすればより良い問題になる, 別解がある, など...)",
                 visible=False
             )
 
@@ -580,9 +580,10 @@ with gr.Blocks() as demo:
 
             report_text = gr.Textbox(
                 label="こちらに詳しく記述してください",
-                placeholder="(報告の種類を選ぶまでは書けません)",
+                placeholder="",
                 visible=False,
-                interactive=False
+                interactive=False,
+                lines=5
             )
         understanding_state = gr.State()
         rating_state = gr.State()
@@ -1045,20 +1046,20 @@ with gr.Blocks() as demo:
                 gr.update(visible=True),
                 gr.update(visible=False, interactive=False, show_label=False), #checkbox
                 gr.update(visible=True, interactive=True), #understanding
-                gr.update(visible=True, interactive=True), #difficulty
-                gr.update(visible=True, interactive=True), #fluency
+                gr.update(visible=False, interactive=True), #difficulty
+                gr.update(visible=False, interactive=True), #fluency
                 gr.update(visible=True, interactive=True), #relevance
                 gr.update(visible=True, interactive=True), #rating
                 gr.update(visible=True, interactive=False),
-                gr.update(visible=True, interactive=True),
-                gr.update(visible=True),
+                gr.update(visible=False, interactive=True), #report_type
+                gr.update(visible=True, interactive=True), #report_text
                 gr.update(visible=True),
                 gr.update(visible=True, interactive=False),
                 gr.update(visible=True, interactive=False),
                 gr.update(visible=True),
                 0, #understanding
-                0, #difficulty
-                0, #fluency
+                1, #difficulty
+                1, #fluency
                 0, #relevance
                 0, #rating
                 1, #checkbox
@@ -1070,19 +1071,19 @@ with gr.Blocks() as demo:
                     gr.update(visible=True),
                     gr.update(visible=True, interactive=True, show_label=True), # checkbox
                     gr.update(visible=True, interactive=True), #understanding
-                    gr.update(visible=True, interactive=True), #difficulty
+                    gr.update(visible=False, interactive=True), #difficulty
                     gr.update(visible=False, interactive=False), #fluency
                     gr.update(visible=False, interactive=False), #relevance
                     gr.update(visible=False, interactive=False), #rating
                     gr.update(visible=True, interactive=False),
-                    gr.update(visible=True, interactive=True),
-                    gr.update(visible=True),
+                    gr.update(visible=False, interactive=True), #report_type
+                    gr.update(visible=True, interactive=True), #report_text
                     gr.update(visible=True),
                     gr.update(visible=True, interactive=False),
                     gr.update(visible=True, interactive=False),
                     gr.update(visible=True),
                     0, #understanding
-                    0, #difficulty
+                    1, #difficulty
                     1, #fluency
                     1, #relevance
                     1, #rating
@@ -1094,19 +1095,19 @@ with gr.Blocks() as demo:
                     gr.update(visible=True),
                     gr.update(visible=False, interactive=False, show_label=False),
                     gr.update(visible=True, interactive=True), #understanding
-                    gr.update(visible=True, interactive=True), #difficulty
+                    gr.update(visible=False, interactive=True), #difficulty
                     gr.update(visible=False, interactive=False), #fluency
                     gr.update(visible=False, interactive=False), #relevance
                     gr.update(visible=False, interactive=False), #rating
                     gr.update(visible=True, interactive=False),
-                    gr.update(visible=True, interactive=True),
-                    gr.update(visible=True),
+                    gr.update(visible=False, interactive=True), #report_type
+                    gr.update(visible=True, interactive=True), #report_text
                     gr.update(visible=True),
                     gr.update(visible=True, interactive=False),
                     gr.update(visible=True, interactive=False),
                     gr.update(visible=True),
                     0, #understanding
-                    0, #difficulty
+                    1, #difficulty
                     1, #fluency
                     1, #relevance
                     1, #rating
@@ -1365,7 +1366,7 @@ with gr.Blocks() as demo:
             gr.update(visible=False, interactive=False, value=None), # rating
             gr.update(visible=False), # report_markdown
             gr.update(visible=False, interactive=False, value=None), # report_type
-            gr.update(visible=False, interactive=False, placeholder="(報告の種類を選ぶまでは書けません)", value="", lines=1), # report_text
+            gr.update(visible=False, interactive=False, placeholder="", value="", lines=5), # report_text
             gr.update(visible=False, interactive=False, value="結果を送信する(まずは問題を振り返ってください！)", variant="secondary"), # report_btn
             gr.update(value="## " + random.choice(phrases)), # title
             gr.update(visible=False), # note_mkdwn
