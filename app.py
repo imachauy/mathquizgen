@@ -38,12 +38,14 @@ app.add_middleware( # for autocomplete TODO add API key
 # Load environment variables from .env file
 load_dotenv()
 
+path_prefix = os.getenv("APP_PATH_PREFIX", "default_path")
+
 app.add_middleware(SessionMiddleware, secret_key=os.environ.get('FASTAPI_SECRET_KEY'))
 
 @app.on_event("startup")
 def startup_event():
     print("[46] Server startup: Initializing database")
-    app.mount("/mathgen/static", StaticFiles(directory="static"), name="static")
+    app.mount(f"/{path_prefix}/static", StaticFiles(directory="static"), name="static")
 
 def get_browser_language(request: Request):
     try:
@@ -67,7 +69,7 @@ def get_browser_language(request: Request):
 # Set up Jinja2 templates
 templates = Jinja2Templates(directory="templates")
 
-LTI_URL = os.getenv("LTI_URL", "https://dev.let.media.kyoto-u.ac.jp/mathgen/lti/login")
+LTI_URL = f"https://lab.let.media.kyoto-u.ac.jp/{path_prefix}/lti/login"
 
 css = """
 h1 {
@@ -216,13 +218,13 @@ async def proxy_request(client, request: Request, path: str):
     print(f"[214] Max retries reached for proxying request to {url}")
     raise HTTPException(status_code=502, detail="Max retries reached")
 
-@app.api_route("/mathgen/{path:path}") # legacy path
+@app.api_route("/" + path_prefix + "/{path:path}") # legacy path
 async def proxy_to_mathgen(request: Request, path: str, user: dict = Depends(get_current_user)):
     return await proxy_request(app.state.mathgen_client, request, path)
 
 ####### LTI #############################################################################
 
-@app.post('/mathgen/lti/login') #/mathgen/lti/login に「POST」でアクセスされた時だけ、この関数が呼ばれます。
+@app.post(f'/{path_prefix}/lti/login') #/mathgen/lti/login に「POST」でアクセスされた時だけ、この関数が呼ばれます。
 async def lti_launch(request: Request):
     print(f"[225] Validating LTI request. Request headers: {dict(request.headers)}")
     valid = await validate_lti_request(request) #ltiリクエストをpostする
@@ -260,19 +262,19 @@ async def lti_launch(request: Request):
         request.session['user'] = user_info
 
 
-        return RedirectResponse(url='/mathgen/ui/', status_code=status.HTTP_303_SEE_OTHER)
+        return RedirectResponse(url=f'/{path_prefix}/ui/', status_code=status.HTTP_303_SEE_OTHER)
     
     print("[292] User ID missing in LTI request")
     return {'error': 'User ID missing in LTI request'}
 
 @router.get("/go-to-gradio")
 async def go_to_gradio():
-    return RedirectResponse(url="/mathgen/ui/")
+    return RedirectResponse(url=f"/{path_prefix}/ui/")
 
-app.include_router(router, prefix="/mathgen")
+app.include_router(router, prefix=f"/{path_prefix}")
 
 # Gradio Mount（/ui以下はGradio専用にする！）
 mount_gradio_app(app, demo1, path="/ui/", root_path="/ui")
 
 if __name__ == '__main__':
-    uvicorn.run(app, root_path="/mathgen")
+    uvicorn.run(app, root_path=f"/{path_prefix}")
