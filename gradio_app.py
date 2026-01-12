@@ -51,9 +51,10 @@ def gpt_exection(model, query):
         )
         response = completion.choices[0].message.content
     else:
-        response = genai_client.models.generate_content(
+        ans = genai_client.models.generate_content(
         model=model, contents = query
         )
+        response = ans.text
     return response
 
 def handle_answer(save, user_id, session, contents_id, page, no, tags, school, new_contents_id, new_page, new_no, user_answer, understanding, rating, difficulty, fluency, relevance, new_checkbox, lti, report_type, report_text):
@@ -315,7 +316,7 @@ def check_if_solvable(question, knowledge, num, model, grade):
         例：$$\\beta + \\gamma \\{} \\\\ \\alpha \\{}$$
         - ただし、以下の点に注意すること。
             - mathjaxフォーマットの&は使わないこと。
-            - \\text で括らないこと。
+            - \\text フォーマットは使わないこと。
             - <, >の２つの記号は、必ず"<\\," ">\\," という形で出力すること。
         - 解答の過程を出力すること。
         - 以下のフォーマットで、XXXXに解答の過程、YYYYに最終的な答えを挿入して答えること。
@@ -365,7 +366,7 @@ def execute0006_ks(question, answer, knowledge, tags, model, quiz_base, grade):
     例：$$\\beta + \\gamma \\{} \\\\ \\alpha \\{}$$
     ただし、以下の点に注意すること。
     - mathjaxフォーマットの&は使わないこと。
-    - \\text で括らないこと。
+    - \\text フォーマットは使わないこと。
     - <, >の２つの記号は、必ず"<\\," ">\\," という形で出力すること。
     以下のフォーマットで、XXXXに問題を挿入して、左揃えで答えること。
     [問題] \n
@@ -492,6 +493,7 @@ with gr.Blocks() as demo:
             model_options = gr.Dropdown(
             choices=["o4-mini", "gpt-5", "gemini-2.5-flash", "gemini-2.5-pro"],
             label="復習問題を作成するモデルを選んでください",
+            interactive=True,
             value="o4-mini"
             )
     dropdown_state = gr.State()
@@ -914,11 +916,9 @@ with gr.Blocks() as demo:
     )
 
     model_options.change(
-        fn=lambda: (
-            model_options
-        ),
-        inputs=None,
-        outputs=[model_state]
+        fn=lambda selection: selection, # Dropdownの選択値をそのまま返す
+        inputs=[model_options],         # 現在の選択値を入力として受け取る
+        outputs=[model_state]           # Stateに格納する
     ).then(
         fn=lambda: (
         "SelectedModel"
@@ -994,12 +994,13 @@ with gr.Blocks() as demo:
         gr.update(interactive=False),
         gr.update(interactive=False),
         gr.update(interactive=False),
+        gr.update(interactive=False),
         gr.update(visible=True, variant="secondary", interactive=False, value="(あなたの理解に最適な問題を作成中...)"),
         "CreatedQuestion",
         1
         ),
         inputs=None,
-        outputs=[vanish_btn, quiz_dropdown, checkboxes, gen_quiz_btn, rev_quiz_btn, answer_btn, operationname_state, gen_state]
+        outputs=[vanish_btn, quiz_dropdown, checkboxes, gen_quiz_btn, rev_quiz_btn, model_options, answer_btn, operationname_state, gen_state]
     ).then(
         fn=update_when_gen_quiz_btn,
         inputs=[quiz_dropdown, checkboxes, quiz_map_state, model_state, lti_state, cnt_review_state],
@@ -1072,12 +1073,13 @@ with gr.Blocks() as demo:
         gr.update(interactive=False),
         gr.update(interactive=False),
         gr.update(interactive=False),
+        gr.update(interactive=False),
         False,
         "ReveiwedQuestion",
         0
         ),
         inputs=None,
-        outputs=[vanish_btn, quiz_dropdown, checkboxes, gen_quiz_btn, rev_quiz_btn, exercise_saving_state, operationname_state, gen_state]
+        outputs=[vanish_btn, quiz_dropdown, checkboxes, gen_quiz_btn, rev_quiz_btn, model_options, exercise_saving_state, operationname_state, gen_state]
     ).then(
         fn=handle_logs,
         inputs=[user_state, operationname_state, session_state, lti_state, exercise_state],
@@ -1431,6 +1433,7 @@ with gr.Blocks() as demo:
             gr.update(visible=True, interactive=False, placeholder="(まだ入力できません)", value="", lines=1), # student_answer
             gr.update(visible=False, interactive=False), # answer_btn
             gr.update(visible=False, value=""), # answer_output
+            gr.update(interactive=True, value="o4-mini"), # model_options
             gr.update(visible=False, interactive=False, value=None), # understanding
             gr.update(visible=False, interactive=False, value=None), # difficulty
             gr.update(visible=False, interactive=False, value=None), # fluency
@@ -1481,6 +1484,7 @@ with gr.Blocks() as demo:
             student_answer,
             answer_btn,
             answer_output,
+            model_options,
             understanding,
             difficulty,
             fluency,
