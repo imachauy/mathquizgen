@@ -33,15 +33,14 @@ def load_session_info(request: gr.Request):
 
 # openaiのapi情報
 openai_client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
-models = ["gpt-3.5-turbo", "gpt-4-turbo", "gpt-4o", "gpt-4o-mini", "o1-preview", "o1-mini", "o3-mini"]
-genai_client = genai.Client()
+genai_client = genai.Client(api_key=os.environ.get("GEMINI_API_KEY"))
 
 # genaiのapiを走らせる
 def gpt_exection(model, query):
     '''
     str: model, str: query
     '''
-    if model in ["gpt-3.5-turbo", "gpt-4-turbo", "gpt-4o", "gpt-4o-mini", "o1-preview", "o1-mini", "o3-mini", "o4-mini", "gpt-5"]:
+    if model in ["gpt-3.5-turbo", "gpt-4-turbo", "gpt-4o", "gpt-4o-mini", "o1-preview", "o1-mini", "o3-mini", "o4-mini", "gpt-5", "gpt-4.1-nano"]:
         completion = openai_client.chat.completions.create(
             model=model,
             messages=[
@@ -53,7 +52,7 @@ def gpt_exection(model, query):
         response = completion.choices[0].message.content
     else:
         response = genai_client.models.generate_content(
-        model="gemini-2.5-flash", contents = query
+        model=model, contents = query
         )
     return response
 
@@ -435,7 +434,6 @@ with gr.Blocks() as demo:
     tags_state = gr.State()
     grade_state = gr.State()
     school_state = gr.State()
-    model_state = gr.State("gemini-2.5-flash")
     gen_state = gr.State()
 
     gr.Markdown(
@@ -490,6 +488,13 @@ with gr.Blocks() as demo:
                 visible=False, 
                 show_label = False
             )
+        
+            model_options = gr.Dropdown(
+            choices=["o4-mini", "gpt-5", "gemini-2.5-flash", "gemini-2.5-pro"],
+            label="復習問題を作成するモデルを選んでください",
+            value="o4-mini"
+            )
+    dropdown_state = gr.State()
     status_msg_state = gr.State()
     checkbox_state = gr.State()
     checkbox_all_items_state = gr.State()
@@ -500,6 +505,7 @@ with gr.Blocks() as demo:
     new_current_checkbox_state = gr.State([])
     cnt_work_state = gr.State()
     cnt_review_state = gr.State()
+    model_state = gr.State("o4-mini")
     
     with gr.Row():  
         with gr.Column(scale=1):    
@@ -719,7 +725,7 @@ with gr.Blocks() as demo:
             if lti["school_id"]=="C126210001533":
                 if count_work==0:
                     return (
-                        gr.update(value=f'<div style="text-align: center;"><h1> あなたが選んだ問題 </h1></div><div style="border: 3px solid #2196f3;padding: 24px;border-radius: 8px;text-align: center;"> \n{quiz_text} </div>', visible=True),
+                        gr.update(value=f'<div style="text-align: center;"><h1> あなたが選んだ問題 </h1></div><div style="border: 3px solid #2196f3;padding: 24px;border-radius: 8px;text-align: center;" translate="no"> \n{quiz_text} </div>', visible=True),
                         gr.update(choices=rubric_explanations, value=[], visible=True, interactive=False, show_label=False, label="できたポイントをチェックしよう！"),
                         gr.update(visible=True, value=msg),
                         quiz_text,
@@ -734,7 +740,7 @@ with gr.Blocks() as demo:
                 elif count_review==0:
                     if len(rubric_explanations) > 0:
                         return (
-                            gr.update(value=f'<div style="text-align: center;"><h1> あなたが選んだ問題 </h1></div><div style="border: 3px solid #2196f3;padding: 24px;border-radius: 8px;text-align: center;"> \n{quiz_text} </div>', visible=True),
+                            gr.update(value=f'<div style="text-align: center;"><h1> あなたが選んだ問題 </h1></div><div style="border: 3px solid #2196f3;padding: 24px;border-radius: 8px;text-align: center;" translate="no"> \n{quiz_text} </div>', visible=True),
                             gr.update(choices=rubric_explanations, value=[], visible=True, interactive=True, label="できたポイントをチェックしよう！", show_label=True),
                             gr.update(visible=True, value=msg),
                             quiz_text,
@@ -749,7 +755,7 @@ with gr.Blocks() as demo:
 
             if len(rubric_explanations) > 0:
                 return (
-                    gr.update(value=f'<div style="text-align: center;"><h1> あなたが選んだ問題 </h1></div><div style="border: 3px solid #2196f3;padding: 24px;border-radius: 8px;text-align: center;"> \n{quiz_text} </div>', visible=True),
+                    gr.update(value=f'<div style="text-align: center;"><h1> あなたが選んだ問題 </h1></div><div style="border: 3px solid #2196f3;padding: 24px;border-radius: 8px;text-align: center;" translate="no"> \n{quiz_text} </div>', visible=True),
                     gr.update(choices=rubric_explanations, value=[], visible=True, interactive=True, show_label=True, label="できたポイントをチェックしよう！"),
                     gr.update(visible=True, value=msg),
                     quiz_text,
@@ -763,7 +769,7 @@ with gr.Blocks() as demo:
                 )
             else:
                 return (
-                    gr.update(value=f'<div style="text-align: center;"><h1> あなたが選んだ問題 </h1></div><div style="border: 3px solid #2196f3;padding: 24px;border-radius: 8px;text-align: center;"> \n{quiz_text} </div>', visible=True),
+                    gr.update(value=f'<div style="text-align: center;"><h1> あなたが選んだ問題 </h1></div><div style="border: 3px solid #2196f3;padding: 24px;border-radius: 8px;text-align: center;" translate="no"> \n{quiz_text} </div>', visible=True),
                     gr.update(choices=rubric_explanations, value=[], visible=True, interactive=True, label="この問題には解答のポイントがついていません。", show_label=True),
                     gr.update(visible=True, value=msg),
                     quiz_text,
@@ -907,6 +913,24 @@ with gr.Blocks() as demo:
         outputs=None
     )
 
+    model_options.change(
+        fn=lambda: (
+            model_options
+        ),
+        inputs=None,
+        outputs=[model_state]
+    ).then(
+        fn=lambda: (
+        "SelectedModel"
+        ),
+        inputs=None,
+        outputs=[operationname_state]
+    ).then(
+        fn=handle_logs,
+        inputs=[user_state, operationname_state, session_state, lti_state, model_state],
+        outputs=None
+    )
+
     def update_when_gen_quiz_btn(quiz_title, selections, quiz_text_dict, model, lti, num_review):
         rubrics = get_main_explanations(quiz_title, quiz_text_dict)
         rubrics = rubrics[:-1]
@@ -955,13 +979,23 @@ with gr.Blocks() as demo:
 
     gen_quiz_btn.click(
         fn=lambda: (
+        "SubmittedCheck"
+        ),
+        inputs=None,
+        outputs=[operationname_state]
+    ).then(
+        fn=handle_logs,
+        inputs=[user_state, operationname_state, session_state, lti_state, checkbox_state],
+        outputs=None
+    ).then(
+        fn=lambda: (
         gr.update(interactive=False),
         gr.update(interactive=False),
         gr.update(interactive=False),
         gr.update(interactive=False),
         gr.update(interactive=False),
         gr.update(visible=True, variant="secondary", interactive=False, value="(あなたの理解に最適な問題を作成中...)"),
-        "SubmittedCheck",
+        "CreatedQuestion",
         1
         ),
         inputs=None,
@@ -979,6 +1013,10 @@ with gr.Blocks() as demo:
                  rating,
                  prompt_exercise_state]
     ).then(
+        fn=handle_logs,
+        inputs=[user_state, operationname_state, session_state, lti_state, exercise_state],
+        outputs=None
+    ).then(
         fn=update_when_gen_quiz_btn_2,
         inputs=[quiz_dropdown, checkboxes, quiz_map_state, model_state, lti_state, cnt_review_state, exercise_state],
         outputs=[answer_state,
@@ -986,8 +1024,14 @@ with gr.Blocks() as demo:
                  answer_btn, 
                  prompt_answer_state]
     ).then(
+        fn=lambda: (
+        "CreatedAnswer"
+        ),
+        inputs=None,
+        outputs=[operationname_state]
+    ).then(
         fn=handle_logs,
-        inputs=[user_state, operationname_state, session_state, lti_state, checkbox_state],
+        inputs=[user_state, operationname_state, session_state, lti_state, answer_state],
         outputs=None
     )
 
@@ -1013,17 +1057,31 @@ with gr.Blocks() as demo:
 
     rev_quiz_btn.click(
         fn=lambda: (
+        "RevSubmittedCheck"
+        ),
+        inputs=None,
+        outputs=[operationname_state]
+    ).then(
+        fn=handle_logs,
+        inputs=[user_state, operationname_state, session_state, lti_state, checkbox_state],
+        outputs=None
+    ).then(
+        fn=lambda: (
         gr.update(interactive=False),
         gr.update(interactive=False),
         gr.update(interactive=False),
         gr.update(interactive=False),
         gr.update(interactive=False),
         False,
-        "RevSubmittedCheck",
+        "ReveiwedQuestion",
         0
         ),
         inputs=None,
         outputs=[vanish_btn, quiz_dropdown, checkboxes, gen_quiz_btn, rev_quiz_btn, exercise_saving_state, operationname_state, gen_state]
+    ).then(
+        fn=handle_logs,
+        inputs=[user_state, operationname_state, session_state, lti_state, exercise_state],
+        outputs=None
     ).then(
         fn=update_when_rev_quiz_btn,
         inputs=[quiz_dropdown, quiz_map_state],
@@ -1037,8 +1095,14 @@ with gr.Blocks() as demo:
                  new_checkboxes,
                  new_checkbox_all_items_state]
     ).then(
+        fn=lambda: (
+        "ReveiwedAnswer"
+        ),
+        inputs=None,
+        outputs=[operationname_state]
+    ).then(
         fn=handle_logs,
-        inputs=[user_state, operationname_state, session_state, lti_state, checkbox_state],
+        inputs=[user_state, operationname_state, session_state, lti_state, answer_state],
         outputs=None
     )
 
@@ -1395,6 +1459,7 @@ with gr.Blocks() as demo:
             "", # page_state, 
             "", # no_state,
             "", "", # prompt_exercise_state, prompt_answer_state
+            "o4-mini", # model_state
             True # exercise_saving_state
         ),
         inputs=None,
@@ -1443,7 +1508,8 @@ with gr.Blocks() as demo:
             contentsid_state, 
             page_state, 
             no_state,
-            prompt_exercise_state, prompt_answer_state, 
+            prompt_exercise_state, prompt_answer_state,
+            model_state, 
             exercise_saving_state
         ]
     ).then(
@@ -1479,10 +1545,11 @@ with gr.Blocks() as demo:
     ).then(
         fn=lambda: (
         "StartedSession",
-        str(uuid.uuid4())
+        str(uuid.uuid4()),
+        "o4-mini"
         ),
         inputs=None,
-        outputs=[operationname_state, session_state]
+        outputs=[operationname_state, session_state, model_state]
     ).then(
         fn=handle_logs,
         inputs=[user_state, operationname_state, session_state, lti_state],
