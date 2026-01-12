@@ -10,6 +10,7 @@ import uuid
 import json
 import base64
 import clickhouse_connect
+from google import genai
 
 JST = timezone(timedelta(hours=9))
 
@@ -33,21 +34,28 @@ def load_session_info(request: gr.Request):
 # openaiのapi情報
 openai_client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
 models = ["gpt-3.5-turbo", "gpt-4-turbo", "gpt-4o", "gpt-4o-mini", "o1-preview", "o1-mini", "o3-mini"]
+genai_client = genai.Client()
 
 # genaiのapiを走らせる
 def gpt_exection(model, query):
     '''
     str: model, str: query
     '''
-    completion = openai_client.chat.completions.create(
-        model=model,
-        messages=[
-            {
-            "role": "user", "content": query
-            }
-        ]
-    ) 
-    return completion.choices[0].message.content
+    if model in ["gpt-3.5-turbo", "gpt-4-turbo", "gpt-4o", "gpt-4o-mini", "o1-preview", "o1-mini", "o3-mini", "o4-mini", "gpt-5"]:
+        completion = openai_client.chat.completions.create(
+            model=model,
+            messages=[
+                {
+                "role": "user", "content": query
+                }
+            ]
+        )
+        response = completion.choices[0].message.content
+    else:
+        response = genai_client.models.generate_content(
+        model="gemini-2.5-flash", contents = query
+        )
+    return response
 
 def handle_answer(save, user_id, session, contents_id, page, no, tags, school, new_contents_id, new_page, new_no, user_answer, understanding, rating, difficulty, fluency, relevance, new_checkbox, lti, report_type, report_text):
     report = {
@@ -427,7 +435,7 @@ with gr.Blocks() as demo:
     tags_state = gr.State()
     grade_state = gr.State()
     school_state = gr.State()
-    model_state = gr.State("o4-mini")
+    model_state = gr.State("gemini-2.5-flash")
     gen_state = gr.State()
 
     gr.Markdown(

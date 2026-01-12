@@ -22,3 +22,4 @@ pillow==10.4.0
 itsdangerous==2.2.0
 h2==4.1.0
 clickhouse-connect==0.8.17
+google-generativeai==0.8.6
