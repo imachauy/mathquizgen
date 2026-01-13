@@ -246,30 +246,35 @@ def get_result_from_db(school, contents_id, page, no, user, lti, answer_contents
         brquizdata = clickhouse_client.query(sql, params)
         result = brquizdata.result_rows
         num_workingquiz += len(brquizdata.result_rows)
+        print(answer_contents_id)
     
+        text_highlighted_yellow = ""
+        text_highlighted_red = ""
+
         if answer_contents_id != "":
             #答えのページに引いたマーカー
             sql2 = """
-            SELECT 
-                m1.marker_text, 
-                m1.marker_color
-            FROM 
-                your_table_name AS m1
-            WHERE 
-                m1.actor_name_id = {user:String} 
-                AND m1.contents_id = {answer_contents_id:String}
-                AND m1.page_no BETWEEN {answer_page_start:Integer} AND {answer_page_end:Integer}
-                AND m1.operation_name = 'ADD_MARKER'
-                AND NOT EXISTS (
-                    SELECT 1 
-                    FROM your_table_name AS m2
-                    WHERE 
-                        m2.actor_name_id = m1.actor_name_id
-                        AND m2.contents_id = m1.contents_id
-                        AND m2.marker_position = m1.marker_position
-                        AND m2.operation_name = 'DELETE_MARKER'
-                        AND m2.timestamp > m1.timestamp 
-                );
+            SELECT
+                last_text AS marker_text,
+                last_color AS marker_color
+            FROM (
+                SELECT
+                    marker_position,
+                    argMax(CAST(operation_name AS String), timestamp) AS last_op,
+                    argMax(CAST(marker_text AS String), timestamp) AS last_text,
+                    argMax(CAST(marker_color AS String), timestamp) AS last_color,
+                    argMax(CAST(page_no AS Int32), timestamp) AS last_page
+                FROM
+                    saikyo_new.statements_target
+                WHERE
+                    actor_name_id = {user:String}
+                    AND contents_id = {answer_contents_id:String}
+                GROUP BY
+                    marker_position
+            )
+            WHERE
+                last_op = 'ADD_MARKER'
+                AND last_page BETWEEN {answer_page_start:Integer} AND {answer_page_end:Integer}                        
             """
             params2 = {
             "user": str(user),  # userの値をセット
@@ -277,8 +282,9 @@ def get_result_from_db(school, contents_id, page, no, user, lti, answer_contents
             "answer_page_start": int(answer_page_start),
             "answer_page_end": int(answer_page_end)
             }
-            brmarkerdata = clickhouse_client.query(sql, params)
+            brmarkerdata = clickhouse_client.query(sql2, params2)
             result2 = brmarkerdata.result_rows
+            print("result2")
             print(result2)
             # 1. カラムのインデックス（SELECT句の順番通り）
             # 0: marker_text, 1: marker_color
@@ -307,12 +313,11 @@ def get_result_from_db(school, contents_id, page, no, user, lti, answer_contents
             combined_results = {}
             for color, text_list in marker_dict.items():
                 combined_results[color] = " ".join(text_list)
-
-            text_highlighted_yellow = combined_results["rgb(255,255,0)"]
-            text_highlighted_red = combined_results["rgb(255,0,0)"]
-        else:
-            text_highlighted_yellow = ""
-            text_highlighted_red = ""
+            if "rgb(255,255,0)" in combined_results:
+                text_highlighted_yellow = combined_results["rgb(255,255,0)"]
+            if "rgb(255,0,0)" in combined_results:
+                text_highlighted_red = combined_results["rgb(255,0,0)"]
+            
     
     # MongoDBクエリ
     query = {
@@ -370,6 +375,7 @@ def check_if_solvable(question, knowledge, num, model, grade):
             - mathjaxフォーマットの&は使わないこと。
             - \\text フォーマットは使わないこと。
             - <, >の２つの記号は、必ず"<\\," ">\\," という形で出力すること。
+            - $という記号は、フォーマットで与えられている4組の$$を除き使用しないこと。
         - 解答の過程を出力すること。
         - 以下のフォーマットで、XXXXに解答の過程、YYYYに最終的な答えを挿入して答えること。
         [解答の過程] \n
@@ -384,6 +390,7 @@ def check_if_solvable(question, knowledge, num, model, grade):
     return ans, prompt, elapsed_time_solve
 
 def execute0006_ks(question, answer, knowledge, tags, model, quiz_base, grade, yellow_marker, red_marker):
+    start_time = time.time()
     reason = ["この問題についてはよくできています。さらに知識を応用した問題で復習しましょう！\n",
           "最後の最後でミスをしています。最後まで気を抜かずに、しっかり解き切りましょう！\n",
           "途中までよくできています。元の問題を解くために必要なステップを確認するために、以下の問題に取り組みましょう！\n",
@@ -400,11 +407,12 @@ def execute0006_ks(question, answer, knowledge, tags, model, quiz_base, grade, y
     if len(tags) > 0:
         stats_bit = ''.join(str(1 if tag == '_o_' else 0) for tag in tags)
         stats, bittype = classify_binary(stats_bit, knowledge)
-        description = reason["bittype"]
+        description = reason[bittype]
 
-        base1 = base1 + '''
-        この問題の設定は次のとおりです。 \n {} \n
-        '''.format(quiz_base)
+        if quiz_base:
+            base1 = base1 + '''
+            この問題の設定は次のとおりです。 \n {} \n
+            '''.format(quiz_base)
 
         prompt_type = 1
 
@@ -416,6 +424,12 @@ def execute0006_ks(question, answer, knowledge, tags, model, quiz_base, grade, y
             問題に必要な数学的思考・計算技術・注意すべき点は次の通りです。 \n {} \n
             {} \n
             '''.format(knowledge, stats)
+            description_query = """
+            {} \n
+            この情報を１行で{}の生徒にわかりやすく伝えてください。
+            復習すべき理由と、復習すべき事項を含め、「〜しましょう！」の形で結果のみを出力すること。
+            """.format(prompt_main, grade)
+            description = gpt_exection("gpt-4.1-nano", description_query) + "\n"
         else:
             prompt_main = '''
             もとの問題の問題文は次の通りです。 \n {} \n
@@ -456,11 +470,9 @@ def execute0006_ks(question, answer, knowledge, tags, model, quiz_base, grade, y
         description_query = """
         {} \n
         この情報を１行で{}の生徒にわかりやすく伝えてください。
-        以下のフォーマットで、XXXXには復習すべき理由、YYYYには復習すべき事項を入れ、結果のみを出力すること。
-        〈フォーマット〉
-        XXXXなので、YYYYを復習しましょう！
-        """
-        description = gpt_exection(model, description_query)
+        復習すべき理由と、復習すべき事項を含め、「〜しましょう！」の形で結果のみを出力すること。
+        """.format(markers, grade)
+        description = gpt_exection("gpt-4.1-nano", description_query) + "\n"
     
     base1 += markers
 
@@ -477,6 +489,7 @@ def execute0006_ks(question, answer, knowledge, tags, model, quiz_base, grade, y
     - mathjaxフォーマットの&は使わないこと。
     - \\text フォーマットは使わないこと。
     - <, >の２つの記号は、必ず"<\\," ">\\," という形で出力すること。
+    - $という記号は、フォーマットで与えられている2組の$$を除き使用しないこと。
     以下のフォーマットで、XXXXに問題を挿入して、左揃えで答えること。
     [問題] \n
     $$ \\begin{}{}{} XXXX \\end{}{} $$
@@ -484,7 +497,7 @@ def execute0006_ks(question, answer, knowledge, tags, model, quiz_base, grade, y
 
     prompt = base1 + prompt_main + condition
 
-    start_time = time.time()
+    
     ans = gpt_exection(model, prompt)
     end_time = time.time()
     elapsed_time_creation = end_time - start_time
@@ -560,7 +573,7 @@ with gr.Blocks() as demo:
         visible=False
     )
     
-    with gr.Row():
+    with gr.Row(elem_classes="notranslate"):
         with gr.Column(scale=3): 
             title = gr.Markdown(
                 "## " + random.choice(phrases),
@@ -569,7 +582,7 @@ with gr.Blocks() as demo:
 
         with gr.Column(scale=2): 
             vanish_btn = gr.Button(
-                value="応援メッセージを消す",
+                value="メッセージを消す",
                 visible=True,
                 interactive=True,
                 variant="secondary"
@@ -585,7 +598,7 @@ with gr.Blocks() as demo:
 
     quiz_text_display = gr.Markdown(visible=False)
 
-    with gr.Row():  
+    with gr.Row(elem_classes="notranslate"):  
         with gr.Column(scale=1):    
             status_msg = gr.Markdown(
                 value='',
@@ -601,17 +614,17 @@ with gr.Blocks() as demo:
             )
 
             marker_checkboxes = gr.CheckboxGroup(
-                choices=["黄：わからなかった部分を復習する", "赤：応用力を試す"], 
+                choices=["赤：応用力を試す", "黄：わからなかった部分を復習する"], 
                 label="以下をチェックすると、マーカーを引いた箇所を考慮した問題を生成します", 
                 visible=False, 
                 show_label = False
             )
 
             model_options = gr.Dropdown(
-            choices=["o4-mini", "gpt-5", "gemini-2.5-flash", "gemini-2.5-pro"],
+            choices=["o4-mini(速さ重視、普段使いにおすすめ)", "gemini-2.5-flash(そこそこの速さ、解答が細かい)", "gpt-5(正確さ重視・遅い。より深い学習向け)"],
             label="復習問題を作成するモデルを選んでください",
             interactive=True,
-            value="o4-mini"
+            value="o4-mini(速さ重視、普段使いにおすすめ)"
             )
     dropdown_state = gr.State()
     status_msg_state = gr.State()
@@ -627,7 +640,7 @@ with gr.Blocks() as demo:
     model_state = gr.State("o4-mini")
     description_state = gr.State()
     
-    with gr.Row():  
+    with gr.Row(elem_classes="notranslate"):  
         with gr.Column(scale=1):    
             gen_quiz_btn = gr.Button("類題をつくる（まだ押せません）", visible=True, interactive=False, variant="stop")
 
@@ -652,7 +665,7 @@ with gr.Blocks() as demo:
 
     answer_btn = gr.Button("模範解答を表示", visible=False)
 
-    with gr.Row():
+    with gr.Row(elem_classes="notranslate"):
         with gr.Column(scale=3):
             answer_output = gr.Markdown(
                 "",
@@ -728,7 +741,7 @@ with gr.Blocks() as demo:
         report_type_state = gr.State()
         report_text_state = gr.State()
 
-    with gr.Row():
+    with gr.Row(elem_classes="notranslate"):
         with gr.Column(scale=1):
             report_btn = gr.Button(
                 interactive=False, 
@@ -762,8 +775,8 @@ with gr.Blocks() as demo:
             "不正解": "red"
         }
         description = f"""問題の復習は、BookRollのクイズに回答するとできるようになります。"""
-        marker_description = f"""この問題の復習は、BookRollの解答に引いたマーカーに対応しています。解答を読んで、<span style="font-weight: bold; color: #ff4500;">応用力を試したいところ</span>や<span style="font-weight: bold; color: #ffd700;">わからないところ</span>マーカーを引いてみましょう！""" if ans_contents_id != "" else "この問題の復習は、BookRollの解答に引いたマーカーに対応していません。"
-        rubric_description = f"""この問題には解答のポイントがついています。右側の解答のポイントにチェックを入れて、今のあなたに適した問題を作りましょう！""" if num_rubrics > 0 else "この問題には解答のポイントがついていません。"
+        marker_description = f"""この問題の復習は、BookRollの解答に引いたマーカーに対応しています。解答を読んで、<br><span style="font-size: 22px; font-weight: bold; color: #ff4500;">応用力を試したいところ</span>や<span style="font-size: 22px; font-weight: bold; color: #ffd700;">わからないところ</span><br>にマーカーを引いてみましょう！""" if ans_contents_id != "" else "この問題の復習は、BookRollの解答に引いたマーカーに対応していません。"
+        rubric_description = f"""この問題には<span style="font-size: 22px; font-weight: bold; color: #66cdaa;">解答のポイント</span>がついています。<br>右側の解答のポイントにチェックを入れて、今のあなたに適した問題を作りましょう！""" if num_rubrics > 0 else "この問題には解答のポイントがついていません。"
 
         # 西京の場合
         if school=="C126210001533":
@@ -773,7 +786,7 @@ with gr.Blocks() as demo:
                 if count_work==0: #BookRollで問題を解かせる
                     html = f"""
                     <div style="text-align: center;" translate="no">
-                        {marker_description} <br> {rubric_description} <br>
+                        {marker_description} <br><br> {rubric_description} <br><br>
                         <span style="font-size: 22px; font-weight: bold;">
                         あなたが解いたデータが見つかりませんでした。<br>
                         </span>
@@ -784,7 +797,7 @@ with gr.Blocks() as demo:
                 else:
                     html = f"""
                     <div style="text-align: center;" translate="no">
-                        {marker_description} <br> {rubric_description} <br>
+                        {marker_description} <br><br> {rubric_description} <br><br>
                         <span style="font-size: 28px; font-weight: bold;">
                         あなたはこの問題を <span style="color: #00c853;">{count_work}回</span> 解き、<br>
                         <span style="color: #00c853;">{count_review}問 </span> 類題を作って解きました。 <br>
@@ -844,7 +857,7 @@ with gr.Blocks() as demo:
             ishighlighted = True if len(text_highlighted_red) + len(text_highlighted_yellow) > 0 else False
             ismarker = True if ans != "" else False
             rubric_label = "できたポイントをチェックしよう！" if isrubric else "この問題には解答のポイントがついていません"
-            marker_label = "BookRollにマーカーを引いてみよう！" if ishighlighted else "類題に反映したいマーカーの種類を選ぼう"
+            marker_label = "類題に反映したいマーカーの種類を選ぼう" if ishighlighted else "BookRollにマーカーを引いてみよう！"
 
             # 西京
             if lti["school_id"]=="C126210001533":
@@ -889,7 +902,6 @@ with gr.Blocks() as demo:
                         ismarker
                     )
             # それ以外
-            else:
                 return (
                     gr.update(value=f'<div style="text-align: center;" translate="no"><h1> あなたが選んだ問題 </h1></div><div style="border: 3px solid #2196f3;padding: 24px;border-radius: 8px;text-align: center;" translate="no"> \n{quiz_text} </div>', visible=True),
                     gr.update(choices=rubric_explanations, value=[], visible=True, interactive=True, show_label=True, label=rubric_label),
@@ -929,17 +941,23 @@ with gr.Blocks() as demo:
                 False
             )
 
-    def open_when_no_rubrics(quiz_title, all_items):
+    def open_when_no_rubrics(quiz_title, all_items, contents_id):
         if quiz_title:
-            if (len(all_items) == 0):
-                return (
-                    gr.update(interactive=False, variant="stop", value="(解答のポイントがない問題は類題をつくれません)"),
-                    gr.update(interactive=True, variant="stop", value="そのまま解く")
-                )
+            if contents_id == "ai_generated":
+                if (len(all_items) == 0):
+                    return (
+                        gr.update(interactive=False, variant="stop", value="(この問題は類題生成に対応していません)"),
+                        gr.update(interactive=True, variant="stop", value="選んだ問題をそのまま解く")
+                    )
+                else:
+                    return (
+                        gr.update(interactive=False, variant="stop", value="類題をつくるには、上のらんに１つ以上チェックを入れてください"),
+                        gr.update(interactive=False, variant="stop", value="そのまま解くには、上のらんに１つ以上チェックを入れてください")
+                    )
             else:
                 return (
-                    gr.update(interactive=False, variant="stop", value="類題をつくる(できたポイントをチェックしてください)"),
-                    gr.update(interactive=False, variant="stop", value="そのまま解く(できたポイントをチェックしてください)")
+                    gr.update(),
+                    gr.update()
                 )
         else:
             return (
@@ -970,7 +988,7 @@ with gr.Blocks() as demo:
         ]
     ).then(
         fn=open_when_no_rubrics,
-        inputs=[quiz_dropdown, checkbox_all_items_state],
+        inputs=[quiz_dropdown, checkbox_all_items_state, contentsid_state],
         outputs=[gen_quiz_btn, rev_quiz_btn]
     ).then(
         fn=handle_logs,
@@ -1020,8 +1038,8 @@ with gr.Blocks() as demo:
         if lti["school_id"]=="C126210001533":
             if count_review == 0:
                 return (
-                    gr.update(interactive=True, variant="stop", value="類題をつくる"),
-                    gr.update(interactive=False, variant="stop", value="そのまま解く(類題を解くと選べるようになります)"),
+                    gr.update(interactive=True, variant="stop", value="選んだ問題の類題をつくる"),
+                    gr.update(interactive=False, variant="stop", value="選んだ問題をそのまま解く(類題を解くと選べるようになります)"),
                     gr.update(interactive=False)
                 )
         
@@ -1068,9 +1086,10 @@ with gr.Blocks() as demo:
     )
 
     model_options.change(
-        fn=lambda selection: selection, # Dropdownの選択値をそのまま返す
-        inputs=[model_options],         # 現在の選択値を入力として受け取る
-        outputs=[model_state]           # Stateに格納する
+        # selectionを '(' で分割し、その最初の要素([0])を取得して、前後の空白を削除(.strip())する
+        fn=lambda selection: selection.split('(')[0].strip() if selection else "",
+        inputs=[model_options],
+        outputs=[model_state]
     ).then(
         fn=lambda: (
         "SelectedModel"
@@ -1095,7 +1114,7 @@ with gr.Blocks() as demo:
             review_point = "この問題は、元の問題の応用問題として、どのくらい役に立ちましたか(どのくらい他の人にオススメしたいですか)？"
             for i in range(len(tags)):
                 if tags[i] == "_x_":
-                    review_point = "この問題は、もとの問題の理解できていなかったポイント「{}」を復習する問題として、どのくらい役に立ちましたか(どのくらい他の人にオススメしたいですか)？".format(rubrics[i])
+                    review_point = "この問題は、もとの問題の理解できていなかったポイントを復習する問題として、どのくらい役に立ちましたか(どのくらい他の人にオススメしたいですか)？".format(rubrics[i])
                     break
         if ismarker:
             if "黄：わからなかった部分を復習する" not in marker_selected:
@@ -1115,7 +1134,7 @@ with gr.Blocks() as demo:
         return (
             new_exercise,
             exercise_creation_time,
-            gr.update(value=description + "\n" + new_exercise + f"\n問題生成時間:" + exercise_creation_time + "秒" + "\n #### 右側の入力欄に解答の過程を入力するか、紙に解いて答えを出した後、模範解答を見て確認しましょう。\n### 注意：AIの生成問題には誤りを含むことがあります。"), 
+            gr.update(value=description + '\n <div style="text-align: center;" translate="no">' + new_exercise + f" </div> \n問題生成時間:" + exercise_creation_time + "秒" + "\n #### 右側の入力欄に解答の過程を入力するか、紙に解いて答えを出した後、模範解答を見て確認しましょう。\n### 注意：AIの生成問題には誤りを含むことがあります。"), 
             gr.update(visible=True, variant="secondary", interactive=False, value="(問題の解答を作成中...)"),
             gr.update(placeholder="ここに記述してください", visible=True, interactive=True, lines=10),
             tags_for_saving,
@@ -1221,7 +1240,7 @@ with gr.Blocks() as demo:
         return (
             quiz_text,
             standard_answer,
-            gr.update(value=quiz_text + "\n #### 右側の入力欄に解答の過程を入力するか、紙に解いて答えを出した後、模範解答を見て確認しましょう。\n### 注意：AIの生成問題には誤りを含むことがあります。"), 
+            gr.update(value='<div style="text-align: center;" translate="no">' + quiz_text + "</div> \n #### 右側の入力欄に解答の過程を入力するか、紙に解いて答えを出した後、模範解答を見て確認しましょう。\n### 注意：AIの生成問題には誤りを含むことがあります。"), 
             gr.update(visible=True, variant="primary", interactive=True, value="模範解答を表示"),
             gr.update(placeholder="ここに記述してください", visible=True, interactive=True, lines=10),
             [],
@@ -1284,9 +1303,9 @@ with gr.Blocks() as demo:
 
     def update_when_answer_btn(solver, answer_time):
         if answer_time:
-            return solver + f"\n解答生成時間: {answer_time}秒" + "\n### 注意：AIの生成した解答には誤りを含むことがあります。"
+            return '<div style="text-align: center;" translate="no">' + solver + f"</div> \n解答生成時間: {answer_time}秒" + "\n### 注意：AIの生成した解答には誤りを含むことがあります。"
         else:
-            return solver + "\n### 注意：AIの生成した解答には誤りを含むことがあります。"
+            return '<div style="text-align: center;" translate="no">' + solver + "</div> \n### 注意：AIの生成した解答には誤りを含むことがあります。"
     
     def appear_questionnaire_box(is_gen, rubrics):
         if is_gen == 1: #類題を作った場合
@@ -1607,7 +1626,7 @@ with gr.Blocks() as demo:
             gr.update(visible=True, interactive=False, placeholder="(まだ入力できません)", value="", lines=1), # student_answer
             gr.update(visible=False, interactive=False), # answer_btn
             gr.update(visible=False, value=""), # answer_output
-            gr.update(interactive=True, value="o4-mini"), # model_options
+            gr.update(interactive=True, value="o4-mini(速さ重視、普段使いにおすすめ)"), # model_options
             gr.update(visible=False, interactive=False, value=None), # understanding
             gr.update(visible=False, interactive=False, value=None), # difficulty
             gr.update(visible=False, interactive=False, value=None), # fluency
@@ -1617,7 +1636,7 @@ with gr.Blocks() as demo:
             gr.update(visible=False, interactive=False, value=None), # report_type
             gr.update(visible=False, interactive=False, placeholder="", value="", lines=5), # report_text
             gr.update(visible=False, interactive=False, value="結果を送信する(まずは問題を振り返ってください！)", variant="secondary"), # report_btn
-            gr.update(visible=False, interactive=False, show_label=False), # marker_checkboxes
+            gr.update(visible=False, interactive=False, show_label=False, value=[]), # marker_checkboxes
             gr.update(value="## " + random.choice(phrases)), # title
             gr.update(visible=False), # note_mkdwn
             gr.update(value=None), # exercise_creation_time_state
@@ -1641,7 +1660,7 @@ with gr.Blocks() as demo:
             "", # description_state
             "", "", # prompt_exercise_state, prompt_answer_state
             "", "", # highlighted_red_state, highlighted_yellow_state
-            "o4-mini", # model_state
+            "o4-mini(速さ重視、普段使いにおすすめ)", # model_state
             True # exercise_saving_state
         ),
         inputs=None,
