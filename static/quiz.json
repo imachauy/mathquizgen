@@ -1622,7 +1622,8 @@
     {
         "contents_id": "ea6b2efbdd4255a9f1b3bbc6399b58f4",
         "answer_id": "7b7a53e239400a13bd6be6c91c4f6c4e",
-        "answer_page": "77",
+        "answer_page_start": "77",
+        "answer_page_end": "77",
         "page": "49",
         "no": "1",
         "quiz_title": "(260116) STEP演習 - 2年2章 演習問題1 いろいろな連立方程式の解き方",
@@ -1642,7 +1643,8 @@
     {
         "contents_id": "ea6b2efbdd4255a9f1b3bbc6399b58f4",
         "answer_id": "7b7a53e239400a13bd6be6c91c4f6c4e",
-        "answer_page": "78",
+        "answer_page_start": "78",
+        "answer_page_end": "78",
         "page": "50",
         "no": "1",
         "quiz_title": "(260116) STEP演習 - 2年2章 演習問題2(1) 比例式を含む連立方程式",
@@ -1662,7 +1664,8 @@
     {
         "contents_id": "ea6b2efbdd4255a9f1b3bbc6399b58f4",
         "answer_id": "7b7a53e239400a13bd6be6c91c4f6c4e",
-        "answer_page": "78",
+        "answer_page_start": "78",
+        "answer_page_end": "78",
         "page": "50",
         "no": "2",
         "quiz_title": "(260116) STEP演習 - 2年2章 演習問題2(2) 比例式を含む連立方程式",
@@ -1683,7 +1686,8 @@
     {
         "contents_id": "ea6b2efbdd4255a9f1b3bbc6399b58f4",
         "answer_id": "7b7a53e239400a13bd6be6c91c4f6c4e",
-        "answer_page": ["79", "80"],
+        "answer_page_start": "79",
+        "answer_page_end": "80",
         "page": "51",
         "no": "2",
         "quiz_title": "(260116) STEP演習 - 2年2章 演習問題3(2) いろいろな連立方程式の解き方",
@@ -1704,7 +1708,8 @@
     {
         "contents_id": "ea6b2efbdd4255a9f1b3bbc6399b58f4",
         "answer_id": "7b7a53e239400a13bd6be6c91c4f6c4e",
-        "answer_page": ["79", "80"],
+        "answer_page_start": "79",
+        "answer_page_end": "80",
         "page": "51",
         "no": "1",
         "quiz_title": "(260116) STEP演習 - 2年2章 演習問題3(1) いろいろな連立方程式の解き方",
@@ -1724,7 +1729,8 @@
     {
         "contents_id": "ea6b2efbdd4255a9f1b3bbc6399b58f4",
         "answer_id": "7b7a53e239400a13bd6be6c91c4f6c4e",
-        "answer_page": "81",
+        "answer_page_start": "81",
+        "answer_page_end": "81",
         "page": "52",
         "no": "1",
         "quiz_title": "(260116) STEP演習 - 2年2章 演習問題4 いろいろな連立方程式の解き方",
@@ -1746,7 +1752,8 @@
     {
         "contents_id": "ea6b2efbdd4255a9f1b3bbc6399b58f4",
         "answer_id": "7b7a53e239400a13bd6be6c91c4f6c4e",
-        "answer_page": "82",
+        "answer_page_start": "82",
+        "answer_page_end": "82",
         "page": "53",
         "no": "1",
         "quiz_title": "(260116) STEP演習 - 2年2章 演習問題5 2元1次方程式の自然数の解",
@@ -1766,7 +1773,8 @@
     {
         "contents_id": "ea6b2efbdd4255a9f1b3bbc6399b58f4",
         "answer_id": "7b7a53e239400a13bd6be6c91c4f6c4e",
-        "answer_page": "83",
+        "answer_page_start": "83",
+        "answer_page_end": "83",
         "page": "54",
         "no": "1",
         "quiz_title": "(260116) STEP演習 - 2年2章 演習問題6 間違って解いた連立方程式とその解",
