@@ -1614,8 +1614,8 @@ with gr.Blocks() as demo:
             gr.update(visible=True, interactive=True, value=None), # quiz_dropdown
             gr.update(visible=False), # quiz_text_display
             gr.update(visible=False), # status_msg
-            gr.update(visible=False, show_label=False), # checkboxes
-            gr.update(visible=False, show_label=False), # new_checkboxes
+            gr.update(visible=False, show_label=False, value=None), # checkboxes
+            gr.update(visible=False, show_label=False, value=None), # new_checkboxes
             {}, # checkbox_state
             [], # current_checkbox_state
             {}, # new_checkbox_state
@@ -1636,7 +1636,7 @@ with gr.Blocks() as demo:
             gr.update(visible=False, interactive=False, value=None), # report_type
             gr.update(visible=False, interactive=False, placeholder="", value="", lines=5), # report_text
             gr.update(visible=False, interactive=False, value="結果を送信する(まずは問題を振り返ってください！)", variant="secondary"), # report_btn
-            gr.update(visible=False, interactive=False, show_label=False, value=[]), # marker_checkboxes
+            gr.update(visible=False, interactive=False, show_label=False, value=None), # marker_checkboxes
             gr.update(value="## " + random.choice(phrases)), # title
             gr.update(visible=False), # note_mkdwn
             gr.update(value=None), # exercise_creation_time_state
