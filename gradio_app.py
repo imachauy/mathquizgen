@@ -1145,7 +1145,7 @@ with gr.Blocks() as demo:
         return (
             new_exercise,
             exercise_creation_time,
-            gr.update(value=description + '\n <div style="text-align: center;" translate="no">' + new_exercise + f" </div> \n問題生成時間:" + exercise_creation_time + "秒" + "\n #### 右側の入力欄に解答の過程を入力するか、紙に解いて答えを出した後、模範解答を見て確認しましょう。\n### 注意：AIの生成問題には誤りを含むことがあります。"), 
+            gr.update(value=description + '\n <div style="text-align: center;" translate="no">' + new_exercise + f" </div> \n問題生成時間:" + exercise_creation_time + "秒" + "\n 右側の入力欄に解答の過程を入力するか、紙に解いて答えを出した後、模範解答を見て確認しましょう。\n 注意：AIの生成問題には誤りを含むことがあります。"), 
             gr.update(visible=True, variant="secondary", interactive=False, value="(問題の解答を作成中...)"),
             gr.update(placeholder="ここに記述してください", visible=True, interactive=True, lines=10),
             tags_for_saving,
@@ -1251,7 +1251,7 @@ with gr.Blocks() as demo:
         return (
             quiz_text,
             standard_answer,
-            gr.update(value='<div style="text-align: center;" translate="no">' + quiz_text + "</div> \n #### 右側の入力欄に解答の過程を入力するか、紙に解いて答えを出した後、模範解答を見て確認しましょう。\n### 注意：AIの生成問題には誤りを含むことがあります。"), 
+            gr.update(value='<div style="text-align: center;" translate="no">' + quiz_text + "</div> \n 右側の入力欄に解答の過程を入力するか、紙に解いて答えを出した後、模範解答を見て確認しましょう。\n 注意：AIの生成問題には誤りを含むことがあります。"), 
             gr.update(visible=True, variant="primary", interactive=True, value="模範解答を表示"),
             gr.update(placeholder="ここに記述してください", visible=True, interactive=True, lines=10),
             [],
