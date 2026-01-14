@@ -1660,7 +1660,7 @@ with gr.Blocks() as demo:
             "", # description_state
             "", "", # prompt_exercise_state, prompt_answer_state
             "", "", # highlighted_red_state, highlighted_yellow_state
-            "o4-mini(速さ重視、普段使いにおすすめ)", # model_state
+            "o4-mini", # model_state
             True # exercise_saving_state
         ),
         inputs=None,
