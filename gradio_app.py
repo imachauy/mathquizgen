@@ -246,7 +246,6 @@ def get_result_from_db(school, contents_id, page, no, user, lti, answer_contents
         brquizdata = clickhouse_client.query(sql, params)
         result = brquizdata.result_rows
         num_workingquiz += len(brquizdata.result_rows)
-        print(answer_contents_id)
     
         text_highlighted_yellow = ""
         text_highlighted_red = ""
@@ -284,8 +283,6 @@ def get_result_from_db(school, contents_id, page, no, user, lti, answer_contents
             }
             brmarkerdata = clickhouse_client.query(sql2, params2)
             result2 = brmarkerdata.result_rows
-            print("result2")
-            print(result2)
             # 1. カラムのインデックス（SELECT句の順番通り）
             # 0: marker_text, 1: marker_color
             COL_TEXT = 0
@@ -385,9 +382,10 @@ def check_if_solvable(question, knowledge, num, model, grade):
         '''.format(question, knowledge, grade, r"{a}", r"{b}", r"text{の値から、}", r"text{を求める}", "{array", "}{l", "}", "{array", "}")
     start_time = time.time()
     ans = gpt_exection(model, prompt)
+    ans = ans.replace("$$", "__two_dollars__").replace("$", "").replace("__two_dollars__", "$$")
     end_time = time.time()
     elapsed_time_solve = end_time - start_time
-    return ans, prompt, elapsed_time_solve
+    return ans, prompt, f"{elapsed_time_solve:.2f}"
 
 def execute0006_ks(question, answer, knowledge, tags, model, quiz_base, grade, yellow_marker, red_marker):
     start_time = time.time()
@@ -499,6 +497,7 @@ def execute0006_ks(question, answer, knowledge, tags, model, quiz_base, grade, y
 
     
     ans = gpt_exection(model, prompt)
+    ans = ans.replace("$$", "__two_dollars__").replace("$", "").replace("__two_dollars__", "$$")
     end_time = time.time()
     elapsed_time_creation = end_time - start_time
     return description, ans, f"{elapsed_time_creation:.2f}", prompt
@@ -788,10 +787,9 @@ with gr.Blocks() as demo:
                     <div style="text-align: center;" translate="no">
                         {marker_description} <br><br> {rubric_description} <br><br>
                         <span style="font-size: 22px; font-weight: bold;">
-                        あなたが解いたデータが見つかりませんでした。<br>
+                        あなたが解いたデータが見つかりませんでした。<br>まずはBookRollで、該当の問題を解きましょう！<br>
                         </span>
-                        <span style="font-weight: bold; color: #2196f3;"> <h2>まずはBookRollで、該当の問題を解きましょう！</h2></span><br>
-                        <span style="font-weight: bold; color: #2196f3;"> <h3>BookRollで解かないと、下のボタンが有効になりません。<br>BookRollで解いてから、システムに入り直してください。</h3></span><br>
+                        <span style="font-weight: bold; color: #2196f3;"> <h3 style="display: inline-block; background-color: #ff9800; color: white; padding: 4px 12px; border-radius: 20px; font-size: 1em; font-weight: bold; margin-bottom: 10px;">BookRollで解かないと、下のボタンが有効になりません。<br>BookRollで解いてから、システムに入り直してください。</h3></span><br>
                     </div>
                     """
                 else:
@@ -858,13 +856,20 @@ with gr.Blocks() as demo:
             ismarker = True if ans != "" else False
             rubric_label = "できたポイントをチェックしよう！" if isrubric else "この問題には解答のポイントがついていません"
             marker_label = "類題に反映したいマーカーの種類を選ぼう" if ishighlighted else "BookRollにマーカーを引いてみよう！"
+            selected_quiz = "あなたが選んだ問題"
+            if contents_id == "ai_generated":
+                selected_quiz = "あなたが選んだ問題"
+            elif ismarker:
+                selected_quiz = "あなたが選んだ問題 (問題：{}ページ, 解答：{}ページ)".format(str(page), str(ans_page_s))
+            else:
+                selected_quiz = "あなたが選んだ問題 (問題：{}ページ)".format(str(page))
 
             # 西京
             if lti["school_id"]=="C126210001533":
                 # 元の問題を１回も解いていない場合
                 if count_work==0:
                     return (
-                        gr.update(value=f'<div style="text-align: center;" translate="no"><h1> あなたが選んだ問題 </h1></div><div style="border: 3px solid #2196f3;padding: 24px;border-radius: 8px;text-align: center;" translate="no"> \n{quiz_text} </div>', visible=True),
+                        gr.update(value=f'<div style="text-align: center;" translate="no"><h1> {selected_quiz} </h1></div><div style="border: 3px solid #2196f3;padding: 24px;border-radius: 8px;text-align: center;" translate="no"> \n{quiz_text} </div>', visible=True),
                         gr.update(choices=rubric_explanations, value=[], visible=False, interactive=False, show_label=False),
                         gr.update(visible=True, value=msg),
                         quiz_text,
@@ -884,7 +889,7 @@ with gr.Blocks() as demo:
                 # 元の問題を１回は解いているが、復習問題を１回も解いていない場合
                 elif count_review==0:
                     return (
-                        gr.update(value=f'<div style="text-align: center;" translate="no"><h1> あなたが選んだ問題 </h1></div><div style="border: 3px solid #2196f3;padding: 24px;border-radius: 8px;text-align: center;" translate="no"> \n{quiz_text} </div>', visible=True),
+                        gr.update(value=f'<div style="text-align: center;" translate="no"><h1> {selected_quiz} </h1></div><div style="border: 3px solid #2196f3;padding: 24px;border-radius: 8px;text-align: center;" translate="no"> \n{quiz_text} </div>', visible=True),
                         gr.update(choices=rubric_explanations, value=[], visible=isrubric, interactive=isrubric, label=rubric_label, show_label=isrubric),
                         gr.update(visible=True, value=msg),
                         quiz_text,
@@ -903,7 +908,7 @@ with gr.Blocks() as demo:
                     )
             # それ以外
                 return (
-                    gr.update(value=f'<div style="text-align: center;" translate="no"><h1> あなたが選んだ問題 </h1></div><div style="border: 3px solid #2196f3;padding: 24px;border-radius: 8px;text-align: center;" translate="no"> \n{quiz_text} </div>', visible=True),
+                    gr.update(value=f'<div style="text-align: center;" translate="no"><h1> {selected_quiz} </h1></div><div style="border: 3px solid #2196f3;padding: 24px;border-radius: 8px;text-align: center;" translate="no"> \n{quiz_text} </div>', visible=True),
                     gr.update(choices=rubric_explanations, value=[], visible=True, interactive=True, show_label=True, label=rubric_label),
                     gr.update(visible=True, value=msg),
                     quiz_text,
@@ -956,8 +961,8 @@ with gr.Blocks() as demo:
                     )
             else:
                 return (
-                    gr.update(),
-                    gr.update()
+                    gr.update(interactive=False, variant="stop", value="類題をつくるには、上のらんに１つ以上チェックを入れてください"),
+                    gr.update(interactive=False, variant="stop", value="そのまま解くには、上のらんに１つ以上チェックを入れてください")
                 )
         else:
             return (
@@ -1020,7 +1025,13 @@ with gr.Blocks() as demo:
             gr.update(value=updated_status)
         )
     
-    def update_genquizbtn_when_checkboxes(selected, lti, count_work, count_review, all_items, marker_selected, isrubric, ismarker):
+    def update_genquizbtn_when_checkboxes(selected, lti, count_work, count_review, all_items, marker_selected, isrubric, ismarker, quiz_title):
+        if not quiz_title:
+            return(
+                gr.update(),
+                gr.update(),
+                gr.update() 
+            )
         if len(selected)+len(marker_selected) == 0:
             if isrubric or ismarker:
                 return (
@@ -1055,7 +1066,7 @@ with gr.Blocks() as demo:
         outputs=[checkbox_state, current_checkbox_state, checkboxes]
     ).then(
         fn=update_genquizbtn_when_checkboxes,
-        inputs=[checkboxes, lti_state, cnt_work_state, cnt_review_state, checkbox_all_items_state, marker_checkboxes, isrubric_state, ismarker_state],
+        inputs=[checkboxes, lti_state, cnt_work_state, cnt_review_state, checkbox_all_items_state, marker_checkboxes, isrubric_state, ismarker_state, quiz_dropdown],
         outputs=[gen_quiz_btn, rev_quiz_btn, quiz_dropdown]
     ).then(
         fn=lambda: (
@@ -1071,7 +1082,7 @@ with gr.Blocks() as demo:
 
     marker_checkboxes.change(
         fn=update_genquizbtn_when_checkboxes,
-        inputs=[checkboxes, lti_state, cnt_work_state, cnt_review_state, checkbox_all_items_state, marker_checkboxes, isrubric_state, ismarker_state],
+        inputs=[checkboxes, lti_state, cnt_work_state, cnt_review_state, checkbox_all_items_state, marker_checkboxes, isrubric_state, ismarker_state, quiz_dropdown],
         outputs=[gen_quiz_btn, rev_quiz_btn, quiz_dropdown]
     ).then(
         fn=lambda: (
@@ -1303,9 +1314,9 @@ with gr.Blocks() as demo:
 
     def update_when_answer_btn(solver, answer_time):
         if answer_time:
-            return '<div style="text-align: center;" translate="no">' + solver + f"</div> \n解答生成時間: {answer_time}秒" + "\n### 注意：AIの生成した解答には誤りを含むことがあります。"
+            return '<div style="text-align: center;" translate="no">' + solver + f"</div> \n解答生成時間: {answer_time}秒" + "\n注意：AIの生成した解答には誤りを含むことがあります。"
         else:
-            return '<div style="text-align: center;" translate="no">' + solver + "</div> \n### 注意：AIの生成した解答には誤りを含むことがあります。"
+            return '<div style="text-align: center;" translate="no">' + solver + "</div> \n注意：AIの生成した解答には誤りを含むことがあります。"
     
     def appear_questionnaire_box(is_gen, rubrics):
         if is_gen == 1: #類題を作った場合
@@ -1620,8 +1631,8 @@ with gr.Blocks() as demo:
             [], # current_checkbox_state
             {}, # new_checkbox_state
             [], # new_current_checkbox_state
-            gr.update(visible=True, interactive=False, variant="stop", value="類題をつくる"), # gen_quiz_btn
-            gr.update(visible=True, interactive=False, variant="stop", value="そのまま解く"), # rev_quiz_btn
+            gr.update(visible=True, interactive=False, variant="stop", value="類題をつくる(まだ押せません)"), # gen_quiz_btn
+            gr.update(visible=True, interactive=False, variant="stop", value="そのまま解く(まだ押せません)"), # rev_quiz_btn
             gr.update(value="復習問題はここに出てきます"), # exercise_output
             gr.update(visible=True, interactive=False, placeholder="(まだ入力できません)", value="", lines=1), # student_answer
             gr.update(visible=False, interactive=False), # answer_btn
