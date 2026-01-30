@@ -57,7 +57,7 @@ def gpt_exection(model, query):
         response = ans.text
     return response
 
-def handle_answer(exercise, answer, save, user_id, session, contents_id, page, no, y_marker, r_marker, tags, school, new_contents_id, new_page, new_no, description, user_answer, understanding, rating, difficulty, fluency, relevance, new_checkbox, lti, report_type, report_text):
+def handle_answer(exercise, answer, save, user_id, session, contents_id, page, no, y_marker, r_marker, tags, markers, school, new_contents_id, new_page, new_no, description, user_answer, understanding, rating, difficulty, fluency, relevance, new_checkbox, lti, report_type, report_text):
     report = {
         "report_type": report_type,
         "report_text": report_text
@@ -71,6 +71,7 @@ def handle_answer(exercise, answer, save, user_id, session, contents_id, page, n
             "tags": tags,
             "yellow_marker": y_marker,
             "red_marker": r_marker,
+            "markers": markers
         }
     else:
         previous_quiz = {}
@@ -213,6 +214,7 @@ def reload_quiz_map_from_mongo(lti):
     return quiz_text_dict, gr.update(choices=sorted(quiz_text_dict.keys()), value=None)
 
 phrases = [
+    "STEP 1年7章をどんどんやるでありMath!",
     "BookRollの解答ページにマーカーを引くと、その情報を活かしMath!"
 ]
 
@@ -575,7 +577,7 @@ with gr.Blocks() as demo:
     with gr.Row(elem_classes="notranslate"):
         with gr.Column(scale=3): 
             title = gr.Markdown(
-                "## " + random.choice(phrases),
+                "## " + phrases[0],
                 visible=True
             )
 
@@ -1606,7 +1608,7 @@ with gr.Blocks() as demo:
         outputs=[report_btn]
     ).then(
         fn=handle_answer,
-        inputs=[exercise_state, answer_state, exercise_saving_state, user_state, session_state, contentsid_state, page_state, no_state, highlighted_yellow_state, highlighted_red_state, checkbox_state, school_state, new_contentsid_state, new_page_state, new_no_state, description_state, student_answer, understanding, rating, difficulty, fluency, relevance, new_checkbox_state, lti_state, report_type, report_text],
+        inputs=[exercise_state, answer_state, exercise_saving_state, user_state, session_state, contentsid_state, page_state, no_state, highlighted_yellow_state, highlighted_red_state, checkbox_state, marker_checkboxes, school_state, new_contentsid_state, new_page_state, new_no_state, description_state, student_answer, understanding, rating, difficulty, fluency, relevance, new_checkbox_state, lti_state, report_type, report_text],
         outputs=None
     ).then(
         fn=lambda: (
