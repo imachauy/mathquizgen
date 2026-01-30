@@ -788,9 +788,6 @@ with gr.Blocks() as demo:
                     html = f"""
                     <div style="text-align: center;" translate="no">
                         {marker_description} <br><br> {rubric_description} <br><br>
-                        <span style="font-size: 22px; font-weight: bold;">
-                        あなたが解いたデータが見つかりませんでした。<br>まずはBookRollで、該当の問題を解きましょう！<br>
-                        </span>
                         <span style="font-weight: bold; color: #2196f3;"> <h3 style="display: inline-block; background-color: #ff9800; color: white; padding: 4px 12px; border-radius: 20px; font-size: 1em; font-weight: bold; margin-bottom: 10px;">BookRollで解かないと、下のボタンが有効になりません。<br>BookRollで解いてから、システムに入り直してください。</h3></span><br>
                     </div>
                     """
@@ -1147,7 +1144,7 @@ with gr.Blocks() as demo:
         return (
             new_exercise,
             exercise_creation_time,
-            gr.update(value=description + '\n <div style="text-align: center;" translate="no">' + new_exercise + f" </div> \n問題生成時間:" + exercise_creation_time + "秒" + "\n 右側の入力欄に解答の過程を入力するか、紙に解いて答えを出した後、模範解答を見て確認しましょう。\n 注意：AIの生成問題には誤りを含むことがあります。"), 
+            gr.update(value=description + '\n <div style="text-align: center;" translate="no">' + new_exercise + f" </div> <br>問題生成時間:" + exercise_creation_time + "秒" + "<br> 右側の入力欄に解答の過程を入力するか、紙に解いて答えを出した後、模範解答を見て確認しましょう。<br> 注意：AIの生成問題には誤りを含むことがあります。"), 
             gr.update(visible=True, variant="secondary", interactive=False, value="(問題の解答を作成中...)"),
             gr.update(placeholder="ここに記述してください", visible=True, interactive=True, lines=10),
             tags_for_saving,
@@ -1253,7 +1250,7 @@ with gr.Blocks() as demo:
         return (
             quiz_text,
             standard_answer,
-            gr.update(value='<div style="text-align: center;" translate="no">' + quiz_text + "</div> \n 右側の入力欄に解答の過程を入力するか、紙に解いて答えを出した後、模範解答を見て確認しましょう。\n 注意：AIの生成問題には誤りを含むことがあります。"), 
+            gr.update(value='<div style="text-align: center;" translate="no">' + quiz_text + "</div> <br> 右側の入力欄に解答の過程を入力するか、紙に解いて答えを出した後、模範解答を見て確認しましょう。<br> 注意：AIの生成問題には誤りを含むことがあります。"), 
             gr.update(visible=True, variant="primary", interactive=True, value="模範解答を表示"),
             gr.update(placeholder="ここに記述してください", visible=True, interactive=True, lines=10),
             [],
@@ -1316,9 +1313,9 @@ with gr.Blocks() as demo:
 
     def update_when_answer_btn(solver, answer_time):
         if answer_time:
-            return '<div style="text-align: center;" translate="no">' + solver + f"</div> \n解答生成時間: {answer_time}秒" + "\n注意：AIの生成した解答には誤りを含むことがあります。"
+            return '<div style="text-align: center;" translate="no">' + solver + f"</div> 解答生成時間: {answer_time}秒" + "<br> 注意：AIの生成した解答には誤りを含むことがあります。"
         else:
-            return '<div style="text-align: center;" translate="no">' + solver + "</div> \n注意：AIの生成した解答には誤りを含むことがあります。"
+            return '<div style="text-align: center;" translate="no">' + solver + "</div> <br> 注意：AIの生成した解答には誤りを含むことがあります。"
     
     def appear_questionnaire_box(is_gen, rubrics):
         if is_gen == 1: #類題を作った場合
