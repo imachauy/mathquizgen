@@ -161,21 +161,21 @@ async def get_httpx_client(base_url: str):
         http2=True
     )
 
-@app.on_event("startup")
-async def startup_event():
-    print("[162] Server startup: Initializing HTML clients")
-
-    # Fetch URLs from environment variables
-    mathgen_url = os.getenv("MATHGEN_URL", "http://fastapi-app:7860")
-
-    app.state.mathgen_client = await get_httpx_client(mathgen_url)
-
-
-@app.on_event("shutdown")
-async def shutdown_event():
-    print("[172] Server shutdown: Closing HTTP clients")
-    await app.state.mathgen_saikyo_client.aclose()
-    await app.state.mathgen_dcat_client.aclose()
+# @app.on_event("startup")
+# async def startup_event():
+#     print("[162] Server startup: Initializing HTML clients")
+# 
+#     # Fetch URLs from environment variables
+#     mathgen_url = os.getenv("MATHGEN_URL", "http://fastapi-app:7860")
+# 
+#     app.state.mathgen_client = await get_httpx_client(mathgen_url)
+# 
+# 
+# @app.on_event("shutdown")
+# async def shutdown_event():
+#     print("[172] Server shutdown: Closing HTTP clients")
+#     await app.state.mathgen_saikyo_client.aclose()
+#     await app.state.mathgen_dcat_client.aclose()
 
 
 # Log incoming requests
@@ -218,9 +218,9 @@ async def proxy_request(client, request: Request, path: str):
     print(f"[214] Max retries reached for proxying request to {url}")
     raise HTTPException(status_code=502, detail="Max retries reached")
 
-@app.api_route("/" + path_prefix + "/{path:path}") # legacy path
-async def proxy_to_mathgen(request: Request, path: str, user: dict = Depends(get_current_user)):
-    return await proxy_request(app.state.mathgen_client, request, path)
+# @app.api_route("/" + path_prefix + "/{path:path}") # legacy path
+# async def proxy_to_mathgen(request: Request, path: str, user: dict = Depends(get_current_user)):
+#     return await proxy_request(app.state.mathgen_client, request, path)
 
 ####### LTI #############################################################################
 
@@ -274,7 +274,7 @@ async def go_to_gradio():
 app.include_router(router, prefix=f"/{path_prefix}")
 
 # Gradio Mount（/ui以下はGradio専用にする！）
-mount_gradio_app(app, demo1, path="/ui/", root_path="/ui")
+mount_gradio_app(app, demo1, path=f"/{path_prefix}/ui", root_path=f"/{path_prefix}/ui")
 
 if __name__ == '__main__':
     uvicorn.run(app, root_path=f"/{path_prefix}")

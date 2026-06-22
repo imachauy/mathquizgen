@@ -11,6 +11,7 @@ import json
 import base64
 import clickhouse_connect
 from google import genai
+import re
 
 JST = timezone(timedelta(hours=9))
 
@@ -34,6 +35,166 @@ def load_session_info(request: gr.Request):
 # openaiのapi情報
 openai_client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
 genai_client = genai.Client(api_key=os.environ.get("GEMINI_API_KEY"))
+
+def get_journey_html(lti):
+    if not lti or "user_id" not in lti:
+        return gr.update(value="")
+
+    user_id = str(lti["user_id"])
+    school_id = str(lti["school_id"])
+
+    all_history = []
+
+    # 1. ClickHouse (元の問題の履歴)
+    if school_id == os.getenv("LTI_CONSUMER_KEY_1"):
+        try:
+            clickhouse_client = clickhouse_connect.get_client(
+                host=os.getenv("BOOKROLL_DATABASE_HOST_1"),
+                username=os.getenv("BOOKROLL_DATABASE_USER_1"),
+                password=os.getenv("BOOKROLL_DATABASE_PASS_1")
+            )
+            # ＝＝＝ 変更：contents_id と page_no も一緒に取得する ＝＝＝
+            sql = "SELECT contents_id, page_no, CAST(results_response AS String), timestamp FROM saikyo_new.statements_target WHERE actor_name_id = {user:String} AND operation_name = 'ANSWER_QUIZ' ORDER BY timestamp ASC"
+            res = clickhouse_client.query(sql, {"user": user_id})
+            for row in res.result_rows:
+                c_id = str(row[0]) if row[0] else ""
+                raw_page = row[1]
+                if isinstance(raw_page, bytes):
+                    p_no = raw_page.decode('utf-8', errors='ignore').replace('\x00', '').strip()
+                else:
+                    p_no = str(raw_page).replace('\x00', '').strip() if raw_page else ""
+                
+                # 問題を特定するユニークなキーを作成
+                q_key = f"{c_id}_{p_no}"
+                all_history.append({"type": "original", "q_key": q_key, "result": str(row[2]) if row[2] else "", "timestamp": row[3]})
+        except Exception as e:
+            print(f"ClickHouse journey fetch failed: {e}")
+
+    # 2. MongoDB (元の問題・復習問題の履歴)
+    try:
+        docs = list(history_col.find({"school_id": school_id, "user": user_id}))
+        for doc in docs:
+            c_id = str(doc.get("contents_id", ""))
+            p_no = str(doc.get("page", ""))
+            n_no = str(doc.get("no", ""))
+            q_type = "review" if c_id == "ai_generated" else "original"
+            # 問題を特定するユニークなキーを作成
+            q_key = f"{c_id}_{p_no}_{n_no}"
+            
+            all_history.append({"type": q_type, "q_key": q_key, "result": doc.get("understanding", ""), "timestamp": doc.get("timestamp")})
+    except Exception as e:
+        print(f"Mongo journey fetch failed: {e}")
+
+    # 3. タイムスタンプでソート
+    def normalize_tz(dt):
+        if not dt: return datetime.min.replace(tzinfo=timezone.utc)
+        if isinstance(dt, str):
+            try: dt = datetime.fromisoformat(dt.replace('Z', '+00:00'))
+            except: pass
+        if getattr(dt, "tzinfo", None) is None: return dt.replace(tzinfo=timezone.utc)
+        return dt
+    try: all_history.sort(key=lambda x: normalize_tz(x["timestamp"]))
+    except: pass
+
+    # --- カウントと距離の計算 ---
+    orig_green = orig_yellow = orig_red = 0
+    rev_green = rev_yellow = rev_red = 0
+    
+    # ＝＝＝ 追加：演習（元の問題）の最新結果を保持する辞書 ＝＝＝
+    latest_orig_results = {}
+
+    for x in all_history:
+        res = str(x.get("result", ""))
+        is_orig = (x["type"] == "original")
+        
+        status = None
+        if "まったく" in res or "わから" in res or "不正解" in res:
+            status = "red"
+        elif "一部" in res or "見てわかった" in res:
+            status = "yellow"
+        elif "自力" in res or "正解" in res:
+            status = "green"
+
+        if status:
+            if is_orig:
+                # 演習の場合は辞書を上書きし、常にその問題の最新の成績を保持する
+                q_key = x.get("q_key", "")
+                if q_key:
+                    latest_orig_results[q_key] = status
+            else:
+                # 復習（AI生成の類題）の場合は、すべて加算する
+                if status == "red": rev_red += 1
+                elif status == "yellow": rev_yellow += 1
+                elif status == "green": rev_green += 1
+
+    # 辞書に残った「最新のステータス」をカウント
+    for status in latest_orig_results.values():
+        if status == "red": orig_red += 1
+        elif status == "yellow": orig_yellow += 1
+        elif status == "green": orig_green += 1
+
+    total_work = orig_green + orig_yellow + orig_red
+    total_review = rev_green + rev_yellow + rev_red
+    distance = (29 * orig_green) + (19 * orig_yellow) + (7 * orig_red) + (23 * rev_green) + (17 * rev_yellow) + (5 * rev_red)
+
+    # --- 🔄 周回ロジック ---
+    lap_length = 79037
+    lap_num = (distance // lap_length) + 1  # 現在の周回数
+    lap_distance = distance % lap_length    # 今の周の中での走行距離
+
+    # マイルストーン定義
+    milestones = [
+        (0, "🏫 京都"), (134, "🇯🇵 姫路城"), (359, "🇯🇵 厳島神社"), (645, "🇯🇵 軍艦島"),
+        (1243, "🇰🇷 昌徳宮"), (2428, "🇨🇳 黄山"), (3914, "🇻🇳 ハロン湾"), (4819, "🇰🇭 アンコール・ワット"),
+        (5189, "🇹🇭 アユタヤ"), (7924, "🇮🇳 タージ・マハル"), (9216, "🇦🇫 バーミヤン渓谷"),
+        (10873, "🇦🇪 アル・アインの遺跡群"), (13414, "🇹🇷 カッパドキア"), (14575, "🇬🇷 オリンピア"),
+        (15682, "🇮🇹 フィレンツェ"), (16543, "🇩🇪 ケルン大聖堂"), (17156, "🇬🇧 ストーンヘンジ"),
+        (17441, "🇫🇷 モン・サン＝ミシェル"), (18395, "🇪🇸 歴史的城壁都市クエンカ"), (19467, "🇲🇦 マラケシュ"),
+        (25460, "🇹🇿 ンゴロンゴロ自然保護区"), (29326, "🇿🇦 カーステンボッシュ植物園"), (36594, "🇦🇷 ペリト・モレノ氷河"),
+        (44592, "🇳🇿 トンガリロ国立公園"), (48143, "🇦🇺 グレート・バリア・リーフ"), (58438, "🇨🇱 イースター島"),
+        (62240, "🇵🇪 ナスカの地上絵"), (64559, "🇪🇨 ガラパゴス"), (69072, "🇺🇸 グランド・キャニオン"),
+        (71297, "🇨🇦 カナディアンロッキー"), (77746, "🇯🇵 知床"), (79037, "🏫 京都")
+    ]
+
+    # 現在地と目的地の特定
+    current_m = milestones[0][1]
+    current_d_rel = milestones[0][0]
+    next_m = milestones[1][1]
+    next_d_rel = milestones[1][0]
+
+    for i in range(len(milestones)):
+        if lap_distance >= milestones[i][0]:
+            current_m = milestones[i][1]
+            current_d_rel = milestones[i][0]
+            if i + 1 < len(milestones):
+                next_m = milestones[i+1][1]
+                next_d_rel = milestones[i+1][0]
+            else:
+                # 京都(ゴール)に到達した瞬間、表示を1周目のゴールから2周目のスタートに切り替える
+                current_m = milestones[0][1]
+                current_d_rel = milestones[0][0]
+                next_m = milestones[1][1]
+                next_d_rel = milestones[1][0]
+
+    # ＝＝＝ 追加：目的地までの進捗率（パーセンテージ）を計算 ＝＝＝
+    segment_length = next_d_rel - current_d_rel
+    if segment_length > 0:
+        progress_pct = ((lap_distance - current_d_rel) / segment_length) * 100
+    else:
+        progress_pct = 100
+    
+    # 0〜100の範囲に収める
+    progress_pct = max(0, min(100, progress_pct))
+
+    # 軌跡（煙）の生成（直近40件）
+    recent = all_history[-40:]
+    trail = "".join(["🟢" if "自力" in str(x.get("result","")) or "正解" in str(x.get("result","")) else 
+                     "🟡" if "一部" in str(x.get("result","")) or "見てわかった" in str(x.get("result","")) else 
+                     "🔴" if x.get("result") else "⚪" for x in recent])
+
+# UI生成
+    html = f"""<div style="background: linear-gradient(135deg, #f1f5f9 0%, #d0ddfb 100%); padding: 20px; border-radius: 12px; font-family: sans-serif; box-shadow: 0 4px 12px rgba(0,0,0,0.08); border: 1px solid #cbd5e1;" translate="no"><div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px; border-bottom: 1px solid rgba(0,0,0,0.1); padding-bottom: 12px;"><div style="font-size: 20px; font-weight: bold; letter-spacing: 1px; color: #1e293b; padding-top: 4px;">🌏 PRIME - WORLD HERITAGE - ({lap_num}周目)<br><br>問題を解いたり、まちがいを直したりすると、移動距離UP!</div><div style="display: flex; flex-direction: column; align-items: flex-end; gap: 6px;"><div style="font-size: 14px; background: #e2e8f0; padding: 4px 12px; border-radius: 20px; color: #334155; border: 1px solid #cbd5e1;">📚 演習: <b style="color: #0f172a;">{total_work}</b> 問 &nbsp;|&nbsp; 🔄 復習: <b style="color: #0f172a;">{total_review}</b> 問</div><div style="font-size: 13px; background: #e2e8f0; padding: 4px 12px; border-radius: 20px; color: #334155; border: 1px solid #cbd5e1;">✅: <b style="color: #0f172a;">{orig_green+rev_green}</b> &nbsp;|&nbsp; 🟨: <b style="color: #0f172a;">{orig_yellow+rev_yellow}</b> &nbsp;|&nbsp; 🟥: <b style="color: #0f172a;">{orig_red+rev_red}</b></div></div></div><div style="background: #ffffff; border-radius: 8px; padding: 16px; position: relative; overflow: hidden; border: 1px solid #e2e8f0; box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);"><div style="font-size: 15px; margin-bottom: 6px; display: flex; justify-content: space-between;"><span style="color: #475569;">移動距離: <span style="font-size: 22px; font-weight: bold; color: #0f172a;">{distance:,} km</span></span><span style="font-size: 13px; align-self: flex-end; color: #64748b;">(次の目的地 <span style="color: #334155; font-weight: bold;">{next_m}</span> まであと <span style="color: #0f172a; font-weight: bold;">{next_d_rel - lap_distance:,} km</span>)</span></div><div style="padding: 0 10px;"><div style="display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 14px;"><span style="color: #0f172a; font-weight: bold;">{current_m}</span><span style="color: #475569; font-weight: bold;">{next_m}</span></div><div style="position: relative; width: 100%; height: 36px;"><div style="position: absolute; left: 0; right: 0; top: 14px; height: 6px; background: #e2e8f0; border-radius: 3px;"></div><div style="position: absolute; left: 0; top: 14px; height: 6px; background: #3b82f6; border-radius: 3px; box-shadow: 0 0 8px rgba(59, 130, 246, 0.4); width: {progress_pct}%;"></div><div style="position: absolute; left: {progress_pct}%; top: -4px; font-size: 28px; transform: translateX(-50%); filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2)); z-index: 10;">✈️</div></div></div></div></div>"""
+    return gr.update(value=html, visible=True)
 
 # genaiのapiを走らせる
 def gpt_exection(model, query):
@@ -161,12 +322,20 @@ def find_grade(context):
     return "中学3年"
 
 # ✅ MongoDBから再読み込みして State と Dropdown を更新する関数
-def reload_quiz_map_from_mongo(lti):
-    
+def reload_quiz_map_from_mongo(lti, target_contents_id):
+    print("\n" + "="*50)
+    print(f" [DEBUG START] reload_quiz_map_from_mongo")
+    print(f"  - school_id: {lti.get('school_id')}")
+    print(f"  - context_id: {lti.get('context_id')}")
+    print(f"  - user_id: {lti.get('user_id')}")
+    print(f"  - target_contents_id: {target_contents_id}")
+    print("="*50)
+
+    # 1. MongoDB (exercise_col) から問題一覧を取得
     documents = list(
         exercise_col.find({
             "school_id": lti["school_id"],
-            "$and": [  # <-- 2つの条件を $and で囲む
+            "$and": [  
                 {
                     "$or": [
                         {"course_id": lti["context_id"]},
@@ -178,21 +347,148 @@ def reload_quiz_map_from_mongo(lti):
                         {"user": lti["user_id"]},
                         {"user": "prime"}
                     ]
+                },
+                {
+                    "$or": [
+                        {"contents_id": target_contents_id},
+                        {"previous_quiz.contents_id": target_contents_id}
+                    ]
                 }
             ],
             "show": True
         })
     )
 
+    print(f"[STEP 1] exercise_col find完了: {len(documents)}件ヒット")
+
     if not documents:
-        return {}, {}, gr.update(choices=[], value=None)
+        print(" [RESULT] ドキュメントが0件のため、空のデータを返します。")
+        return {}, gr.update(choices=[], value=None)
+
+    user_id = lti["user_id"]
+    school_id = lti["school_id"]
+
+    # --- 1. ClickHouseから元の問題の解答履歴を取得 ---
+    ch_status_map = {}
+    target_key = os.getenv("LTI_CONSUMER_KEY_1")
+    
+    print(f"[STEP 2] ClickHouse取得開始 (School ID: {school_id})")
+    if school_id == target_key:
+        try:
+            clickhouse_client = clickhouse_connect.get_client(
+                host=os.getenv("BOOKROLL_DATABASE_HOST_1"), 
+                username=os.getenv("BOOKROLL_DATABASE_USER_1"), 
+                password=os.getenv("BOOKROLL_DATABASE_PASS_1")
+            )
+            sql = """
+            SELECT 
+                page_no, 
+                argMax(CAST(results_response AS String), timestamp) AS latest_response
+            FROM saikyo_new.statements_target
+            WHERE actor_name_id = {user:String}
+              AND contents_id = {contents_id:String}
+              AND operation_name = 'ANSWER_QUIZ'
+            GROUP BY page_no
+            """
+            params = {
+                "user": str(user_id),
+                "contents_id": str(target_contents_id)
+            }
+            res = clickhouse_client.query(sql, params)
+            
+            for row in res.result_rows:
+                raw_page = row[0]
+                if isinstance(raw_page, bytes):
+                    page_no = raw_page.decode('utf-8', errors='ignore').replace('\x00', '').strip()
+                else:
+                    page_no = str(raw_page).replace('\x00', '').strip()
+                    
+                response_text = str(row[1]) if row[1] else ""
+                
+                # 判定ロジック
+                if "まったく分からなかった" in response_text or "解説を見てもわからなかった" in response_text or "不正解" in response_text:
+                    status = "🟥 "
+                elif "一部解説を見て解いた" in response_text or "解説を見てわかった" in response_text or "一部正解" in response_text:
+                    status = "🟨 "
+                elif "すべて自力で解けた" in response_text or "正解" in response_text:
+                    status = "✅ "
+                else:
+                    status = "⬜ "
+                
+                ch_status_map[page_no] = status
+            
+            print(f" - ClickHouse結果: {len(ch_status_map)}件のページ履歴を取得")
+            print(f" - ch_status_map: {ch_status_map}")
+
+        except Exception as e:
+            print(f" [ERROR] ClickHouse取得中に例外発生: {e}")
+    else:
+        print(f" - ClickHouseスキップ: school_id が一致しません (expected: {target_key})")
+
+    # --- 2. MongoDB(history_col)から解答履歴を取得 ---
+    print(f"[STEP 3] history_col 検索ターゲット作成")
+    mongo_status_map = {}
+    search_targets = []
+    for doc in documents:
+        c_id = doc.get("contents_id")
+        p = str(doc.get("page"))
+        n = str(doc.get("no"))
+        if c_id and p and n:
+            search_targets.append({
+                "contents_id": c_id,
+                "page": p,
+                "no": n
+            })
+            
+    search_targets.append({"contents_id": target_contents_id})
+    print(f" - 検索ターゲット数: {len(search_targets)}")
+
+    history_docs = list(history_col.find({
+        "school_id": school_id,
+        "user": user_id,
+        "$or": search_targets
+    }).sort("timestamp", 1)) 
+    
+    print(f" - history_col 取得件数: {len(history_docs)}件")
+
+    for h in history_docs:
+        h_contents_id = h.get("contents_id")
+        h_page = str(h.get("page"))
+        h_no = str(h.get("no"))
+        understanding = str(h.get("understanding", ""))
+        
+        emoji = ""
+        if "まったく分からなかった" in understanding or "解説を見てもわからなかった" in understanding or "不正解" in understanding:
+            emoji = "🟥 "
+        elif "一部解説を見て解いた" in understanding or "解説を見てわかった" in understanding:
+            emoji = "🟨 "
+        elif "すべて自力で解けた" in understanding or "正解" in understanding:
+            emoji = "✅ "
+        else:
+            emoji = "⬜ "
+
+        if h_contents_id == "ai_generated":
+            mongo_status_map[h_no] = emoji
+        else:
+            # 形式: contents_id + page + no
+            key = f"{h_contents_id}_{h_page}_{h_no}"
+            mongo_status_map[key] = emoji
+
+    print(f" - mongo_status_mapを構築完了 (件数: {len(mongo_status_map)})")
+    print(f" - mongo_status_map: {mongo_status_map}")
 
     def shorten_sessionid(sessionid, n=5):
-        sessionid = uuid.UUID(sessionid)
-        s = base64.urlsafe_b64encode(sessionid.bytes)
-        return s.decode('ascii').rstrip('=')[:n]
+        if not sessionid: return "unknown"
+        try:
+            sessionid_obj = uuid.UUID(sessionid)
+            s = base64.urlsafe_b64encode(sessionid_obj.bytes)
+            return s.decode('ascii').rstrip('=')[:n]
+        except Exception as e:
+            print(f" [DEBUG] session_idの短縮に失敗: {e}")
+            return "err"
     
-    # quiz_text_dict = quiz_title(問題ID:{short_session_id}) → (quiz_textsession, contentid, page, no)
+    # --- 3. クイステキスト辞書の構築 ---
+    print(f"[STEP 4] 選択肢タイトルの構築と絵文字判定開始")
     quiz_text_dict = {}
 
     for doc in documents:
@@ -205,13 +501,172 @@ def reload_quiz_map_from_mongo(lti):
         ans_page_e = doc.get("answer_page_end", "")
         title = doc.get("quiz_title")
         school = doc.get("school_id")
+        
+        # 履歴に基づいて絵文字を決定
+        prefix = "⬜ " 
+        match_source = "None"
+        
         if contents_id == "ai_generated":
-            sessionid = shorten_sessionid(doc.get("session_id"))
-            title = "類題" + f"{int(no):04d}: " + title + " (問題ID:{})".format(sessionid)
+            if no in mongo_status_map:
+                prefix = mongo_status_map[no]
+                match_source = f"Mongo(AI-No:{no})"
+        else:
+            mongo_key = f"{contents_id}_{page}_{no}"
+            if mongo_key in mongo_status_map:
+                prefix = mongo_status_map[mongo_key]
+                match_source = f"Mongo(Key:{mongo_key})"
+            elif page in ch_status_map:
+                prefix = ch_status_map[page]
+                match_source = f"ClickHouse(Page:{page})"
+
+        # 判定結果を1つずつ出力
+        print(f"  [Judge] Title: {title[:15]}... | Key: {contents_id}/{page}/{no} | Prefix: {prefix} | Source: {match_source}")
+
+        if contents_id == "ai_generated":
+            sid = doc.get("session_id")
+            session_short = shorten_sessionid(sid)
+            display_title = prefix + "類題" + f"{int(no):04d}: " + title + " (問題ID:{})".format(session_short)
+        else:
+            display_title = prefix + title
         
         if title and text and contents_id and page and no and school:
-            quiz_text_dict[title] = (text, contents_id, page, no, school, ans, ans_page_s, ans_page_e)
-    return quiz_text_dict, gr.update(choices=sorted(quiz_text_dict.keys()), value=None)
+            quiz_text_dict[display_title] = (text, contents_id, page, no, school, ans, ans_page_s, ans_page_e)
+
+    # --- 4. ソート ---
+    print(f"[STEP 5] ソート処理開始")
+    sorted_choices = sorted(
+        quiz_text_dict.keys(),
+        key=lambda k: k[2:] if k.startswith(('✅', '🟨', '🟥', '⬜')) else k
+    )
+
+    # ＝＝＝ 修正：演習（もとの問題）のみをカウントするように絞り込み ＝＝＝
+    # quiz_text_dict[c][1] は contents_id を指します。これが "ai_generated" でないものだけを抽出
+    orig_choices = [c for c in sorted_choices if quiz_text_dict[c][1] != "ai_generated"]
+
+    cnt_green = sum(1 for c in orig_choices if c.startswith('✅'))
+    cnt_yellow = sum(1 for c in orig_choices if c.startswith('🟨'))
+    cnt_red = sum(1 for c in orig_choices if c.startswith('🟥'))
+    cnt_white = sum(1 for c in orig_choices if c.startswith('⬜'))
+    
+    total_q = cnt_green + cnt_yellow + cnt_red + cnt_white
+
+    color_green = "#00c853"
+    color_yellow = "#ffb300"
+    color_red = "#f44336"
+    color_white = "#e0e0e0"
+
+    blocks_html = (
+        f'<span style="color: {color_green}; font-size: 20px; margin: 0 1px;">▮</span>' * cnt_green +
+        f'<span style="color: {color_yellow}; font-size: 20px; margin: 0 1px;">▮</span>' * cnt_yellow +
+        f'<span style="color: {color_red}; font-size: 20px; margin: 0 1px;">▮</span>' * cnt_red +
+        f'<span style="color: {color_white}; font-size: 20px; margin: 0 1px;">▮</span>' * cnt_white
+    )
+
+    summary_text = f"✅：{cnt_green} &nbsp;&nbsp; 🟨：{cnt_yellow} &nbsp;&nbsp; 🟥：{cnt_red} &nbsp;&nbsp; ⬜：{cnt_white}"
+
+    # ＝＝＝ 修正：進捗に応じた応援メッセージ（演習の進捗ベース） ＝＝＝
+    progress_msg = "【あなたのこの教材の取り組み】　💪 コツコツ進めていきましょう！"
+    if total_q > 0:
+        if cnt_white == total_q:
+            progress_msg = "【あなたのこの教材の取り組み】 🌱 さあ、学習を始めましょう！まずはBookRollで1問解いてみてください。"
+        elif cnt_white == 0:
+            if cnt_red == 0:
+                progress_msg = "【あなたのこの教材の取り組み】 👑 素晴らしい！この教材の問題をすべてマスターしましたね！"
+            else:
+                progress_msg = "【あなたのこの教材の取り組み】 🔥 すべての問題に挑戦完了！🟥や🟨の問題を復習して完璧を目指しましょう！"
+
+    if len(sorted_choices) > 0:
+        summary_html = f"""
+        <div style="background-color: #fcfcfc; padding: 16px; border-radius: 8px; border: 1px solid #e0e0e0; margin-top: 4px; margin-bottom: 8px;" translate="no">
+            <div style="text-align: center; font-weight: bold; font-size: 16px; color: #1976d2; margin-bottom: 14px; letter-spacing: 0.5px;">
+                {progress_msg}
+            </div>
+            <div style="display: flex; align-items: center; justify-content: center; flex-wrap: wrap; line-height: 1; margin-bottom: 12px;">
+                {blocks_html}
+            </div>
+            <div style="text-align: center; font-weight: bold; font-size: 15px; color: #424242;">
+                {summary_text}
+            </div>
+        </div>
+        """
+        summary_update = gr.update(value=summary_html, visible=True)
+    else:
+        summary_update = gr.update(value="", visible=False)
+    # ▲▲▲ 追加ここまで ▲▲▲
+    summary_update = ""
+
+    print(f" - ソート済み選択肢（先頭5件）: {sorted_choices[:5]}")
+    print(f" [DEBUG END] reload_quiz_map_from_mongo 正常終了")
+    print("="*50 + "\n")
+
+    return quiz_text_dict, gr.update(choices=sorted_choices, value=None, visible=True), summary_update
+
+def get_contents_dict_from_clickhouse(lti):
+    # 1. MongoDBから該当の lti["context_id"] が course_id に含まれるものを検索
+    query = {"course_id": lti["context_id"]}
+    projection = {"contents_id": 1, "_id": 0}
+    
+    # 重複を省くために set を使用して contents_id を収集
+    contents_ids = set()
+    for doc in exercise_col.find(query, projection):
+        c_id = doc.get("contents_id")
+        if c_id:
+            contents_ids.add(c_id)
+            
+    contents_dict = {}
+    
+    # 該当のIDが1つもなければ空の辞書を返す
+    if not contents_ids:
+        return contents_dict
+
+    # 2. ClickHouseに接続
+    clickhouse_client = clickhouse_connect.get_client(
+        host=os.getenv("BOOKROLL_DATABASE_HOST_1"), 
+        username=os.getenv("BOOKROLL_DATABASE_USER_1"), 
+        password=os.getenv("BOOKROLL_DATABASE_PASS_1")
+    )
+
+    # 3. それぞれの contents_id に対してClickHouseから contents_name を取得
+    for c_id in contents_ids:
+        # LIMIT 1 で一番上の1行だけを取得するように最適化
+        sql = """
+        SELECT contents_name 
+        FROM saikyo_new.statements_mv 
+        WHERE operation_name = 'REGISTER_CONTENTS' 
+        AND contents_id = {contents_id:String}
+        ORDER BY timestamp DESC
+        LIMIT 1
+        """
+        params = {"contents_id": str(c_id)}
+        result = clickhouse_client.query(sql, params)
+        
+        # 取得結果が存在するかチェック
+        if result.result_rows and len(result.result_rows) > 0:
+            c_name = result.result_rows[0][0]
+            
+            # --- 追加：特定のフォーマットを検知して並び替える ---
+            # 例: "第1章(問題) 正の数と負の数[STEP中1]" -> "[STEP中1] 第1章 正の数と負の数"
+            match = re.match(r"^(.*?)\(問題\)\s*(.*?)(\[.*?\])$", c_name)
+            if match:
+                chapter = match.group(1).strip() # 例: "第1章"
+                title = match.group(2).strip()   # 例: "正の数と負の数"
+                tag = match.group(3).strip()     # 例: "[STEP中1]"
+                c_name = f"{tag} {chapter} {title}"
+            # ----------------------------------------------------
+            
+        else:
+            c_name = "PRIMEが生成した問題"  # 万が一レコードが存在しなかった場合のフォールバック
+            
+        # キーの作成: contents_name(ID: 上4桁)
+        key = f"{c_name}(ID: {str(c_id)[:4]})"
+        
+        # 値として contents_id と contents_name を持つ辞書（またはタプル）を登録
+        contents_dict[key] = {
+            "contents_id": c_id,
+            "contents_name": c_name
+        }
+
+    return contents_dict, gr.update(choices=sorted(contents_dict.keys()), value=None)
 
 phrases = [
     "STEP 1年7章をどんどんやるでありMath!",
@@ -221,127 +676,245 @@ phrases = [
 # userのこれまでのresultを入手する
 def get_result_from_db(school, contents_id, page, no, user, lti, answer_contents_id, answer_page_start, answer_page_end):
     
-    # 該当の問題に取り組んだ数
     num_workingquiz = 0
-
-    # BookRollのデータを取得
-    if lti["school_id"] == os.getenv("LTI_CONSUMER_KEY_1"):
-        clickhouse_client = clickhouse_connect.get_client(
-            host=os.getenv("BOOKROLL_DATABASE_HOST_1"), 
-            username=os.getenv("BOOKROLL_DATABASE_USER_1"), 
-            password=os.getenv("BOOKROLL_DATABASE_PASS_1")
-        )
-
-        sql = """
-        SELECT actor_name_id, contents_id, page_no, description, timestamp
-        FROM saikyo_new.statements_target
-        WHERE operation_name='ANSWER_QUIZ'
-        AND actor_name_id={user:String}
-        AND contents_id={contents_id:String}
-        AND page_no={page:String}
-        """
-        params = {
-        "user": str(user),  # userの値をセット
-        "contents_id": str(contents_id),  # contents_idも同様に
-        "page": str(page)
-        }
-        brquizdata = clickhouse_client.query(sql, params)
-        result = brquizdata.result_rows
-        num_workingquiz += len(brquizdata.result_rows)
-    
-        text_highlighted_yellow = ""
-        text_highlighted_red = ""
-
-        if answer_contents_id != "":
-            #答えのページに引いたマーカー
-            sql2 = """
-            SELECT
-                last_text AS marker_text,
-                last_color AS marker_color
-            FROM (
-                SELECT
-                    marker_position,
-                    argMax(CAST(operation_name AS String), timestamp) AS last_op,
-                    argMax(CAST(marker_text AS String), timestamp) AS last_text,
-                    argMax(CAST(marker_color AS String), timestamp) AS last_color,
-                    argMax(CAST(page_no AS Int32), timestamp) AS last_page
-                FROM
-                    saikyo_new.statements_target
-                WHERE
-                    actor_name_id = {user:String}
-                    AND contents_id = {answer_contents_id:String}
-                GROUP BY
-                    marker_position
-            )
-            WHERE
-                last_op = 'ADD_MARKER'
-                AND last_page BETWEEN {answer_page_start:Integer} AND {answer_page_end:Integer}                        
-            """
-            params2 = {
-            "user": str(user),  # userの値をセット
-            "answer_contents_id": str(answer_contents_id),  # contents_idも同様に
-            "answer_page_start": int(answer_page_start),
-            "answer_page_end": int(answer_page_end)
-            }
-            brmarkerdata = clickhouse_client.query(sql2, params2)
-            result2 = brmarkerdata.result_rows
-            # 1. カラムのインデックス（SELECT句の順番通り）
-            # 0: marker_text, 1: marker_color
-            COL_TEXT = 0
-            COL_COLOR = 1
-
-            # 2. 色ごとにテキストをリストにまとめる辞書
-            marker_dict = {}
-
-            # 3. データを走査して色ごとに分類
-            for row in result2:
-                text = row[COL_TEXT]
-                color = row[COL_COLOR]
-
-                # None（NULL）や空文字を除外
-                if not text:
-                    continue
-
-                if color not in marker_dict:
-                    marker_dict[color] = []
-
-                marker_dict[color].append(text)
-
-            # 4. 色ごとにテキストを結合（例：スペース区切り）
-            # 必要に応じて、ここで最終的な変数に格納します
-            combined_results = {}
-            for color, text_list in marker_dict.items():
-                combined_results[color] = " ".join(text_list)
-            if "rgb(255,255,0)" in combined_results:
-                text_highlighted_yellow = combined_results["rgb(255,255,0)"]
-            if "rgb(255,0,0)" in combined_results:
-                text_highlighted_red = combined_results["rgb(255,0,0)"]
-            
-    
-    # MongoDBクエリ
-    query = {
-        "school_id": lti["school_id"],
-        "user": user,
-        "contents_id": contents_id,
-        "page": page,
-        "no": no
-    }
-    matching_docs = list(history_col.find(query))
-    num_workingquiz += len(matching_docs)
-
-    # 該当の問題を復習した数
     num_reviewquiz = 0
-    query = {
-        "user": user,
-        "previous_quiz.school_id": lti["school_id"],
-        "previous_quiz.contents_id": contents_id,
-        "previous_quiz.page": page,
-        "previous_quiz.no": no
-    }
-    matching_docs = list(history_col.find(query))
-    num_reviewquiz += len(matching_docs)
+    text_highlighted_yellow = ""
+    text_highlighted_red = ""
+    
+    user_history_raw = []
+    class_latest_responses = {}
 
-    return num_workingquiz, num_reviewquiz, text_highlighted_yellow, text_highlighted_red
+    if contents_id == "ai_generated":
+        # --- 類題が選ばれた場合 ---
+        class_stats = {}
+        try:
+            query_review = {
+                "user": user,
+                "contents_id": contents_id,
+                "page": page,
+                "no": no
+            }
+            review_docs = list(history_col.find(query_review))
+            num_workingquiz = len(review_docs)
+            
+            for doc in review_docs:
+                ts = doc.get("timestamp")
+                if ts and isinstance(ts, str):
+                    try:
+                        ts = datetime.fromisoformat(ts.replace('Z', '+00:00'))
+                    except:
+                        pass
+                resp = doc.get("understanding", "")
+                user_history_raw.append({"type": "review", "result": resp, "timestamp": ts})
+        except Exception as e:
+            print(f"MongoDB query failed for ai_generated: {e}")
+            
+    else:
+        # --- もとの問題が選ばれた場合 ---
+        class_stats = {"green": [], "yellow": [], "red": []}
+
+        if lti["school_id"] == os.getenv("LTI_CONSUMER_KEY_1"):
+            try:
+                clickhouse_client = clickhouse_connect.get_client(
+                    host=os.getenv("BOOKROLL_DATABASE_HOST_1"), 
+                    username=os.getenv("BOOKROLL_DATABASE_USER_1"), 
+                    password=os.getenv("BOOKROLL_DATABASE_PASS_1")
+                )
+
+                # B. 個人の元の問題の解答履歴
+                sql_user_history = """
+                SELECT CAST(results_response AS String), timestamp
+                FROM saikyo_new.statements_target
+                WHERE operation_name='ANSWER_QUIZ'
+                  AND actor_name_id={user:String}
+                  AND contents_id={contents_id:String}
+                  AND page_no={page:String}
+                ORDER BY timestamp ASC
+                """
+                params_user = {
+                    "user": str(user), 
+                    "contents_id": str(contents_id), 
+                    "page": str(page)
+                }
+                res_user = clickhouse_client.query(sql_user_history, params_user)
+                
+                for row in res_user.result_rows:
+                    resp = str(row[0]) if row[0] else ""
+                    ts = row[1]
+                    user_history_raw.append({"type": "original", "result": resp, "timestamp": ts})
+                    num_workingquiz += 1
+
+                # C. クラス全体のもとの問題の正答率
+                sql_class_stats = """
+                SELECT actor_name_id, argMax(CAST(results_response AS String), timestamp)
+                FROM saikyo_new.statements_target
+                WHERE operation_name='ANSWER_QUIZ'
+                  AND contents_id={contents_id:String}
+                  AND page_no={page:String}
+                  AND context_id={course_id:String}  -- ✨追加: クラス(コース)で絞り込み
+                GROUP BY actor_name_id
+                """
+                params_class = {
+                    "contents_id": str(contents_id), 
+                    "page": str(page),
+                    "course_id": str(lti["context_id"]) # ✨追加
+                }
+                res_class = clickhouse_client.query(sql_class_stats, params_class)
+                
+                for row in res_class.result_rows:
+                    u_id = str(row[0])
+                    resp = str(row[1]) if row[1] else ""
+                    class_latest_responses[u_id] = resp
+
+                # マーカー取得
+                if answer_contents_id != "" and str(answer_page_start).isdigit() and str(answer_page_end).isdigit():
+                    sql2 = """
+                    SELECT
+                        last_text AS marker_text,
+                        last_color AS marker_color
+                    FROM (
+                        SELECT
+                            marker_position,
+                            argMax(CAST(operation_name AS String), timestamp) AS last_op,
+                            argMax(CAST(marker_text AS String), timestamp) AS last_text,
+                            argMax(CAST(marker_color AS String), timestamp) AS last_color,
+                            argMax(CAST(page_no AS Int32), timestamp) AS last_page
+                        FROM
+                            saikyo_new.statements_target
+                        WHERE
+                            actor_name_id = {user:String}
+                            AND contents_id = {answer_contents_id:String}
+                        GROUP BY
+                            marker_position
+                    )
+                    WHERE
+                        last_op = 'ADD_MARKER'
+                        AND last_page BETWEEN {answer_page_start:Integer} AND {answer_page_end:Integer}                        
+                    """
+                    params2 = {
+                        "user": str(user), 
+                        "answer_contents_id": str(answer_contents_id), 
+                        "answer_page_start": int(answer_page_start),
+                        "answer_page_end": int(answer_page_end)
+                    }
+                    brmarkerdata = clickhouse_client.query(sql2, params2)
+                    for row in brmarkerdata.result_rows:
+                        text, color = row[0], row[1]
+                        if text:
+                            if color == "rgb(255,255,0)":
+                                text_highlighted_yellow += text + " "
+                            elif color == "rgb(255,0,0)":
+                                text_highlighted_red += text + " "
+
+            except Exception as e:
+                print(f"ClickHouse query failed: {e}")
+
+        # 追加: PRIME上でのそのまま解く履歴
+        query_prime_orig = {
+            "user": user,
+            "school_id": lti["school_id"],
+            "contents_id": contents_id,
+            "page": page
+        }
+        try:
+            prime_orig_docs = list(history_col.find(query_prime_orig))
+            num_workingquiz += len(prime_orig_docs)
+            for doc in prime_orig_docs:
+                ts = doc.get("timestamp")
+                if ts and isinstance(ts, str):
+                    try: ts = datetime.fromisoformat(ts.replace('Z', '+00:00'))
+                    except: pass
+                resp = doc.get("understanding", "")
+                user_history_raw.append({"type": "original", "result": resp, "timestamp": ts})
+        except Exception as e:
+            pass
+
+        # C-1. クラスのPRIME履歴マージ
+        pipeline = [
+            {
+                "$match": {
+                    "school_id": lti["school_id"], 
+                    "course_id": lti["context_id"],
+                    "contents_id": contents_id, 
+                    "page": page, 
+                    "no": no
+                }
+            },
+            {"$sort": {"timestamp": 1}},
+            {"$group": {"_id": "$user", "latest_understanding": {"$last": "$understanding"}}}
+        ]
+        try:
+            for doc in list(history_col.aggregate(pipeline)):
+                if doc.get("latest_understanding"):
+                    class_latest_responses[doc["_id"]] = doc["latest_understanding"]
+        except Exception as e:
+            pass
+
+        # === NEW: クラス全員の復習（類題）回数を集計 ===
+        class_review_counts = {}
+        pipeline_reviews = [
+            {
+                "$match": {
+                    "school_id": lti["school_id"],
+                    "course_id": lti["context_id"],
+                    "previous_quiz.contents_id": contents_id,
+                    "previous_quiz.page": page,
+                    "previous_quiz.no": no
+                }
+            },
+            {
+                "$group": {
+                    "_id": "$user",
+                    "review_count": {"$sum": 1}
+                }
+            }
+        ]
+        try:
+            for doc in list(history_col.aggregate(pipeline_reviews)):
+                class_review_counts[doc["_id"]] = doc["review_count"]
+        except Exception as e:
+            pass
+
+        # C-2. クラス集計（人数ではなく、ユーザーごとのデータを配列に格納）
+        for u_id, resp in class_latest_responses.items():
+            r_count = class_review_counts.get(u_id, 0)
+            if "まったく分からなかった" in resp or "解説を見てもわからなかった" in resp or "不正解" in resp:
+                class_stats["red"].append({"user": u_id, "review_count": r_count})
+            elif "一部解説を見て解いた" in resp or "解説を見てわかった" in resp or "一部正解" in resp:
+                class_stats["yellow"].append({"user": u_id, "review_count": r_count})
+            elif "すべて自力で解けた" in resp or "正解" in resp:
+                class_stats["green"].append({"user": u_id, "review_count": r_count})
+
+        # D. 個人の復習問題（類題）の解答履歴
+        query_review = {"user": user, "previous_quiz.school_id": lti["school_id"], "previous_quiz.contents_id": contents_id, "previous_quiz.page": page, "previous_quiz.no": no}
+        try:
+            review_docs = list(history_col.find(query_review))
+            num_reviewquiz += len(review_docs)
+            for doc in review_docs:
+                ts = doc.get("timestamp")
+                if ts and isinstance(ts, str):
+                    try: ts = datetime.fromisoformat(ts.replace('Z', '+00:00'))
+                    except: pass
+                resp = doc.get("understanding", "")
+                user_history_raw.append({"type": "review", "result": resp, "timestamp": ts})
+        except Exception as e:
+            pass
+
+    # E. 履歴をソート
+    def normalize_tz(dt):
+        if not dt: return datetime.min.replace(tzinfo=timezone.utc)
+        if getattr(dt, "tzinfo", None) is None: return dt.replace(tzinfo=timezone.utc)
+        return dt
+
+    try:
+        user_history_raw.sort(key=lambda x: normalize_tz(x["timestamp"]))
+    except:
+        pass
+
+    user_history = [{"type": x["type"], "result": x["result"]} for x in user_history_raw]
+    user_latest_result = user_history[-1]["result"] if len(user_history) > 0 else ""
+
+    return num_workingquiz, num_reviewquiz, text_highlighted_yellow, text_highlighted_red, user_history, class_stats, user_latest_result
 
 def classify_binary(binary_string, knowledge):
     if all(c == '1' for c in binary_string):  # すべて1の場合
@@ -566,7 +1139,7 @@ with gr.Blocks() as demo:
         <div style="background-color: #2196f3; padding: 24px; border-radius: 8px; text-align: center; color: black;">
         <h1> $$\\Huge \\mathfrak{PRIME} - \\textsf{AI数学復習エンジン}$$ </h1>
         </div>
-        """
+        """, visible=False
     )
     
     report_result = gr.Markdown(
@@ -574,30 +1147,44 @@ with gr.Blocks() as demo:
         visible=False
     )
     
-    with gr.Row(elem_classes="notranslate"):
+    # 新しい宇宙の旅UIを配置
+    journey_display = gr.Markdown(visible=False)
+
+    # 古いUIはコードの連鎖を壊さないために、Rowごと非表示(visible=False)にして残す
+    with gr.Row(elem_classes="notranslate", visible=False):
         with gr.Column(scale=3): 
             title = gr.Markdown(
                 "## " + phrases[0],
-                visible=True
+                visible=False
             )
-
         with gr.Column(scale=2): 
             vanish_btn = gr.Button(
                 value="メッセージを消す",
-                visible=True,
-                interactive=True,
+                visible=False,
+                interactive=False,
                 variant="secondary"
             )
     title_state = gr.State()
 
-    quiz_dropdown = gr.Dropdown(
+    contents_dropdown = gr.Dropdown(
         choices=[],
-        label="まずは、復習する問題を選んでください",
+        label="復習する教材",
         value=None
     )
-    dropdown_state = gr.State()
+    contents_dropdown_state = gr.State()
+    contents_state = gr.State()
+
+    contents_summary = gr.Markdown(visible=False)
+    
+    quiz_dropdown = gr.Dropdown(
+        choices=[],
+        label="復習する問題",
+        value=None
+    )
+    quiz_dropdown_state = gr.State()
 
     quiz_text_display = gr.Markdown(visible=False)
+    figure_warning_display = gr.Markdown(visible=False)
 
     with gr.Row(elem_classes="notranslate"):  
         with gr.Column(scale=1):    
@@ -607,6 +1194,17 @@ with gr.Blocks() as demo:
             )
 
         with gr.Column(scale=1):
+            
+            marker_btn_state = gr.State(False)
+            rubric_btn_state = gr.State(False)
+
+            with gr.Row():
+                btn_from_marker = gr.Button("マーカーからつくる", interactive=False, variant="secondary")
+                btn_from_rubric = gr.Button("解答のポイントからつくる", interactive=False, variant="secondary")
+            
+            with gr.Column(scale=1):
+                rev_quiz_btn = gr.Button("そのまま解く", visible=False, interactive=False, variant="primary")
+            
             checkboxes = gr.CheckboxGroup(
                 choices=[], 
                 label="できたポイントをチェックしよう", 
@@ -625,9 +1223,10 @@ with gr.Blocks() as demo:
             choices=["o4-mini(速さ重視、普段使いにおすすめ)", "gemini-2.5-flash(そこそこの速さ、解答が細かい)", "gpt-5(正確さ重視・遅い。より深い学習向け)"],
             label="復習問題を作成するモデルを選んでください",
             interactive=True,
-            value="o4-mini(速さ重視、普段使いにおすすめ)"
+            value="o4-mini(速さ重視、普段使いにおすすめ)",
+            visible=False
             )
-    dropdown_state = gr.State()
+    quiz_dropdown_state = gr.State()
     status_msg_state = gr.State()
     checkbox_state = gr.State()
     checkbox_all_items_state = gr.State()
@@ -644,9 +1243,6 @@ with gr.Blocks() as demo:
     with gr.Row(elem_classes="notranslate"):  
         with gr.Column(scale=1):    
             gen_quiz_btn = gr.Button("類題をつくる（まだ押せません）", visible=True, interactive=False, variant="stop")
-
-        with gr.Column(scale=1):
-            rev_quiz_btn = gr.Button("そのまま解く（まだ押せません）", visible=True, interactive=False, variant="stop")
 
     with gr.Row():
         with gr.Column(scale=1):
@@ -765,96 +1361,165 @@ with gr.Blocks() as demo:
         outputs=None
     )
 
-    def generate_status_msg(count_work, count_review, num_rubrics, school, contents_id, ans_contents_id):
-        color_map = {
-            "まったくわからなかった": "red",
-            "解説を見てもわからなかった": "red",
-            "すべて自力で解けた": "green",
-            "一部解説を見て解いた": "orange",
-            "解説を見てわかった": "orange",
-            "正解": "green",
-            "不正解": "red"
-        }
-        description = f"""問題の復習は、BookRollのクイズに回答するとできるようになります。"""
-        marker_description = f"""この問題の復習は、BookRollの解答に引いたマーカーに対応しています。解答を読んで、<br><span style="font-size: 22px; font-weight: bold; color: #ff4500;">応用力を試したいところ</span>や<span style="font-size: 22px; font-weight: bold; color: #ffd700;">わからないところ</span><br>にマーカーを引いてみましょう！""" if ans_contents_id != "" else "この問題の復習は、BookRollの解答に引いたマーカーに対応していません。"
-        rubric_description = f"""この問題には<span style="font-size: 22px; font-weight: bold; color: #66cdaa;">解答のポイント</span>がついています。<br>右側の解答のポイントにチェックを入れて、今のあなたに適した問題を作りましょう！""" if num_rubrics > 0 else "この問題には解答のポイントがついていません。"
+    # ⬇️ 引数の一番最後に user_id を追加！
+    def generate_status_msg(school, contents_id, count_work, count_review, ans_contents_id, ishighlighted, user_history, class_stats, user_latest_result, user_id):
+        color_green = "#00c853"
+        color_yellow = "#ffb300"
+        color_red = "#f44336"
+        html_parts = []
+    
+        if school == "C126210001533" and contents_id != "ai_generated" and count_work == 0:
+            html_parts.append(f"""<div style="background-color: #ffebee; color: #c62828; padding: 12px; border-radius: 8px; font-weight: bold; margin-bottom: 10px; text-align: center; border: 2px solid #ef5350;" translate="no">⚠️ BookRollで問題を解かないと、下のボタンが有効になりません。<br>BookRollで解いてから、システムに入り直してください。</div>""")
+    
+        if ans_contents_id != "" and not ishighlighted:
+            html_parts.append(f"""<div style="background-color: #fff8e1; color: #f57f17; padding: 12px; border-radius: 8px; font-weight: bold; margin-bottom: 10px; text-align: center; border: 2px solid #fbc02d;" translate="no">🖍️ マーカーから類題を作るには、BookRollの解答ページにマーカー（<span style="color:red;">赤色</span>や<span style="color:#f57f17;">黄色</span>）を引いてください。</div>""")
+    
+        count_html = f"""<div style="display: flex; justify-content: center; gap: 40px; margin-bottom: 4px; border-bottom: 1px solid #e0e0e0; padding-bottom: 12px;"><div style="text-align: center;"><div style="font-size: 14px; color: #616161; font-weight: bold;">演習回数</div><div style="font-size: 26px; font-weight: bold; color: #2196f3;">{count_work}<span style="font-size: 16px; margin-left: 2px; color: #424242;">回</span></div></div><div style="text-align: center;"><div style="font-size: 14px; color: #616161; font-weight: bold;">復習回数</div><div style="font-size: 26px; font-weight: bold; color: #4caf50;">{count_review}<span style="font-size: 16px; margin-left: 2px; color: #424242;">問</span></div></div></div>"""
+    
+        history_html = ""
+        if isinstance(user_history, list) and len(user_history) > 0:
+            recent_history = user_history[-10:]
+            history_html += '<span style="font-size: 11px; color: #9e9e9e; margin-right: 8px; font-weight: normal; align-self: center;">◀ 古い</span>'
+            
+            if len(user_history) > 10:
+                history_html += '<span style="color: #bdbdbd; font-weight: bold; font-size: 20px; margin-right: 8px; align-self: center;">...</span>'
 
-        # 西京の場合
-        if school=="C126210001533":
-            # BRの場合
-            if contents_id != "ai_generated":
-                # 1回以上解いているかどうか
-                if count_work==0: #BookRollで問題を解かせる
-                    html = f"""
-                    <div style="text-align: center;" translate="no">
-                        {marker_description} <br><br> {rubric_description} <br><br>
-                        <span style="font-weight: bold; color: #2196f3;"> <h3 style="display: inline-block; background-color: #ff9800; color: white; padding: 4px 12px; border-radius: 20px; font-size: 1em; font-weight: bold; margin-bottom: 10px;">BookRollで解かないと、下のボタンが有効になりません。<br>BookRollで解いてから、システムに入り直してください。</h3></span><br>
-                    </div>
-                    """
+            total_items = len(recent_history)
+            for i, item in enumerate(recent_history):
+                if not isinstance(item, dict): continue
+                char = "問" if item.get("type") == "original" else "復"
+                res = str(item.get("result", ""))
+                
+                if "まったく分からなかった" in res or "解説を見てもわからなかった" in res or "不正解" in res:
+                    color = color_red
+                elif "一部解説を見て解いた" in res or "解説を見てわかった" in res or "一部正解" in res:
+                    color = color_yellow
                 else:
-                    html = f"""
-                    <div style="text-align: center;" translate="no">
-                        {marker_description} <br><br> {rubric_description} <br><br>
-                        <span style="font-size: 28px; font-weight: bold;">
-                        あなたはこの問題を <span style="color: #00c853;">{count_work}回</span> 解き、<br>
-                        <span style="color: #00c853;">{count_review}問 </span> 類題を作って解きました。 <br>
-                        </span>
-                    </div>
-                    """
-            # 生成の場合
-            else:
-                if count_work==0:
-                    html = f"""
-                    <div style="text-align: center;" translate="no">
-                        <span style="font-size: 22px; font-weight: bold;">
-                        あなたが解いたデータが見つかりませんでした。<br>
-                        </span>
-                        <span style="font-weight: bold; color: #2196f3;"> <h2>次は、きちんと振り返りを行ってください。</h2></span><br>
-                        <span style="font-weight: bold; color: #2196f3;"> <h3>問題を復習しましょう！</h3></span><br>
-                    </div>
-                    """
+                    color = color_green
+                
+                # 【UI改善1】左（古い）ほど薄く(0.3)、右（新しい）ほど濃く(1.0)する計算
+                opacity = 0.3 + (0.7 * (i / max(1, total_items - 1))) if total_items > 1 else 1.0
+                
+                # 【UI改善2】最新（一番右）のアイテムだけ少し大きくして影をつけ「これが今」を強調
+                if i == total_items - 1:
+                    style = f'color: {color}; font-weight: 900; font-size: 26px; margin-right: 4px; text-shadow: 0px 0px 4px {color}80; transform: scale(1.1); display: inline-block; align-self: center;'
                 else:
-                    html = f"""
-                    <div style="text-align: center;" translate="no">
-                        <span style="font-size: 28px; font-weight: bold;">
-                        あなたはこの問題を <span style="color: #00c853;">{count_work}回</span> 解きました。 <br>
-                        </span>
-                        <span style="font-weight: bold; color: #2196f3;"> <h3>問題を復習しましょう！</h3></span><br>
-                    </div>
-                    """
-        # 西京でない場合
+                    style = f'color: {color}; font-weight: bold; font-size: 24px; margin-right: 6px; opacity: {opacity:.2f}; align-self: center;'
+                    
+                history_html += f'<span style="{style}">{char}</span>'
+            
+            # 右側に少し目立つ色で「最新 ▶」を添える
+            history_html += '<span style="font-size: 11px; color: #2196f3; margin-left: 6px; font-weight: bold; align-self: center;">最新 ▶</span>'
+            
         else:
-            if num_rubrics > 0:
-                html = f"""
-                <div style="text-align: center;" translate="no">
-                    <span style="font-size: 28px; font-weight: bold;">
-                    あなたはこの問題を <span style="color: #00c853;">{count_work}回</span> 解きました。 <br>
-                    </span>
-                    <span style="font-weight: bold; color: #2196f3;"> <h3>問題を復習しましょう！</h3></span><br>
-                </div>
-                """
+            history_html = '<span style="color: #9e9e9e; font-size: 16px;">まだ解答履歴がありません</span>'
+    
+        total_students = sum(len(lst) for lst in class_stats.values()) if isinstance(class_stats, dict) and "green" in class_stats else 0
+        blocks_html = ""
+        
+        if total_students > 0:
+            # ＝＝＝ 修正：パーセンテージの計算 ＝＝＝
+            green_count = len(class_stats.get("green", []))
+            yellow_count = len(class_stats.get("yellow", []))
+            
+            # 合計が必ず100%になるように調整（赤は100から引く）
+            green_pct = round((green_count / total_students) * 100)
+            yellow_pct = round((yellow_count / total_students) * 100)
+            red_pct = max(0, 100 - green_pct - yellow_pct)
+            
+            blocks_html = f'''
+            <div style="font-size: 20px; font-weight: bold; letter-spacing: 1px;">
+                <span style="color: {color_green}; margin-right: 16px;">🟩：{green_pct}%</span>
+                <span style="color: {color_yellow}; margin-right: 16px;">🟨：{yellow_pct}%</span>
+                <span style="color: {color_red};">🟥：{red_pct}%</span>
+            </div>
+            '''
+        else:
+            if contents_id == "ai_generated":
+                blocks_html = '<span style="color: #9e9e9e; font-size: 16px; letter-spacing: normal;">類題のため、クラスの正答率データはありません</span>'
             else:
-                html = f"""
-                <div style="text-align: center;" translate="no">
-                    <span style="font-size: 22px; font-weight: bold;">
-                    あなたが解いたデータが見つかりませんでした。<br>
-                    </span>
-                    <span style="font-weight: bold; color: #2196f3;"> <h3>問題を復習しましょう！</h3></span><br>
-                </div>
-                """
-        return html
+                blocks_html = '<span style="color: #9e9e9e; font-size: 16px; letter-spacing: normal;">クラスのデータがありません</span>'
+    
+        # ＝＝＝ 凡例から「大きい▮: 〜〜」の説明を削除 ＝＝＝
+        html_parts.append(
+            f"""<div style="background-color: #f5f5f5; padding: 16px; border-radius: 8px; border: 1px solid #e0e0e0; display: flex; flex-direction: column; gap: 12px;" translate="no">{count_html}<div style="display: flex; align-items: center; justify-content: center;"><span style="font-size: 16px; font-weight: bold; margin-right: 12px; color: #424242;">あなたの解答履歴:</span><div style="display: flex; align-items: center; line-height: 1;">{history_html}</div></div><div style="display: flex; align-items: center; justify-content: center;"><span style="font-size: 16px; font-weight: bold; margin-right: 12px; color: #424242;">クラス全体の正答率:</span><div style="display: flex; align-items: center; line-height: 1;">{blocks_html}</div></div></div><div style="margin-top: 8px; font-size: 13px; color: #757575; text-align: center; line-height: 1.6;" translate="no"><span style="font-weight: bold; color: #616161;">【見方】</span><br><span style="color: #00c853; font-weight: bold;">緑</span>: 全部正解/自力で正解 &nbsp;&nbsp;|&nbsp;&nbsp; <span style="color: #ffb300; font-weight: bold;">黄</span>: 一部正解/解説を見て正解 &nbsp;&nbsp;|&nbsp;&nbsp; <span style="color: #f44336; font-weight: bold;">赤</span>: 不正解<br><span style="font-weight: bold;">問</span>: もとの問題 &nbsp;&nbsp;|&nbsp;&nbsp; <span style="font-weight: bold;">復</span>: PRIMEで作った復習問題</div>"""
+        )
+    
+        return "\n".join(html_parts)
+    
+    def update_when_contents_dropdown(contents_name, contents_dropdown_list, lti):
+        if contents_name:
+            contents_id = contents_dropdown_list[contents_name]["contents_id"] 
+            
+            quiz_map, quiz_dropdown_update, summary_update = reload_quiz_map_from_mongo(lti, contents_id)
+            
+            return quiz_map, quiz_dropdown_update, summary_update
+        
+        return {}, gr.update(choices=[], value=None), gr.update(visible=False, value="")
+    
+    contents_dropdown.change(
+        fn=update_when_contents_dropdown,
+        inputs=[contents_dropdown, contents_dropdown_state, lti_state],
+        outputs=[quiz_map_state, quiz_dropdown, contents_summary]
+    ).then(
+        fn=lambda: (
+        "SelectedContents"
+        ),
+        inputs=None,
+        outputs=[operationname_state]
+    ).then(
+        fn=handle_logs,
+        inputs=[user_state, operationname_state, session_state, lti_state, contents_dropdown],
+        outputs=None
+    )
 
     def update_when_dropdown(quiz_title, quiz_text_dict, user, lti):
         if quiz_title:
             quiz_text, contents_id, page, no, school, ans, ans_page_s, ans_page_e = quiz_text_dict[quiz_title]
             rubric_explanations = get_main_explanations(quiz_title, quiz_text_dict)
-            count_work, count_review, text_highlighted_yellow, text_highlighted_red = get_result_from_db(school, contents_id, page, no, user, lti, ans, ans_page_s, ans_page_e)
-            msg = generate_status_msg(count_work, count_review, len(rubric_explanations), lti["school_id"], contents_id, ans)
+            
+            exercise_info = exercise_col.find_one({"school_id": school, "contents_id": contents_id, "page": page, "no": no})
+            isfigure = exercise_info.get("isfigure", False) if exercise_info else False
+            
+            if isfigure:
+                figure_warning_update = gr.update(value='<div style="background-color: #fff3e0; color: #e65100; padding: 12px; border-radius: 8px; font-weight: bold; margin-bottom: 12px; text-align: center; border: 2px solid #ffb74d;" translate="no">🖼️ この問題は図が必要な問題です。図は、BookRollを見てください</div>', visible=True)
+            else:
+                figure_warning_update = gr.update(visible=False)
+            
+            # --- 1. DBからデータを取得（7つの変数を受け取る） ---
+            count_work, count_review, text_highlighted_yellow, text_highlighted_red, user_history, class_stats, user_latest_result = get_result_from_db(school, contents_id, page, no, user, lti, ans, ans_page_s, ans_page_e)
+            
             isrubric = True if len(rubric_explanations) > 0 else False
             ishighlighted = True if len(text_highlighted_red) + len(text_highlighted_yellow) > 0 else False
             ismarker = True if ans != "" else False
+            
+            # --- 2. ボタンの有効化判定（警告文の処理は generate_status_msg に移動したため削除） ---
+            btn_marker_interactive = False
+            btn_rubric_interactive = False
+
+            if contents_id != "ai_generated" and count_work > 0:
+                if isrubric:
+                    btn_rubric_interactive = True
+                if ismarker and ishighlighted:
+                    btn_marker_interactive = True
+            
+            # --- 3. メッセージと履歴の生成---
+            msg = generate_status_msg(
+                school=lti["school_id"], 
+                contents_id=contents_id, 
+                count_work=count_work, 
+                count_review=count_review,
+                ans_contents_id=ans, 
+                ishighlighted=ishighlighted, 
+                user_history=user_history, 
+                class_stats=class_stats, 
+                user_latest_result=user_latest_result,
+                user_id=user
+            )
+            
             rubric_label = "できたポイントをチェックしよう！" if isrubric else "この問題には解答のポイントがついていません"
             marker_label = "類題に反映したいマーカーの種類を選ぼう" if ishighlighted else "BookRollにマーカーを引いてみよう！"
+            
             selected_quiz = "あなたが選んだ問題"
             if contents_id == "ai_generated":
                 selected_quiz = "あなたが選んだ問題"
@@ -863,120 +1528,188 @@ with gr.Blocks() as demo:
             else:
                 selected_quiz = "あなたが選んだ問題 (問題：{}ページ)".format(str(page))
 
-            # 西京
-            if lti["school_id"]=="C126210001533":
+            # --- 4. ボタンの状態更新 ---
+            if btn_marker_interactive:
+                update_marker_btn = gr.update(visible=True, interactive=True, variant="primary", value="マーカーからつくる")
+            else:
+                update_marker_btn = gr.update(visible=True, interactive=False, variant="secondary", value="マーカーからつくる")
+
+            if btn_rubric_interactive:
+                update_rubric_btn = gr.update(visible=True, interactive=True, variant="primary", value="解答のポイントからつくる")
+            else:
+                update_rubric_btn = gr.update(visible=True, interactive=False, variant="secondary", value="解答のポイントからつくる")
+
+            # --- 5. 画面UIの更新（西京高校向けの条件分岐） ---
+            if lti["school_id"] == "C126210001533":
                 # 元の問題を１回も解いていない場合
-                if count_work==0:
+                if count_work == 0:
                     return (
-                        gr.update(value=f'<div style="text-align: center;" translate="no"><h1> {selected_quiz} </h1></div><div style="border: 3px solid #2196f3;padding: 24px;border-radius: 8px;text-align: center;" translate="no"> \n{quiz_text} </div>', visible=True),
-                        gr.update(choices=rubric_explanations, value=[], visible=False, interactive=False, show_label=False),
-                        gr.update(visible=True, value=msg),
-                        quiz_text,
-                        "SelectedExercise",
-                        rubric_explanations,
-                        contents_id,
-                        page,
-                        no,
-                        count_work,
-                        count_review, 
-                        text_highlighted_yellow, 
-                        text_highlighted_red,
-                        gr.update(visible=False, interactive=False, show_label=False),
-                        isrubric,
-                        ismarker
+                        gr.update(value=f'<div style="text-align: center;" translate="no"><h1> {selected_quiz} </h1></div><div style="border: 3px solid #2196f3;padding: 24px;border-radius: 8px;text-align: center;" translate="no"> \n{quiz_text} </div>', visible=True), # quiz_text_display
+                        figure_warning_update, # figure_warning_display 
+                        gr.update(choices=rubric_explanations, value=[], visible=False, interactive=False, show_label=False), # checkboxes
+                        gr.update(visible=True, value=msg), # status_msg
+                        quiz_text, # quiz_dropdown_state
+                        "SelectedExercise", # operationname_state
+                        rubric_explanations, # checkbox_all_items_state
+                        contents_id, # contentsid_state
+                        page, # page_state
+                        no, # no_state
+                        count_work, # cnt_work_state
+                        count_review, # cnt_review_state
+                        text_highlighted_yellow, # highlighted_yellow_state
+                        text_highlighted_red, # highlighted_red_state
+                        gr.update(visible=False, interactive=False, show_label=False), # marker_checkboxes
+                        isrubric, # isrubric_state
+                        ismarker, # ismarker_state
+                        gr.update(interactive=False), # contents_dropdown
+                        update_marker_btn, # btn_from_marker
+                        update_rubric_btn, # btn_from_rubric
+                        False, # marker_btn_state
+                        False  # rubric_btn_state
                     )
                 # 元の問題を１回は解いているが、復習問題を１回も解いていない場合
-                elif count_review==0:
+                elif count_review == 0:
                     return (
-                        gr.update(value=f'<div style="text-align: center;" translate="no"><h1> {selected_quiz} </h1></div><div style="border: 3px solid #2196f3;padding: 24px;border-radius: 8px;text-align: center;" translate="no"> \n{quiz_text} </div>', visible=True),
-                        gr.update(choices=rubric_explanations, value=[], visible=isrubric, interactive=isrubric, label=rubric_label, show_label=isrubric),
-                        gr.update(visible=True, value=msg),
-                        quiz_text,
-                        "SelectedExercise",
-                        rubric_explanations,
-                        contents_id,
-                        page,
-                        no,
-                        count_work,
-                        count_review, 
-                        text_highlighted_yellow, 
-                        text_highlighted_red,
-                        gr.update(visible=ishighlighted, interactive=ishighlighted, show_label=True, label=marker_label),
-                        isrubric,
-                        ismarker
+                        gr.update(value=f'<div style="text-align: center;" translate="no"><h1> {selected_quiz} </h1></div><div style="border: 3px solid #2196f3;padding: 24px;border-radius: 8px;text-align: center;" translate="no"> \n{quiz_text} </div>', visible=True), # quiz_text_display
+                        figure_warning_update, # figure_warning_display 
+                        gr.update(choices=rubric_explanations, value=[], visible=False, interactive=isrubric, label=rubric_label, show_label=isrubric), # checkboxes
+                        gr.update(visible=True, value=msg), # status_msg
+                        quiz_text, # quiz_dropdown_state
+                        "SelectedExercise", # operationname_state
+                        rubric_explanations, # checkbox_all_items_state
+                        contents_id, # contentsid_state
+                        page, # page_state
+                        no, # no_state
+                        count_work, # cnt_work_state
+                        count_review, # cnt_review_state
+                        text_highlighted_yellow, # highlighted_yellow_state
+                        text_highlighted_red, # highlighted_red_state
+                        gr.update(visible=False, interactive=ishighlighted, show_label=True, label=marker_label), # marker_checkboxes
+                        isrubric, # isrubric_state
+                        ismarker, # ismarker_state
+                        gr.update(interactive=False), # contents_dropdown
+                        update_marker_btn, # btn_from_marker
+                        update_rubric_btn, # btn_from_rubric
+                        False, # marker_btn_state
+                        False  # rubric_btn_state
                     )
-            # それ以外
+                # それ以外（１回以上復習済み）
+                else:
+                    return (
+                        gr.update(value=f'<div style="text-align: center;" translate="no"><h1> {selected_quiz} </h1></div><div style="border: 3px solid #2196f3;padding: 24px;border-radius: 8px;text-align: center;" translate="no"> \n{quiz_text} </div>', visible=True), # quiz_text_display
+                        figure_warning_update, # figure_warning_display 
+                        gr.update(choices=rubric_explanations, value=[], visible=False, interactive=True, show_label=True, label=rubric_label), # checkboxes
+                        gr.update(visible=True, value=msg), # status_msg
+                        quiz_text, # quiz_dropdown_state
+                        "SelectedExercise", # operationname_state
+                        rubric_explanations, # checkbox_all_items_state
+                        contents_id, # contentsid_state
+                        page, # page_state
+                        no, # no_state
+                        count_work, # cnt_work_state
+                        count_review, # cnt_review_state
+                        text_highlighted_yellow, # highlighted_yellow_state
+                        text_highlighted_red, # highlighted_red_state
+                        gr.update(visible=False, interactive=ishighlighted, show_label=True, label=marker_label), # marker_checkboxes
+                        isrubric, # isrubric_state
+                        ismarker, # ismarker_state
+                        gr.update(interactive=False), # contents_dropdown
+                        update_marker_btn, # btn_from_marker
+                        update_rubric_btn, # btn_from_rubric
+                        False, # marker_btn_state
+                        False  # rubric_btn_state
+                    )
+
+            # --- 西京高校以外（通常）の場合 ---
+            else:
                 return (
-                    gr.update(value=f'<div style="text-align: center;" translate="no"><h1> {selected_quiz} </h1></div><div style="border: 3px solid #2196f3;padding: 24px;border-radius: 8px;text-align: center;" translate="no"> \n{quiz_text} </div>', visible=True),
-                    gr.update(choices=rubric_explanations, value=[], visible=True, interactive=True, show_label=True, label=rubric_label),
-                    gr.update(visible=True, value=msg),
-                    quiz_text,
-                    "SelectedExercise",
-                    rubric_explanations,
-                    contents_id,
-                    page,
-                    no,
-                    count_work,
-                    count_review, 
-                    text_highlighted_yellow, 
-                    text_highlighted_red,
-                    gr.update(visible=ishighlighted, interactive=ishighlighted, show_label=True, label=marker_label),
-                    isrubric,
-                    ismarker
+                    gr.update(value=f'<div style="text-align: center;" translate="no"><h1> {selected_quiz} </h1></div><div style="border: 3px solid #2196f3;padding: 24px;border-radius: 8px;text-align: center;" translate="no"> \n{quiz_text} </div>', visible=True), # quiz_text_display
+                    figure_warning_update, # figure_warning_display 
+                    gr.update(choices=rubric_explanations, value=[], visible=False, interactive=isrubric, label=rubric_label, show_label=isrubric), # checkboxes
+                    gr.update(visible=True, value=msg), # status_msg
+                    quiz_text, # quiz_dropdown_state
+                    "SelectedExercise", # operationname_state
+                    rubric_explanations, # checkbox_all_items_state
+                    contents_id, # contentsid_state
+                    page, # page_state
+                    no, # no_state
+                    count_work, # cnt_work_state
+                    count_review, # cnt_review_state
+                    text_highlighted_yellow, # highlighted_yellow_state
+                    text_highlighted_red, # highlighted_red_state
+                    gr.update(visible=False, interactive=ishighlighted, show_label=True, label=marker_label), # marker_checkboxes
+                    isrubric, # isrubric_state
+                    ismarker, # ismarker_state
+                    gr.update(interactive=False), # contents_dropdown
+                    update_marker_btn, # btn_from_marker
+                    update_rubric_btn, # btn_from_rubric
+                    False, # marker_btn_state
+                    False  # rubric_btn_state
                 )
-        # dropboxに何も選択されていない場合（初期状態）
+
+        # --- dropboxに何も選択されていない場合（初期状態） ---
         else:
             return (
-                gr.update(),
-                gr.update(),
-                gr.update(),
-                "",
-                "SelectedExercise",
-                [],
-                "",
-                "",
-                "",
-                0,
-                0,
-                "",
-                "",
-                gr.update(),
-                False,
-                False
+                gr.update(), # quiz_text_display
+                gr.update(), # figure_display
+                gr.update(), # checkboxes
+                gr.update(), # status_msg
+                "", # quiz_dropdown_state
+                "SelectedExercise", # operationname_state
+                [], # checkbox_all_items_state
+                "", # contentsid_state
+                "", # page_state
+                "", # no_state
+                0, # cnt_work_state
+                0, # cnt_review_state
+                "", # highlighted_yellow_state
+                "", # highlighted_red_state
+                gr.update(), # marker_checkboxes
+                False, # isrubric_state
+                False, # ismarker_state
+                gr.update(), # contents_dropdown
+                gr.update(), # btn_from_marker
+                gr.update(), # btn_from_rubric
+                False, # marker_btn_state
+                False  # rubric_btn_state
             )
 
-    def open_when_no_rubrics(quiz_title, all_items, contents_id):
+    def open_when_no_rubrics(quiz_title, all_items, contents_id, count_review):
         if quiz_title:
+            # 出現条件：「AI生成問題である」または「復習回数が1回以上」
+            is_rev_visible = (contents_id == "ai_generated") or (count_review > 0)
+            
             if contents_id == "ai_generated":
                 if (len(all_items) == 0):
                     return (
-                        gr.update(interactive=False, variant="stop", value="(この問題は類題生成に対応していません)"),
-                        gr.update(interactive=True, variant="stop", value="選んだ問題をそのまま解く")
+                        gr.update(interactive=False, variant="secondary", value="(この問題は類題生成に対応していません)"),
+                        gr.update(visible=is_rev_visible, interactive=True, variant="primary", value="選んだ問題をそのまま解く")
                     )
                 else:
                     return (
-                        gr.update(interactive=False, variant="stop", value="類題をつくるには、上のらんに１つ以上チェックを入れてください"),
-                        gr.update(interactive=False, variant="stop", value="そのまま解くには、上のらんに１つ以上チェックを入れてください")
+                        gr.update(interactive=False, variant="secondary", value="類題をつくるには、上のらんに１つ以上チェックを入れてください"),
+                        gr.update(visible=is_rev_visible, interactive=True, variant="primary", value="選んだ問題をそのまま解く")
                     )
             else:
                 return (
-                    gr.update(interactive=False, variant="stop", value="類題をつくるには、上のらんに１つ以上チェックを入れてください"),
-                    gr.update(interactive=False, variant="stop", value="そのまま解くには、上のらんに１つ以上チェックを入れてください")
+                    gr.update(interactive=False, variant="secondary", value="類題をつくるには、上のらんに１つ以上チェックを入れてください"),
+                    gr.update(visible=is_rev_visible, interactive=True, variant="primary", value="選んだ問題をそのまま解く")
                 )
         else:
             return (
                 gr.update(),
-                gr.update()
+                gr.update(visible=False)
             )
-
+    
     quiz_dropdown.change(
         fn=update_when_dropdown,
         inputs=[quiz_dropdown, quiz_map_state, user_state, lti_state],
         outputs=[
-            quiz_text_display, 
+            quiz_text_display,
+            figure_warning_display,
             checkboxes,
             status_msg,
-            dropdown_state,
+            quiz_dropdown_state,
             operationname_state,
             checkbox_all_items_state,
             contentsid_state,
@@ -988,15 +1721,70 @@ with gr.Blocks() as demo:
             highlighted_red_state,
             marker_checkboxes,
             isrubric_state,
-            ismarker_state
+            ismarker_state,
+            contents_dropdown,
+            btn_from_marker,
+            btn_from_rubric,
+            marker_btn_state,
+            rubric_btn_state
         ]
     ).then(
         fn=open_when_no_rubrics,
-        inputs=[quiz_dropdown, checkbox_all_items_state, contentsid_state],
+        inputs=[quiz_dropdown, checkbox_all_items_state, contentsid_state, cnt_review_state],
         outputs=[gen_quiz_btn, rev_quiz_btn]
     ).then(
         fn=handle_logs,
-        inputs=[user_state, operationname_state, session_state, lti_state, dropdown_state],
+        inputs=[user_state, operationname_state, session_state, lti_state, quiz_dropdown_state],
+        outputs=None
+    )
+
+    def toggle_marker_btn(is_selected, other_btn_state):
+        new_state = not is_selected
+        new_value = "✔️ マーカーからつくる" if new_state else "マーカーからつくる"
+        
+        dropdown_interactive = not (new_state or other_btn_state)
+        model_visible = new_state or other_btn_state
+        
+        return new_state, gr.update(value=new_value, variant="primary"), gr.update(visible=new_state), gr.update(interactive=dropdown_interactive), gr.update(visible=model_visible)
+
+    btn_from_marker.click(
+        fn=toggle_marker_btn,
+        inputs=[marker_btn_state, rubric_btn_state],
+        outputs=[marker_btn_state, btn_from_marker, marker_checkboxes, quiz_dropdown, model_options]
+    ).then(
+        fn=lambda: (
+        "SelectedBtnFromMarker"
+        ),
+        inputs=None,
+        outputs=[operationname_state]
+    ).then(
+        fn=handle_logs,
+        inputs=[user_state, operationname_state, session_state, lti_state],
+        outputs=None
+    )
+
+    def toggle_rubric_btn(is_selected, other_btn_state):
+        new_state = not is_selected
+        new_value = "✔️ 解答のポイントからつくる" if new_state else "解答のポイントからつくる"
+        
+        dropdown_interactive = not (new_state or other_btn_state)
+        model_visible = new_state or other_btn_state
+        
+        return new_state, gr.update(value=new_value, variant="primary"), gr.update(visible=new_state), gr.update(interactive=dropdown_interactive), gr.update(visible=model_visible)
+
+    btn_from_rubric.click(
+        fn=toggle_rubric_btn,
+        inputs=[rubric_btn_state, marker_btn_state],
+        outputs=[rubric_btn_state, btn_from_rubric, checkboxes, quiz_dropdown, model_options]
+    ).then(
+        fn=lambda: (
+        "SelectedBtnFromRubric"
+        ),
+        inputs=None,
+        outputs=[operationname_state]
+    ).then(
+        fn=handle_logs,
+        inputs=[user_state, operationname_state, session_state, lti_state],
         outputs=None
     )
 
@@ -1024,40 +1812,55 @@ with gr.Blocks() as demo:
             gr.update(value=updated_status)
         )
     
-    def update_genquizbtn_when_checkboxes(selected, lti, count_work, count_review, all_items, marker_selected, isrubric, ismarker, quiz_title):
+    def update_genquizbtn_when_checkboxes(selected, lti, count_work, count_review, all_items, marker_selected, isrubric, ismarker, quiz_title, contents_id, h_yellow, h_red):
+        selected = selected or []
+        marker_selected = marker_selected or []
+        h_yellow = h_yellow or ""
+        h_red = h_red or ""
+
         if not quiz_title:
-            return(
-                gr.update(),
-                gr.update(),
-                gr.update() 
-            )
-        if len(selected)+len(marker_selected) == 0:
-            if isrubric or ismarker:
-                return (
-                    gr.update(interactive=False, variant="stop", value="類題をつくるには、上のらんに１つ以上チェックを入れてください"),
-                    gr.update(interactive=False, variant="stop", value="そのまま解くには、上のらんに１つ以上チェックを入れてください"),
-                    gr.update()
-                )
-            else:
-                return (
-                    gr.update(interactive=False, variant="stop", value="(この問題は類題生成に対応していません)"),
-                    gr.update(interactive=True, variant="stop", value="選んだ問題をそのまま解く"),
-                    gr.update()
-                )
+            return gr.update(), gr.update(), gr.update(), gr.update(), gr.update()
             
-        if lti["school_id"]=="C126210001533":
-            if count_review == 0:
-                return (
-                    gr.update(interactive=True, variant="stop", value="選んだ問題の類題をつくる"),
-                    gr.update(interactive=False, variant="stop", value="選んだ問題をそのまま解く(類題を解くと選べるようになります)"),
-                    gr.update(interactive=False)
-                )
-        
-        return (
-            gr.update(interactive=True, variant="stop", value="選んだ問題の類題をつくる"),
-            gr.update(interactive=True, variant="stop", value="選んだ問題をそのまま解く"),
-            gr.update(interactive=False)
-        )
+        gen_btn_val = gr.update()
+        rev_btn_val = gr.update()
+        dropdown_val = gr.update()
+
+        # 出現条件：「AI生成問題である」または「復習回数が1回以上」
+        is_rev_visible = (contents_id == "ai_generated") or (count_review > 0)
+
+        # --- 1. 類題作成・そのまま解くボタンの制御 ---
+        if len(selected) + len(marker_selected) == 0:
+            if isrubric or ismarker:
+                gen_btn_val = gr.update(interactive=False, variant="secondary", value="類題をつくるには、上のらんに１つ以上チェックを入れてください")
+                rev_btn_val = gr.update(visible=is_rev_visible, interactive=True, variant="primary", value="選んだ問題をそのまま解く")
+            else:
+                gen_btn_val = gr.update(interactive=False, variant="secondary", value="(この問題は類題生成に対応していません)")
+                rev_btn_val = gr.update(visible=is_rev_visible, interactive=True, variant="primary", value="選んだ問題をそのまま解く")
+        else:
+            if lti["school_id"] == "C126210001533" and count_review == 0:
+                gen_btn_val = gr.update(interactive=True, variant="primary", value="選んだ問題の類題をつくる")
+                rev_btn_val = gr.update(visible=False, interactive=False, variant="secondary")
+            else:
+                gen_btn_val = gr.update(interactive=True, variant="primary", value="選んだ問題の類題をつくる")
+                rev_btn_val = gr.update(visible=is_rev_visible, interactive=True, variant="primary", value="選んだ問題をそのまま解く")
+            dropdown_val = gr.update(interactive=False)
+
+        # --- 2. トグルボタンを「押せない」状態にする制御 ---
+        ishighlighted = True if len(h_yellow) + len(h_red) > 0 else False
+        can_use_rubric = (contents_id != "ai_generated") and (count_work > 0) and isrubric
+        can_use_marker = (contents_id != "ai_generated") and (count_work > 0) and ismarker and ishighlighted
+
+        if can_use_rubric:
+            rubric_btn_state = gr.update(interactive=(len(selected) == 0))
+        else:
+            rubric_btn_state = gr.update(interactive=False)
+            
+        if can_use_marker:
+            marker_btn_state = gr.update(interactive=(len(marker_selected) == 0))
+        else:
+            marker_btn_state = gr.update(interactive=False)
+
+        return gen_btn_val, rev_btn_val, dropdown_val, rubric_btn_state, marker_btn_state
     
     checkboxes.change(
         fn=update_when_checkboxes,
@@ -1065,8 +1868,8 @@ with gr.Blocks() as demo:
         outputs=[checkbox_state, current_checkbox_state, checkboxes]
     ).then(
         fn=update_genquizbtn_when_checkboxes,
-        inputs=[checkboxes, lti_state, cnt_work_state, cnt_review_state, checkbox_all_items_state, marker_checkboxes, isrubric_state, ismarker_state, quiz_dropdown],
-        outputs=[gen_quiz_btn, rev_quiz_btn, quiz_dropdown]
+        inputs=[checkboxes, lti_state, cnt_work_state, cnt_review_state, checkbox_all_items_state, marker_checkboxes, isrubric_state, ismarker_state, quiz_dropdown, contentsid_state, highlighted_yellow_state, highlighted_red_state],
+        outputs=[gen_quiz_btn, rev_quiz_btn, quiz_dropdown, btn_from_rubric, btn_from_marker]
     ).then(
         fn=lambda: (
         "SelectedRubricStatus"
@@ -1081,8 +1884,8 @@ with gr.Blocks() as demo:
 
     marker_checkboxes.change(
         fn=update_genquizbtn_when_checkboxes,
-        inputs=[checkboxes, lti_state, cnt_work_state, cnt_review_state, checkbox_all_items_state, marker_checkboxes, isrubric_state, ismarker_state, quiz_dropdown],
-        outputs=[gen_quiz_btn, rev_quiz_btn, quiz_dropdown]
+        inputs=[checkboxes, lti_state, cnt_work_state, cnt_review_state, checkbox_all_items_state, marker_checkboxes, isrubric_state, ismarker_state, quiz_dropdown, contentsid_state, highlighted_yellow_state, highlighted_red_state],
+        outputs=[gen_quiz_btn, rev_quiz_btn, quiz_dropdown, btn_from_rubric, btn_from_marker]
     ).then(
         fn=lambda: (
         "SelectedMarkerInput"
@@ -1091,7 +1894,7 @@ with gr.Blocks() as demo:
         outputs=[operationname_state]
     ).then(
         fn=handle_logs,
-        inputs=[user_state, operationname_state, session_state, lti_state, checkbox_state],
+        inputs=[user_state, operationname_state, session_state, lti_state, marker_checkboxes],
         outputs=None
     )
 
@@ -1187,12 +1990,14 @@ with gr.Blocks() as demo:
         gr.update(interactive=False),
         gr.update(interactive=False),
         gr.update(interactive=False),
+        gr.update(interactive=False),
+        gr.update(interactive=False),
         gr.update(visible=True, variant="secondary", interactive=False, value="(あなたの理解に最適な問題を作成中...)"),
         "CreatedQuestion",
         1
         ),
         inputs=None,
-        outputs=[vanish_btn, quiz_dropdown, checkboxes, marker_checkboxes, gen_quiz_btn, rev_quiz_btn, model_options, answer_btn, operationname_state, gen_state]
+        outputs=[vanish_btn, quiz_dropdown, checkboxes, marker_checkboxes, gen_quiz_btn, rev_quiz_btn, model_options, btn_from_marker, btn_from_rubric, answer_btn, operationname_state, gen_state]
     ).then(
         fn=update_when_gen_quiz_btn,
         inputs=[quiz_dropdown, checkboxes, quiz_map_state, model_state, lti_state, cnt_review_state, highlighted_yellow_state, highlighted_red_state, isrubric_state, ismarker_state, marker_checkboxes],
@@ -1277,12 +2082,14 @@ with gr.Blocks() as demo:
         gr.update(interactive=False),
         gr.update(interactive=False),
         gr.update(interactive=False),
+        gr.update(interactive=False),
+        gr.update(interactive=False),
         False,
         "ReveiwedQuestion",
         0
         ),
         inputs=None,
-        outputs=[vanish_btn, quiz_dropdown, checkboxes, gen_quiz_btn, rev_quiz_btn, model_options, exercise_saving_state, operationname_state, gen_state]
+        outputs=[vanish_btn, quiz_dropdown, checkboxes, gen_quiz_btn, rev_quiz_btn, model_options, btn_from_rubric, btn_from_marker, exercise_saving_state, operationname_state, gen_state]
     ).then(
         fn=handle_logs,
         inputs=[user_state, operationname_state, session_state, lti_state, exercise_state],
@@ -1621,8 +2428,10 @@ with gr.Blocks() as demo:
         fn=lambda: (
             gr.update(interactive=True), # vanish_btn
             gr.update(visible=True), # report_result
+            gr.update(visible=True, interactive=True, value=None), # contents_dropdown
             gr.update(visible=True, interactive=True, value=None), # quiz_dropdown
             gr.update(visible=False), # quiz_text_display
+            gr.update(visible=False), # figure_warning_display
             gr.update(visible=False), # status_msg
             gr.update(visible=False, show_label=False, value=None), # checkboxes
             gr.update(visible=False, show_label=False, value=None), # new_checkboxes
@@ -1630,13 +2439,15 @@ with gr.Blocks() as demo:
             [], # current_checkbox_state
             {}, # new_checkbox_state
             [], # new_current_checkbox_state
-            gr.update(visible=True, interactive=False, variant="stop", value="類題をつくる(まだ押せません)"), # gen_quiz_btn
-            gr.update(visible=True, interactive=False, variant="stop", value="そのまま解く(まだ押せません)"), # rev_quiz_btn
+            gr.update(visible=False, interactive=False), # btn_from_rubric
+            gr.update(visible=False, interactive=False), # btn_from_marker
+            gr.update(visible=True, interactive=False, variant="secondary", value="類題をつくる(まだ押せません)"), # gen_quiz_btn
+            gr.update(visible=False, interactive=False, variant="primary", value="そのまま解く"), # rev_quiz_btn
             gr.update(value="復習問題はここに出てきます"), # exercise_output
             gr.update(visible=True, interactive=False, placeholder="(まだ入力できません)", value="", lines=1), # student_answer
             gr.update(visible=False, interactive=False), # answer_btn
             gr.update(visible=False, value=""), # answer_output
-            gr.update(interactive=True, value="o4-mini(速さ重視、普段使いにおすすめ)"), # model_options
+            gr.update(visible=False, interactive=True, value="o4-mini(速さ重視、普段使いにおすすめ)"), # model_options
             gr.update(visible=False, interactive=False, value=None), # understanding
             gr.update(visible=False, interactive=False, value=None), # difficulty
             gr.update(visible=False, interactive=False, value=None), # fluency
@@ -1677,8 +2488,10 @@ with gr.Blocks() as demo:
         outputs=[
             vanish_btn,
             report_result,
+            contents_dropdown,
             quiz_dropdown,
             quiz_text_display,
+            figure_warning_display,
             status_msg,
             checkboxes,
             new_checkboxes,
@@ -1686,6 +2499,8 @@ with gr.Blocks() as demo:
             current_checkbox_state,
             new_checkbox_state,
             new_current_checkbox_state,
+            btn_from_rubric,
+            btn_from_marker,
             gen_quiz_btn,
             rev_quiz_btn,
             exercise_output,
@@ -1730,9 +2545,9 @@ with gr.Blocks() as demo:
             exercise_saving_state
         ]
     ).then(
-        fn=reload_quiz_map_from_mongo,
+        fn=get_contents_dict_from_clickhouse,
         inputs=[lti_state],
-        outputs=[quiz_map_state, quiz_dropdown]
+        outputs=[contents_dropdown_state, contents_dropdown]
     ).then(
         fn=lambda: (
         "StartedSession",
@@ -1743,6 +2558,20 @@ with gr.Blocks() as demo:
     ).then(
         fn=handle_logs,
         inputs=[user_state, operationname_state, session_state, lti_state],
+        outputs=None
+    ).then(
+        fn=get_journey_html,
+        inputs=[lti_state],
+        outputs=[journey_display]
+    ).then(
+        fn=lambda: (
+        "Traveled"
+        ),
+        inputs=None,
+        outputs=[operationname_state]
+    ).then(
+        fn=handle_logs,
+        inputs=[user_state, operationname_state, session_state, lti_state, journey_display],
         outputs=None
     )
 
@@ -1756,9 +2585,9 @@ with gr.Blocks() as demo:
         inputs=None,
         outputs=None
     ).then(
-        fn=reload_quiz_map_from_mongo,
+        fn=get_contents_dict_from_clickhouse,
         inputs=[lti_state],
-        outputs=[quiz_map_state, quiz_dropdown]
+        outputs=[contents_dropdown_state, contents_dropdown]
     ).then(
         fn=lambda: (
         "StartedSession",
@@ -1770,6 +2599,20 @@ with gr.Blocks() as demo:
     ).then(
         fn=handle_logs,
         inputs=[user_state, operationname_state, session_state, lti_state],
+        outputs=None
+    ).then(
+        fn=get_journey_html,
+        inputs=[lti_state],
+        outputs=[journey_display]
+    ).then(
+        fn=lambda: (
+        "Traveled"
+        ),
+        inputs=None,
+        outputs=[operationname_state]
+    ).then(
+        fn=handle_logs,
+        inputs=[user_state, operationname_state, session_state, lti_state, journey_display],
         outputs=None
     )
 
