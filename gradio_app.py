@@ -28,6 +28,17 @@ logs_col = quiz_generator_db["logs"]
 
 #ltiセッション情報読み込み
 def load_session_info(request: gr.Request):
+    '''
+    lti = {
+            'user_id': user_id,
+            'roles': roles,
+            'browser_language': browser_language,
+            'oauth_consumer_key': oauth_consumer_key,
+            'context_id': context_id,
+            'context_title': context_title,
+            'school_id': school
+        }
+    '''
     lti = request.session['user']
     user = lti['user_id']
     return lti, user
